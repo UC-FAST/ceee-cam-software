@@ -1,2 +1,11 @@
 # Project exclude paths
+/example/
 /history/
+/pict/
+/temp/
+/exceptions.log
+/sketch.txt
+/test.py
+/test2.py
+/test3.py
+/picamera2/
