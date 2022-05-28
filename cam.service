@@ -1,0 +1,14 @@
+[Unit]
+Description=Start Camera After Power On
+After=network.target
+
+
+[Service]
+WorkingDirectory=/home/pi/camera/
+Type=forking
+User=pi
+ExecStart=python3 startUp.py
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target
