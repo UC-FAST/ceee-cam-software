@@ -1,10 +1,8 @@
+import functools
 import imghdr
 import os
-import threading
-from typing import List
 
 import cv2
-import numpy as np
 
 
 class GalleryBrowser:
@@ -15,33 +13,8 @@ class GalleryBrowser:
         self.__width, self.__height = width, height
         self.__index = 0
         self.__filePathList = list()
-        self.__cache: List[np.array] = [None, None, None]
-        self.__loadNext = None
-        self.__loadPrevious = None
-        self.__browseDirection = 1
         self.refreshPictList()
-
-    def __loadNextPictInAnotherThread(self):
-        self.__cache[0] = self.__cache[1]
-        self.__cache[1] = self.__cache[2]
-        if self.__index == len(self.__filePathList) - 1:
-            self.__cache[2] = None
-        else:
-            self.__cache[2] = cv2.resize(
-                cv2.imread(self.__filePathList[self.__index + 1]),
-                (self.__width, self.__height)
-            )
-
-    def __loadPreviousPictInAnotherThread(self):
-        self.__cache[2] = self.__cache[1]
-        self.__cache[1] = self.__cache[0]
-        if self.__index == 0:
-            self.__cache[0] = None
-        else:
-            self.__cache[0] = cv2.resize(
-                cv2.imread(self.__filePathList[self.__index - 1]),
-                (self.__width, self.__height)
-            )
+        self.__direction = 0
 
     def refreshPictList(self):
         self.__filePathList = list()
@@ -53,67 +26,46 @@ class GalleryBrowser:
             if (file.endswith('.dng') and fmat == 'tiff') or not fmat:
                 continue
             self.__filePathList.append(filePath)
-        self.__filePathList.sort(key=lambda x: os.path.splitext(x)[0])
+        self.__filePathList.sort(key=lambda x: os.path.splitext(x)[0], reverse=True)
         self.__index = 0
         if not self.__filePathList:
-            raise IndexError
-        self.__filePathList = self.__filePathList[::-1]
-        self.__cache[0] = None
-        self.__cache[1] = cv2.resize(
-            cv2.imread(self.__filePathList[self.__index]),
-            (self.__width, self.__height)
-        )
-        if len(self.__filePathList) == 1:
-            self.__cache[2] = None
-        else:
-            self.__cache[2] = cv2.resize(
-                cv2.imread(self.__filePathList[self.__index + 1]),
-                (self.__width, self.__height)
-            )
+            raise FileNotFoundError
 
     def next(self):
         if self.__index == len(self.__filePathList) - 1:
-            raise IndexError
-
-        if self.__loadNext is not None and self.__loadNext.is_alive():
-            self.__loadNext.join()
-
+            return self
         self.__index += 1
-        self.__browseDirection = 1
-        self.__loadNext = threading.Thread(target=self.__loadNextPictInAnotherThread)
-        self.__loadNext.start()
+        self.__direction = 0
         return self
 
     def previous(self):
         if self.__index == 0:
-            raise IndexError
-        if self.__loadPrevious is not None and self.__loadPrevious.is_alive():
-            self.__loadPrevious.join()
+            return self
         self.__index -= 1
-        self.__browseDirection = 0
-        self.__loadPrevious = threading.Thread(target=self.__loadPreviousPictInAnotherThread)
-        self.__loadPrevious.start()
+        self.__direction = 1
         return self
 
     def getPict(self):
-        if self.__browseDirection == 1 and self.__loadNext:
-            self.__loadNext.join()
-        elif self.__browseDirection == 0 and self.__loadPrevious:
-            self.__loadPrevious.join()
-        frame = self.__cache[1]
+        return self.__getPict(self.__filePathList[self.__index])
 
-        if frame is not None:
-            return frame.copy()
+    @functools.lru_cache(maxsize=10)
+    def __getPict(self, filename):
+        return cv2.resize(cv2.imread(filename), (self.__width, self.__height))
 
     def delete(self):
         filename = self.__filePathList[self.__index]
         os.remove(filename)
-        self.__cache.pop(filename)
+
+        if self.__index == len(self.__filePathList) - 1:
+            self.__index = len(self.__filePathList) - 2
+
+        elif self.__index != 0:
+            if self.__direction == 0:
+                self.next()
+            else:
+                self.previous()
+
         self.__filePathList.remove(filename)
-        if self.__index == len(self.__filePathList):
-            self.__index = len(self.__filePathList) - 1
-        else:
-            self.next()
 
     def getPictName(self):
         return self.__filePathList[self.__index]

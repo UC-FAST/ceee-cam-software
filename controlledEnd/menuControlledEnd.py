@@ -220,6 +220,7 @@ class MenuControlledEnd(ControlledEnd):
                 self.__currentOptions[self.__currentIndex]['receiver'],
                 self.__currentOptions[self.__currentIndex]['value']
             )
+            self._irq(self.__from)
         else:
             self.__selectIndex = self.__currentIndex
 

@@ -17,7 +17,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__config = configLoader.ConfigLoader('./config.json')
         try:
             galleryBrowser.GalleryBrowser.__init__(self, self.__config['camera']['path'], width, height)
-        except IndexError:
+        except FileNotFoundError:
             pass
         self.__width, self.__height = width, height
         self.__direction = 0
@@ -104,16 +104,13 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
 
     def __refreshFrame(self):
         if self.__currentFrame is not None:
-            self.__busy.decorate(self.__currentFrame)#, rotate=self.__rotate)
+            self.__busy.decorate(self.__currentFrame)
             self.__frameList.put(self.__currentFrame)
-        try:
-            self.__rawFrame = self.getPict()
-            self.__currentFrame = self.__rawFrame.copy()
-            self.__addHist()
-            self.__frameList.put(self.__currentFrame)
-        except AttributeError:
-            self.__currentFrame = frameDecorator.Warining(self.__width, self.__height).decorate("Empty")
-            self.__frameList.put(self.__currentFrame, True)
+
+        self.__rawFrame = self.getPict()
+        self.__currentFrame = self.__rawFrame.copy()
+        self.__addHist()
+        self.__frameList.put(self.__currentFrame)
 
     def mainLoop(self):
         while True:
@@ -130,7 +127,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
     def onEnter(self, lastID):
         try:
             self.refreshPictList()
-        except IndexError:
+        except FileNotFoundError:
             self._irq(lastID)
         self.__from = lastID
         self.__refreshFrame()

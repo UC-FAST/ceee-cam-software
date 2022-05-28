@@ -1,5 +1,6 @@
 # encoding=utf-8
 
+import time
 import traceback
 from functools import wraps
 
@@ -21,5 +22,3 @@ def exceptionRecorder(path="exceptions.log"):
         return wrap
 
     return decorate
-
-
