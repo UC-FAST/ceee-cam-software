@@ -9,8 +9,8 @@ import psutil
 import wiringpi
 
 import frameDecorator
-from components import effect, max17048, picam2, led, configLoader
-from utils import SlidingWindowFilter
+from components import max17048, picam2, led, configLoader
+from utils import SlidingWindowFilter, Hdr
 from . import controlledEnd
 
 
@@ -39,6 +39,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__config['screen']['height']
         )
         self.__isBusy = False
+        self.__isHdrProcessing = False
         self.__decorateEnable = False
         self.__zoomHold = False
         self.__rotate = 0
@@ -93,6 +94,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         time.sleep(0.3)
 
     def leftPressAction(self):
+        if self.__isHdrProcessing:
+            return
         self.__zoomHold = True
         if self.__zoom - 0.05 < 1:
             self.__zoom = 1
@@ -106,6 +109,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__zoomHold = False
 
     def rightPressAction(self):
+        if self.__isHdrProcessing:
+            return
         self.__zoomHold = True
         self.__zoom += 0.05
         self.__toast.setText("X {}".format(round(self.__zoom, 1)))
@@ -116,6 +121,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__zoomHold = False
 
     def circlePressAction(self):
+        if self.__isBusy:
+            return
         t = 0
         while wiringpi.digitalRead(self.__config['pin']['circle']) and t < 1:
             t += 0.01
@@ -154,8 +161,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     try:
                         width, height = tuple(self.__findOptionByContent('Resolution').split('x'))
                     except ValueError:
-                        width, height = 1920, 1080
+                        width, height = 0, 0
                     self.__isBusy = True
+                    self.__isHdrProcessing = True
                     led.on(led.green)
                     lower, upper, stackNum = self.__findOptionByContent('Lower'), self.__findOptionByContent(
                         'Upper'), self.__findOptionByContent('Stack Num')
@@ -165,7 +173,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                         self.__toast.setText("{}/{}".format(index, stackNum))
                         frameList.append(self.exposureCapture(i, int(width), int(height)))
                     self.__toast.setText("Processing")
-                    hdrFrame = effect.Hdr(frameList).exposureFusion()
+                    hdrFrame = Hdr(
+                        frameList, self.__findOptionByContent('Correction')
+                    ).exposureFusion()
                     cv2.imwrite(
                         os.path.join(
                             self.__config['camera']['path'],
@@ -179,6 +189,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                         hdrFrame
                     )
                     led.off(led.green)
+                    self.__isHdrProcessing = False
                     self.__isBusy = False
                     self.__exposeSetting()
                 else:
@@ -275,6 +286,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             if self.__zoomHold:
                 self.__toast.decorate(frame, self.__rotate)
             if self.__toast.isUpdate:
+                self.__toast.decorate(frame, self.__rotate)
+
+            if self.__isHdrProcessing:
                 self.__toast.decorate(frame, self.__rotate)
 
             yield frame

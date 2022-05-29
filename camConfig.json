@@ -123,9 +123,13 @@
                     3,
                     5,
                     10,
-                    30,
-                    50
+                    30
                 ]
+            },
+            {
+                "content": "Correction",
+                "type": "bool",
+                "value": false
             }
         ]
     },

@@ -1,13 +1,15 @@
 import os
+import time
 
 import cv2
 
 
 class Hdr:
-    def __init__(self, imageList: list):
+    def __init__(self, imageList: list, correction=False):
         self.__imageList = imageList
-        alignMTB = cv2.createAlignMTB()
-        alignMTB.process(self.__imageList, self.__imageList)
+        if correction:
+            alignMTB = cv2.createAlignMTB()
+            alignMTB.process(self.__imageList, self.__imageList)
 
     def exposureFusion(self):
         mergeMertens = cv2.createMergeMertens()

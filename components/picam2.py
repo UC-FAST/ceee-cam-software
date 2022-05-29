@@ -6,11 +6,11 @@ import time
 import cv2
 import numpy as np
 
-from . import configLoader
 import picamera2
 from picamera2 import YUV420_to_RGB
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
+from . import configLoader
 
 
 class Cam:
@@ -183,6 +183,8 @@ class Cam:
         threading.Thread(target=cv2.imwrite, args=(filePath, frame)).start()
 
     def exposureCapture(self, exposeTime, width, height):
+        if width == 0 or height == 0:
+            width, height = 3000, 2000
         config = self.__cam.still_configuration(
             main={"size": (width, height)},
             lores={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)}
