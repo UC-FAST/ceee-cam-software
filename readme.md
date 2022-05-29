@@ -1,62 +1,12 @@
-# 树莓派HQ相机——CEEE
-# 硬件
-## 我需要准备什么
-* 学硬件是要烧钱的，为了完成这个项目，1000元是可能需要花费的。
-* 需要购买的成品组件：
-    - 树莓派HQ摄像头模组
-    - 一个C或者CS接口的镜头，1/23"以上面积
-    - 树莓派Zero 2w
-* 必须的工具：电烙铁、热风枪、焊锡、锡浆、镊子等
-* 额外的工具：游标卡尺，可以帮助你更加精确地测算机械尺寸
-* 基本的电路板绘制技能
-* 一些其他零件：在文件BOM.xlsx内
-* 若干电阻以及电容等，参照原理图
-_____
-## 需要自制的电路板组件
-本项目内含四块需要自制的电路板，分别为：
-* Z01-2：电源板，负责整个系统的充放电，附带电量指示功能，并提供基本的输入按钮
-![电源板](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Z01.png "Z01")
-* Z02：摄像头转接板及支架，这一部分是作为结构板、不含电路的
-![转接板](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Z02-1.png "摄像头转接板")
-![支架](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Z02-2.png "摄像头支架")
-* Z03：Lcd显示屏板，附带一个5D开关
-![Lcd显示屏板](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Z03.png "Lcd显示屏板")
+# CEEE-树莓派相机 软件
 
-为了区分相对于树莓派正反的安装方向，电路板在阻焊层颜色上做了区分。安装于于树莓派正面的电路板为绿色，反面为紫色。
-
-____
-
-## 组装
-需要用到若干5mm尼龙柱、10mm尼龙柱、12mm尼龙柱、15mm尼龙柱、M2.5尼龙螺丝以及M2.5尼龙螺母。本项目中所有安装孔都是2.5mm的直径。
-
-### 组装顺序：
-|层数|名称|高度（尼龙柱长度，单位mm）|
-|-|-|-|
-|1|树莓派HQ摄像头模组|
-||尼龙柱|5|
-|2|摄像头转接板 Z02||
-||尼龙柱|5|
-|3|摄像头支架 Z02|
-||尼龙柱|10|
-|4|树莓派Zero 2w，焊接17mm双排针|
-||尼龙柱|12或15|
-|5|电源板 Z01-2|
-||尼龙柱|12|
-|6|Lcd显示屏板|
-
-* **组装前最好先做些测量工作，步步为营，不要急于求成**
-
-
-_____
-# 软件
-
-## 运行环境
+# 运行环境
 
 系统版本：2022-01-28-raspios-bullseye-armhf
 
 Python版本：3.9.2
 
-## 准备工作：
+# 准备工作：
 ```
 sudo apt update
 sudo apt install python3-libcamera python3-kms++ libatlas-base-dev raspberrypi-ui-mods ffmpeg
@@ -70,7 +20,7 @@ git clone https://github.com/raspberrypi/picamera2.git
 export PYTHONPATH=/home/pi/picamera2
 ```
 
-## universalControl.UniversalControl
+# universalControl.UniversalControl
 类universalControl.UniversalControl起到控制与协调本项目运行的作用，是程序主循环的入口
 
 ```
@@ -78,7 +28,7 @@ universalControl.UniversalControl(
 self, lcd: screen.Lcd, controlledEndList: List[controlledEnd.ControlledEnd]):
 ```
 
-## 摄像头类 picam2.cam
+# 摄像头类 picam2.cam
 
 
 类cam.camera用于创建摄像头句柄并录制图像，是cv2.VideoCapture的封装
@@ -159,10 +109,10 @@ camera.frameHeight
 
 
 ----
-## 帧渲染模块 frameDecorator:
+# 帧渲染模块 frameDecorator:
 frameDecorator用于将文字和菜单等添加至OpenCV传入的帧中。
 
-### 简单文本类 frameDecorator.SimpleText
+## 简单文本类 frameDecorator.SimpleText
 frameDecorator.SimpleText是一个可以自动根据显示区域大小排版的用于显示单列文字的类，是cv2.putText的封装。
 
 ![SimpleText](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/SimpleText.png "SimpleText")
@@ -220,7 +170,7 @@ frame：OpenCV的图像数组
 
 ----
 
-### 菜单类 frameDecorator.DialogBox
+## 菜单类 frameDecorator.DialogBox
 类frameDecorator.DialogBox是一个可以自动根据显示区域大小排版的用于显示菜单的类，是cv2.putText和cv2.rectangle的封装。
 
 ![DialogBox](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/DialogBox.png "DialogBox")
@@ -311,7 +261,7 @@ DialogBox.title
 
 ---
 
-### 柱状图类 frameDecorator.BarChart
+## 柱状图类 frameDecorator.BarChart
 类frameDecorator.BarChart是一个可以叠加在现有图像上的滚动柱状图显示类，是cv2.rectangle的封装。其内部维护了一个队列用于保存数据。
 
 ![BarChart](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/BarChart.png "BarChart")
@@ -373,7 +323,7 @@ BarChart.dataList
 数据列表，可将其他列表直接赋值。列表长度大于maxSize时会进行抽样。
 
 
-### 帧直方图类 frameDecorator.Hist
+## 帧直方图类 frameDecorator.Hist
 类frameDecorator.Hist是一个可以叠加在现有图像上的图像色彩直方图显示类，是cv2.rectangle的封装。渲染速度较慢，不建议用于……场合中
 
 ![Hist](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Hist.png "Hist")
@@ -415,7 +365,7 @@ BarChart.decorate(self, frame):
 frame：OpenCV的图像数组
 
 -----
-### Busy frameDecorator.Busy
+## Busy frameDecorator.Busy
 类frameDecorator.Busy用于在图像的右上角绘制一个小方块表示程序正忙，是cv2.rectangle的封装。
 ![Busy](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Busy.png "Busy")
 ```
@@ -448,7 +398,7 @@ frame：OpenCV的图像数组
 
 ---
 
-### 注入灵魂 frameDecorator.WaterMark
+## 注入灵魂 frameDecorator.WaterMark
 加水印！
 
 ![WaterMark](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/WaterMark.png "WaterMark")
@@ -482,7 +432,7 @@ frame：OpenCV的图像数组
 ----
 
 
-##  Lcd类 screen.Lcd:
+#  Lcd类 screen.Lcd:
 类Lcd用于初始化屏幕并显示固定图像，在spi通信频率为17500000Hz、传入的图像为opencv生成时至少可达到30fps的显示帧率。（好用到哭）
 
 ```
@@ -532,7 +482,7 @@ image：图像数组，可以由PIL（有性能问题）或者opencv生成
 
 ------
 
-## 屏幕刷新方向<span id="ScanDir">screen.ScanDir</span>
+# 屏幕刷新方向<span id="ScanDir">screen.ScanDir</span>
 设置屏幕的刷新方向
 
 ```ScanDir.L2R_U2D```

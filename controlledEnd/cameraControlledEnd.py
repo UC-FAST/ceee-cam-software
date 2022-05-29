@@ -47,7 +47,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__option: typing.Dict[typing.Dict] = json.load(f)
         self.__m = max17048.Max17048()
         self.__filter = SlidingWindowFilter(10)
-        self.__frameList = queue.Queue()
+        self.__frameList = queue.SimpleQueue()
 
         if self.__findOptionByContent('Auto Expose'):
             self.exposureTime = 0

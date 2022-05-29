@@ -831,7 +831,7 @@ class MenuControlledEnd(ControlledEnd):
         self.__from = sender
 
     def onEnter(self, lastID):
-        self.__frameList = queue.Queue()
+        self.__frameList = queue.SimpleQueue()
 
     def onExit(self):
         self.__frameList.put(

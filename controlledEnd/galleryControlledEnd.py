@@ -23,7 +23,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__direction = 0
         with open(self.__config['gallery']['configFilePath']) as f:
             self.__option: typing.Dict[typing.Dict] = json.load(f)
-        self.__frameList = queue.Queue()
+        self.__frameList = queue.SimpleQueue()
         self.__busy = frameDecorator.Busy()
         self.__rotate = 0
         self.__currentFrame = np.zeros((self.__width, self.__height, 3), np.uint8)
