@@ -41,6 +41,11 @@
                 "step": 1
             },
             {
+                "content": "Watermark",
+                "type": "bool",
+                "value": false
+            },
+            {
                 "content": "Save Metadata",
                 "type": "bool",
                 "value": false

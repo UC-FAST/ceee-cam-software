@@ -313,6 +313,19 @@ class MenuControlledEnd(ControlledEnd):
                     self.__fontScale,
                     color
                 )
+            cv2.rectangle(
+                frame,
+                (
+                    self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                    i[1] - self.__spaceHeight,
+                ),
+                (
+                    self.__width - self.__padding[2] - self.__width // 21,
+                    i[1] + self.__spaceHeight + self.__fontHeight,
+                ),
+                self.__theme['background'],
+                -1
+            )
 
     def __drawUnderLinePreview(self, frame):
         if not self.__showPreview:
@@ -384,10 +397,16 @@ class MenuControlledEnd(ControlledEnd):
             if self.__currentIndex == index:
                 cv2.rectangle(
                     frame,
-                    (self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21 + 1, i[1]),
-                    (self.__width - self.__padding[2] - self.__width // 42 - 1, i[1] + self.__fontHeight),
+                    (
+                        self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                        i[1] - self.__spaceHeight
+                    ),
+                    (
+                        self.__width - self.__padding[2] - self.__width // 42 - 1,
+                        i[1] + self.__fontHeight + self.__spaceHeight
+                    ),
                     self.__theme['background'],
-                    -1
+                    - 1
                 )
                 self.__drawUnderLinePreview(frame)
                 continue
@@ -439,12 +458,12 @@ class MenuControlledEnd(ControlledEnd):
             cv2.rectangle(
                 frame,
                 (
-                    self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21 + 1,
-                    i[1] - self.__spaceHeight // 3
+                    self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                    i[1] - self.__spaceHeight
                 ),
                 (
                     self.__width - self.__padding[2] - self.__width // 42 - 1,
-                    i[1] + self.__fontHeight + self.__spaceHeight // 3
+                    i[1] + self.__fontHeight + self.__spaceHeight
                 ),
                 self.__theme['background'],
                 -1
@@ -488,6 +507,19 @@ class MenuControlledEnd(ControlledEnd):
             self.__fontScale,
             self.__theme['text'],
             self.__thickness
+        )
+        cv2.rectangle(
+            background,
+            (
+                self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21 + 1,
+                self.__padding[1] - self.__spaceHeight
+            ),
+            (
+                self.__width - self.__padding[2] - self.__width // 21 - 1,
+                self.__padding[1] + self.__fontHeight + self.__spaceHeight
+            ),
+            self.__theme['background'],
+            -1
         )
 
     def __numericalSlideBar(self, frame):
