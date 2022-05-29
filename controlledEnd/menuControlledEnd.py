@@ -43,6 +43,7 @@ class MenuControlledEnd(ControlledEnd):
         self.__selectIndex = None
         self.__title = None
         self.__from = None
+        self.__valueTemp = None
         self.__routeList: typing.List[tuple] = list()
         self.__theme = {
             'background': Colors.black.value,
@@ -220,17 +221,16 @@ class MenuControlledEnd(ControlledEnd):
             )
             self._irq(self.__from)
         else:
+            self.__valueTemp = self.__currentOptions[self.__currentIndex]['value']
             self.__selectIndex = self.__currentIndex
 
     def unselect(self):
+        self.__currentOptions[self.__selectIndex]['value'] = self.__valueTemp
+        self.__valueTemp = None
         self._msgSender(
             self._id,
             self.__from,
-            (
-                self.__currentID,
-                self.__currentIndex + self.__rowCount * self.__currentPage,
-                self.__currentOptions[self.__currentIndex]
-            )
+            self.__currentOptions[self.__currentIndex]
         )
         self.__selectIndex = None
 
@@ -491,7 +491,8 @@ class MenuControlledEnd(ControlledEnd):
         )
 
     def __numericalSlideBar(self, frame):
-        value = self.__currentOptions[self.__currentIndex]['value']
+        value = self.__valueTemp if self.__valueTemp is not None else self.__currentOptions[self.__currentIndex][
+            'value']
         mi = self.__currentOptions[self.__currentIndex]['min']
         ma = self.__currentOptions[self.__currentIndex]['max']
         for index, i in enumerate(self.__genItemStartCoordinate(itemCount=5, ignoreTitle=True)):
@@ -592,7 +593,8 @@ class MenuControlledEnd(ControlledEnd):
                 return
 
     def __optionMenu(self, frame):
-        value = self.__currentOptions[self.__currentIndex]['value']
+        value = self.__valueTemp if self.__valueTemp is not None else self.__currentOptions[self.__currentIndex][
+            'value']
         options: list = self.__currentOptions[self.__currentIndex]['options']
         selectIndex = options.index(value)
         for index, i in enumerate(self.__genItemStartCoordinate(itemCount=5, ignoreTitle=True)):
@@ -686,40 +688,40 @@ class MenuControlledEnd(ControlledEnd):
         item = self.__currentOptions[self.__selectIndex]
         if item['type'] != 'numeral':
             return
-        value, step, ma = item['value'], item['step'], item['max']
+        value, step, ma = self.__valueTemp, item['step'], item['max']
         value += step
         if value >= ma:
             value = ma
-        item['value'] = value
+        self.__valueTemp = value
 
     def __valueMinus(self):
         item = self.__currentOptions[self.__selectIndex]
         if item['type'] != 'numeral':
             return
-        value, step, mi = item['value'], item['step'], item['min']
+        value, step, mi = self.__valueTemp, item['step'], item['min']
         value -= step
         if value <= mi:
             value = mi
-        item['value'] = value
+        self.__valueTemp = value
 
     def __optionUp(self):
         item = self.__currentOptions[self.__selectIndex]
         if item['type'] != 'option':
             return
-        value, optionList = item['value'], item['options']
+        value, optionList = self.__valueTemp, item['options']
         optionIndex = optionList.index(value)
-        self.__currentOptions[self.__selectIndex]['value'] = optionList[optionIndex - 1]
+        self.__valueTemp = optionList[optionIndex - 1]
 
     def __optionDown(self):
         item = self.__currentOptions[self.__selectIndex]
         if item['type'] != 'option':
             return
-        value, optionList = item['value'], item['options']
+        value, optionList = self.__valueTemp, item['options']
         optionIndex = optionList.index(value)
         try:
-            self.__currentOptions[self.__selectIndex]['value'] = optionList[optionIndex + 1]
+            self.__valueTemp = optionList[optionIndex + 1]
         except IndexError:
-            self.__currentOptions[self.__selectIndex]['value'] = optionList[0]
+            self.__valueTemp = optionList[0]
 
     def centerPressAction(self):
         t = 0

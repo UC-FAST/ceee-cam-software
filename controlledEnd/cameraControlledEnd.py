@@ -49,10 +49,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__filter = SlidingWindowFilter(10)
         self.__frameList = queue.SimpleQueue()
 
-        if self.__findOptionByContent('Auto Expose'):
-            self.exposureTime = 0
-        else:
-            self.exposureTime = self.__findOptionByContent('Expose Time')
+        self.__exposeSetting()
 
     def __worker2(self):
         return {
@@ -183,6 +180,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     )
                     led.off(led.green)
                     self.__isBusy = False
+                    self.__exposeSetting()
                 else:
                     try:
                         width, height = tuple(self.__findOptionByContent('Resolution').split('x'))
@@ -234,15 +232,18 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         elif not self.__decorateEnable and self.__recordTimestamp is None and not self.__isBusy:
             self._irq('MenuControlledEnd')
 
+    def __exposeSetting(self):
+        if self.__findOptionByContent('Auto Expose'):
+            self.exposureTime = 0
+        else:
+            self.exposureTime = self.__findOptionByContent('Expose Time')
+
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
             with open(self.__config['camera']['configFilePath'], 'w') as f:
                 json.dump(self.__option, f, indent=4)
             if msg['content'] in ('Auto Expose', 'Expose Time'):
-                if self.__findOptionByContent('Auto Expose'):
-                    self.exposureTime = 0
-                else:
-                    self.exposureTime = self.__findOptionByContent('Expose Time')
+                self.__exposeSetting()
 
     def centerPressAction(self):
         pass
