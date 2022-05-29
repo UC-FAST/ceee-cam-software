@@ -42,13 +42,14 @@ class Cam:
 
     def __setZoom(self):
         # [2, 0, 4052, 3040]
+        # [508,0,3040,3040]
         # 4056,3040
         if self.__digitalZoom == 1:
-            self.__cam.set_controls({"ScalerCrop": [2, 0, 4052, 3040]})
+            self.__cam.set_controls({"ScalerCrop": [508, 0, 3040, 3040]})
             return
-        swidth, sheight = (4052 - 2, 3040 - 0)
+        swidth, sheight = (3040 - 508, 3040 - 0)
         pwidth, pheight = swidth // self.__digitalZoom, sheight // self.__digitalZoom
-        offset = [int((swidth - pwidth) // 2) + 2, int((sheight - pheight) // 2)]
+        offset = [int((swidth - pwidth) // 2 + 508), int((sheight - pheight) // 2)]
         size = [int(pwidth), int(pheight)]
         self.__cam.set_controls({"ScalerCrop": offset + size})
 
@@ -165,6 +166,7 @@ class Cam:
         self.__lock.acquire()
         self.__cam.switch_mode(config)
         self.__setZoom()
+        time.sleep(0.2)
         request = self.__cam.capture_request()
         frame = request.make_array("main")
         if rotate:
@@ -192,14 +194,19 @@ class Cam:
         self.__lock.acquire()
         self.__cam.switch_mode(config)
         self.__lock.release()
+        self.__setZoom()
         self.exposureTime = exposeTime
+        time.sleep(0.5)
         self.__lock.acquire()
-        frame = self.__cam.capture_array()
+        request = self.__cam.capture_request()
+        frame = request.make_array("main")
+        metadata = request.get_metadata()
+        request.release()
         self.__cam.switch_mode(self.__pictConfig)
         self.__lock.release()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.exposureTime = 0
-        return frame
+        return metadata['ExposureTime'], frame
 
     def stop(self):
         self.__lock.acquire()

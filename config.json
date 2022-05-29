@@ -17,7 +17,7 @@
         "path": "./pict",
         "configFilePath": "./camConfig.json",
         "video_path": "./pict/video",
-        "video_bitrate": 10000000
+        "video_bitrate": 1000000
     },
     "gallery": {
         "configFilePath": "./galleryConfig.json",
@@ -38,6 +38,6 @@
         "alert_threshold": 3.1,
         "alert_pin": 28
     },
-    "debug_level": 1,
+    "debug_level": 0,
     "screenshot_path": "./pict/screenshot/"
 }

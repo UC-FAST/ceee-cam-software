@@ -87,12 +87,12 @@
             {
                 "content": "HDR Enable",
                 "type": "bool",
-                "value": false
+                "value": true
             },
             {
                 "content": "Lower",
                 "type": "numeral",
-                "value": 1000,
+                "value": 9000,
                 "min": 0,
                 "max": 200000,
                 "step": 1000,
@@ -105,10 +105,10 @@
             {
                 "content": "Upper",
                 "type": "numeral",
-                "value": 8000,
+                "value": 311000,
                 "min": 0,
                 "max": 1000000,
-                "step": 1000,
+                "step": 100000,
                 "stepOptions": [
                     1000,
                     10000,
@@ -118,12 +118,23 @@
             {
                 "content": "Stack Num",
                 "type": "option",
-                "value": 5,
+                "value": 10,
                 "options": [
                     3,
                     5,
                     10,
                     30
+                ]
+            },
+            {
+                "content": "Algorithm",
+                "type": "option",
+                "value": "EP Fusion",
+                "options": [
+                    "EP Fusion",
+                    "Drago",
+                    "Reinhard",
+                    "Mantiuk"
                 ]
             },
             {
@@ -139,7 +150,7 @@
             {
                 "content": "Auto Expose",
                 "type": "bool",
-                "value": false
+                "value": true
             },
             {
                 "content": "Expose Time",
@@ -149,7 +160,9 @@
                 "max": 1000000,
                 "step": 100,
                 "stepOptions": [
-                    100, 1000, 10000
+                    100,
+                    1000,
+                    10000
                 ]
             }
         ]

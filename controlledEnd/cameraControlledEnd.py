@@ -66,7 +66,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def __worker1(self):
         return {
             # "BAT {}v": round(self.__m.getBat(), 2),
-            "BAT {}%": round(self.__m.soc() * 100, 2),
+            "BAT {}%": int(self.__m.soc() * 100),
             "FPS {}": round(self.framePerSecond, 1),
             "MEM {}%": round((psutil.virtual_memory().used / psutil.virtual_memory().total) * 100, 2),
             "TEMP {}": psutil.sensors_temperatures()['cpu_thermal'][0].current,
@@ -168,14 +168,28 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     lower, upper, stackNum = self.__findOptionByContent('Lower'), self.__findOptionByContent(
                         'Upper'), self.__findOptionByContent('Stack Num')
                     step = (upper - lower) // stackNum
-                    frameList = list()
+                    exposureTimeList, frameList = list(), list()
                     for index, i in enumerate(range(lower, upper, step), start=1):
                         self.__toast.setText("{}/{}".format(index, stackNum))
-                        frameList.append(self.exposureCapture(i, int(width), int(height)))
+                        exposeTime, frame = self.exposureCapture(i, int(width), int(height))
+                        exposureTimeList.append(exposeTime / 1e6)
+                        frameList.append(frame)
+                        cv2.imwrite('./test/{}.png'.format(exposeTime), frame)
+                    print(lower, upper, step)
                     self.__toast.setText("Processing")
-                    hdrFrame = Hdr(
-                        frameList, self.__findOptionByContent('Correction')
-                    ).exposureFusion()
+                    algorithm = self.__findOptionByContent('Algorithm')
+                    hdr = Hdr(exposureTimeList, frameList, self.__findOptionByContent('Correction'))
+                    print(algorithm)
+                    if algorithm == 'Drago':
+                        hdrFrame = hdr.tonemapDrago()
+                    elif algorithm == 'Reinhard':
+                        hdrFrame = hdr.tonemapReinhard()
+                    elif algorithm == 'Mantiuk':
+                        hdrFrame = hdr.tonemapMantiuk()
+                    elif algorithm == 'EP Fusion':
+                        hdrFrame = hdr.exposureFusion()
+                    else:
+                        raise KeyError
                     cv2.imwrite(
                         os.path.join(
                             self.__config['camera']['path'],
@@ -290,5 +304,4 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
 
             if self.__isHdrProcessing:
                 self.__toast.decorate(frame, self.__rotate)
-
             yield frame
