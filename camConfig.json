@@ -41,26 +41,6 @@
                 "step": 1
             },
             {
-                "content": "Watermark",
-                "type": "bool",
-                "value": false
-            },
-            {
-                "content": "Save Metadata",
-                "type": "bool",
-                "value": false
-            },
-            {
-                "content": "DNG Enable",
-                "type": "bool",
-                "value": false
-            },
-            {
-                "content": "Save EXIF",
-                "type": "bool",
-                "value": false
-            },
-            {
                 "content": "Resolution",
                 "type": "option",
                 "value": "800x600",
@@ -83,6 +63,26 @@
                     "tiff",
                     "jpeg"
                 ]
+            },
+            {
+                "content": "Watermark",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "content": "Save Metadata",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "content": "DNG Enable",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "content": "Save EXIF",
+                "type": "bool",
+                "value": false
             }
         ]
     },
