@@ -49,6 +49,11 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__filter = SlidingWindowFilter(10)
         self.__frameList = queue.Queue()
 
+        if self.__findOptionByContent('Auto Expose'):
+            self.exposureTime = 0
+        else:
+            self.exposureTime = self.__findOptionByContent('Expose Time')
+
     def __worker2(self):
         return {
             "EPTime {}": self.metadata['ExposureTime'],
@@ -231,9 +236,13 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
-            self.__option[msg[0]]['options'][msg[1]] = msg[2]
             with open(self.__config['camera']['configFilePath'], 'w') as f:
                 json.dump(self.__option, f, indent=4)
+            if msg['content'] in ('Auto Expose', 'Expose Time'):
+                if self.__findOptionByContent('Auto Expose'):
+                    self.exposureTime = 0
+                else:
+                    self.exposureTime = self.__findOptionByContent('Expose Time')
 
     def centerPressAction(self):
         pass
@@ -247,7 +256,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self._msgSender(self._id, 'MenuControlledEnd', self.__option)
 
     def mainLoop(self):
-        for frame in self.preview():
+        for index, frame in enumerate(self.preview()):
             self.__filter.addData(self.frameQuality)
             self.__barChart.addData(int(self.__filter.calc()))
             if self.__decorateEnable and not self.__zoomHold:

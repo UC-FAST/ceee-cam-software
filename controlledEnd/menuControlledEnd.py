@@ -8,7 +8,7 @@ import numpy as np
 import wiringpi
 
 from components import configLoader
-from frameDecorator import colors
+from frameDecorator.colors import Colors
 from .controlledEnd import ControlledEnd
 
 
@@ -43,17 +43,17 @@ class MenuControlledEnd(ControlledEnd):
         self.__selectIndex = None
         self.__title = None
         self.__from = None
-        self.__routeList = list()
+        self.__routeList: typing.List[tuple] = list()
         self.__theme = {
-            'background': colors.Colors.black.value,
-            'cursor': colors.Colors.darkslategray.value,
-            'text': colors.Colors.white.value,
-            'boolTrue': colors.Colors.darkolivegreen.value,
-            'boolFalse': colors.Colors.darkred.value,
-            'numeral': colors.Colors.darkgoldenrod.value,
-            'msg': colors.Colors.gray.value,
-            'option': colors.Colors.palevioletred.value,
-            'irq': colors.Colors.darkorchid.value
+            'background': Colors.black.value,
+            'cursor': Colors.steelblue.value,
+            'text': Colors.white.value,
+            'boolTrue': Colors.darkolivegreen.value,
+            'boolFalse': Colors.darkred.value,
+            'numeral': Colors.darkgoldenrod.value,
+            'msg': Colors.gray.value,
+            'option': Colors.palevioletred.value,
+            'irq': Colors.darkorchid.value
         }
         if self.__optionList:
             self.__currentID = "0"
@@ -191,7 +191,9 @@ class MenuControlledEnd(ControlledEnd):
             temp[1] += self.__fontHeight + self.__spaceHeight
 
     def __jumpToPrevious(self):
-        self.__jumpByID(self.__routeList.pop(), record=False)
+        last = self.__routeList.pop()
+        self.__jumpByID(last[0], record=False)
+        self.__currentIndex = last[1]
 
     def select(self):
         t = self.__currentOptions[self.__currentIndex]['type'].lower()
@@ -201,11 +203,7 @@ class MenuControlledEnd(ControlledEnd):
             self._msgSender(
                 self._id,
                 self.__from,
-                (
-                    self.__currentID,
-                    self.__currentIndex + self.__rowCount * self.__currentPage,
-                    self.__currentOptions[self.__currentIndex]
-                )
+                self.__currentOptions[self.__currentIndex]
             )
         elif t == 'menu':
             self.__jumpByIndex(self.__currentIndex)
@@ -275,7 +273,7 @@ class MenuControlledEnd(ControlledEnd):
 
     def __jumpByID(self, target, record=True):
         if record:
-            self.__routeList.append(self.__currentID)
+            self.__routeList.append((self.__currentID, self.__currentIndex))
         self.__currentID = target
         self.__title = self.__optionList[self.__currentID].get('title', None)
         self.__options = self.__optionList[self.__currentID]['options']

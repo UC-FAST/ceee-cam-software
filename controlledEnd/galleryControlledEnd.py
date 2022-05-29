@@ -44,34 +44,22 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         pass
 
     def upPressAction(self):
-        try:
-            self.previous()
-        except IndexError:
-            return
+        self.previous()
         self.__refreshFrame()
         sleep(0.2)
 
     def downPressAction(self):
-        try:
-            self.next()
-        except IndexError:
-            return
+        self.next()
         self.__refreshFrame()
         sleep(0.2)
 
     def leftPressAction(self):
-        try:
-            self.previous()
-        except IndexError:
-            return
+        self.previous()
         self.__refreshFrame()
         sleep(0.2)
 
     def rightPressAction(self):
-        try:
-            self.next()
-        except IndexError:
-            return
+        self.next()
         self.__refreshFrame()
         sleep(0.2)
 
@@ -101,6 +89,14 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
             if msg == 'delete':
                 self.delete()
                 self.__refreshFrame()
+            elif msg == 'update':
+                self.update()
+            else:
+                with open(self.__config['gallery']['configFilePath'], 'w') as f:
+                    json.dump(self.__option, f, indent=4)
+
+    def update(self):
+        pass
 
     def __refreshFrame(self):
         if self.__currentFrame is not None:

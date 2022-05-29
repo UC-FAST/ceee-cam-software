@@ -50,7 +50,6 @@ class Cam:
         pwidth, pheight = swidth // self.__digitalZoom, sheight // self.__digitalZoom
         offset = [int((swidth - pwidth) // 2) + 2, int((sheight - pheight) // 2)]
         size = [int(pwidth), int(pheight)]
-        print(offset, size)
         self.__cam.set_controls({"ScalerCrop": offset + size})
 
     @property

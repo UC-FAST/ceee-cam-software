@@ -20,7 +20,11 @@
         "video_bitrate": 10000000
     },
     "gallery": {
-        "configFilePath": "./galleryConfig.json"
+        "configFilePath": "./galleryConfig.json",
+        "url": "https://microfish.club/api",
+        "params": {
+            "mode": "pictUpdate"
+        }
     },
     "screen": {
         "width": 128,

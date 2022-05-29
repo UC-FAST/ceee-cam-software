@@ -30,7 +30,6 @@ class Warining:
         except ZeroDivisionError:
             space = 0
         for index, _ in enumerate(textList):
-            print(self.__width // 10)
             cv2.putText(
                 self.__sketch,
                 _,

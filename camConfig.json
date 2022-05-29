@@ -25,7 +25,12 @@
             {
                 "content": "HDR",
                 "type": "menu",
-                "value": "HDR Menu"
+                "value": "hdr"
+            },
+            {
+                "content": "Expose",
+                "type": "menu",
+                "value": "expose"
             },
             {
                 "content": "Delay",
@@ -73,16 +78,10 @@
                     "tiff",
                     "jpeg"
                 ]
-            },
-            {
-                "content": "message",
-                "type": "msg",
-                "receiver": "GalleryControlledEnd",
-                "value": "delete"
             }
         ]
     },
-    "HDR Menu": {
+    "hdr": {
         "title": "HDR Menu",
         "options": [
             {
@@ -126,6 +125,27 @@
                     10,
                     30,
                     50
+                ]
+            }
+        ]
+    },
+    "expose": {
+        "title": "Expose",
+        "options": [
+            {
+                "content": "Auto Expose",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "content": "Expose Time",
+                "type": "numeral",
+                "value": 1000,
+                "min": 303,
+                "max": 1000000,
+                "step": 100,
+                "stepOptions": [
+                    100, 1000, 10000
                 ]
             }
         ]

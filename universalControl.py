@@ -218,6 +218,7 @@ class UniversalControl:
         if t < 0.09:
             return
         if t >= 2:
+            # self.__frameList.put()
             self.__logger.info('Poweroff')
             subprocess.run(['sudo', 'poweroff'])
         else:
