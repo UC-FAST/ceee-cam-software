@@ -74,12 +74,12 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             "FocusFoM {}": int(self.__filter.calc())
         }
 
-    def __findOptionByContent(self, key):
+    def __findOptionByID(self, key):
         for _ in self.__option.keys():
             if 'options' in self.__option[_].keys():
                 for j in self.__option[_]['options']:
-                    if 'content' in j.keys() and 'value' in j.keys():
-                        if j['content'] == key:
+                    if 'id' in j.keys() and 'value' in j.keys():
+                        if j['id'] == key:
                             return j['value']
         raise IndexError
 
@@ -132,7 +132,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if t >= 1:
             if self.__recordTimestamp is None:
                 try:
-                    width, height = tuple(self.__findOptionByContent('Resolution').split('x'))
+                    width, height = tuple(self.__findOptionByID('resolution').split('x'))
                 except ValueError:
                     width, height = 0, 0
                 self.startRecording(
@@ -157,16 +157,16 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 led.off(led.blue)
                 self.__recordTimestamp = None
             else:
-                if self.__findOptionByContent('HDR Enable'):
+                if self.__findOptionByID('HDR Enable'):
                     try:
-                        width, height = tuple(self.__findOptionByContent('Resolution').split('x'))
+                        width, height = tuple(self.__findOptionByID('resolution').split('x'))
                     except ValueError:
                         width, height = 0, 0
                     self.__isBusy = True
                     self.__isHdrProcessing = True
                     led.on(led.green)
-                    lower, upper, stackNum = self.__findOptionByContent('Lower'), self.__findOptionByContent(
-                        'Upper'), self.__findOptionByContent('Stack Num')
+                    lower, upper, stackNum = self.__findOptionByID('lower'), self.__findOptionByID(
+                        'upper'), self.__findOptionByID('stack num')
                     step = (upper - lower) // stackNum
                     exposureTimeList, frameList = list(), list()
                     for index, i in enumerate(range(lower, upper, step), start=1):
@@ -177,8 +177,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                         cv2.imwrite('./test/{}.png'.format(exposeTime), frame)
                     print(lower, upper, step)
                     self.__toast.setText("Processing")
-                    algorithm = self.__findOptionByContent('Algorithm')
-                    hdr = Hdr(exposureTimeList, frameList, self.__findOptionByContent('Correction'))
+                    algorithm = self.__findOptionByID('algorithm')
+                    hdr = Hdr(exposureTimeList, frameList, self.__findOptionByID('correction'))
                     print(algorithm)
                     if algorithm == 'Drago':
                         hdrFrame = hdr.tonemapDrago()
@@ -195,9 +195,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                             self.__config['camera']['path'],
                             "{}{}".format(
                                 int(time.time()),
-                                '{}'.format(self.__findOptionByContent('Pict Format'))
-                                if self.__findOptionByContent('Pict Format').startswith('.')
-                                else '.{}'.format(self.__findOptionByContent('Pict Format'))
+                                '{}'.format(self.__findOptionByID('pict format'))
+                                if self.__findOptionByID('pict format').startswith('.')
+                                else '.{}'.format(self.__findOptionByID('pict format'))
                             )
                         ),
                         hdrFrame
@@ -208,11 +208,11 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     self.__exposeSetting()
                 else:
                     try:
-                        width, height = tuple(self.__findOptionByContent('Resolution').split('x'))
+                        width, height = tuple(self.__findOptionByID('resolution').split('x'))
                     except ValueError:
                         width, height = 0, 0
 
-                    delay = self.__findOptionByContent('Delay')
+                    delay = self.__findOptionByID('delay')
                     for i in range(delay):
                         if delay - i <= 3:
                             led.toggleState(led.green)
@@ -230,15 +230,15 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                             self.__config['camera']['path'],
                             "{}{}".format(
                                 int(time.time()),
-                                '{}'.format(self.__findOptionByContent('Pict Format'))
-                                if self.__findOptionByContent('Pict Format').startswith('.')
-                                else '.{}'.format(self.__findOptionByContent('Pict Format'))
+                                '{}'.format(self.__findOptionByID('pict format'))
+                                if self.__findOptionByID('pict format').startswith('.')
+                                else '.{}'.format(self.__findOptionByID('pict format'))
                             )
                         ),
                         int(width), int(height),
                         self.__rotate,
-                        saveMetadata=self.__findOptionByContent("Save Metadata"),
-                        saveRaw=self.__findOptionByContent("DNG Enable")
+                        saveMetadata=self.__findOptionByID("save metadata"),
+                        saveRaw=self.__findOptionByID("dng enable")
                     )
                     led.off(led.green)
                     self.__isBusy = False
@@ -258,10 +258,10 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self._irq('MenuControlledEnd')
 
     def __exposeSetting(self):
-        if self.__findOptionByContent('Auto Expose'):
+        if self.__findOptionByID('auto expose'):
             self.exposureTime = 0
         else:
-            self.exposureTime = self.__findOptionByContent('Expose Time')
+            self.exposureTime = self.__findOptionByID('expose time')
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':

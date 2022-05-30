@@ -39,7 +39,7 @@ class MenuControlledEnd(ControlledEnd):
         self.__pageCount = 0
         self.__currentPage = 0
         self.__currentIndex = 0
-        self.__currentID = None
+        self.__currentMenuID = None
         self.__selectIndex = None
         self.__title = None
         self.__from = None
@@ -54,12 +54,14 @@ class MenuControlledEnd(ControlledEnd):
             'numeral': Colors.darkgoldenrod.value,
             'msg': Colors.gray.value,
             'option': Colors.palevioletred.value,
-            'irq': Colors.darkorchid.value
+            'irq': Colors.darkorchid.value,
+            'cursorDisable': Colors.darkgray.value,
+            'textDisable': Colors.gray.value
         }
         if self.__optionList:
-            self.__currentID = "0"
-            self.__title = self.__optionList[self.__currentID].get('title', None)
-            self.__options = self.__optionList[self.__currentID]['options']
+            self.__currentMenuID = "0"
+            self.__title = self.__optionList[self.__currentMenuID].get('title', None)
+            self.__options = self.__optionList[self.__currentMenuID]['options']
             self.__pageCount = math.ceil(len(self.__options) / self.__rowCount)
             self.__spaceCalc()
             self.__currentPage = 0
@@ -77,10 +79,10 @@ class MenuControlledEnd(ControlledEnd):
     @options.setter
     def options(self, optionList):
         self.__optionList = optionList
-        self.__currentID = "0"
+        self.__currentMenuID = "0"
         self.__routeList = list()
-        self.__title = self.__title = self.__optionList[self.__currentID].get('title', None)
-        self.__options = self.__optionList[self.__currentID]['options']
+        self.__title = self.__title = self.__optionList[self.__currentMenuID].get('title', None)
+        self.__options = self.__optionList[self.__currentMenuID]['options']
         self.__pageCount = math.ceil(len(self.__options) / self.__rowCount)
         self.__spaceCalc()
         self.__selectIndex = None
@@ -201,6 +203,21 @@ class MenuControlledEnd(ControlledEnd):
         if t == 'bool':
             self.__currentOptions[self.__currentIndex]['value'] = not self.__currentOptions[self.__currentIndex][
                 'value']
+            if 'setDisable' in self.__currentOptions[self.__currentIndex].keys():
+                shotList = list()
+                for i in self.__currentOptions[self.__currentIndex]['setDisable']:
+                    shotList.append(i)
+                for i in self.__options:
+                    if i['id'] in shotList:
+                        i['enable'] = not self.__currentOptions[self.__currentIndex]['value']
+
+            if 'setEnable' in self.__currentOptions[self.__currentIndex].keys():
+                shotList = list()
+                for i in self.__currentOptions[self.__currentIndex]['setEnable']:
+                    shotList.append(i)
+                for i in self.__options:
+                    if i['id'] in shotList:
+                        i['enable'] = self.__currentOptions[self.__currentIndex]['value']
             self._msgSender(
                 self._id,
                 self.__from,
@@ -235,6 +252,22 @@ class MenuControlledEnd(ControlledEnd):
         self.__selectIndex = None
 
     def upAction(self):
+        times = 1
+        for i in self.__options[self.__currentPage * self.__rowCount + self.__currentIndex-1::-1]:
+
+            enable = i.get('enable', True)
+            if not enable:
+                times += 1
+            else:
+                print(i)
+                break
+        else:
+            times = 0
+
+        for i in range(times):
+            self.upOneStep()
+
+    def upOneStep(self):
         if self.__currentPage == 0 and self.__currentIndex == 0:
             return
         elif self.__currentPage != 0 and self.__currentIndex == 0:
@@ -252,6 +285,20 @@ class MenuControlledEnd(ControlledEnd):
                                 ]
 
     def downAction(self):
+        times = 1
+        for i in self.__options[self.__currentPage * self.__rowCount + self.__currentIndex + 1:]:
+            enable = i.get('enable', True)
+            if not enable:
+                times += 1
+            else:
+                break
+        else:
+            times = 0
+
+        for i in range(times):
+            self.downOneStep()
+
+    def downOneStep(self):
         if self.__currentPage * self.__rowCount + self.__currentIndex + 1 == len(self.__options):
             return
         elif self.__currentIndex == self.__rowCount - 1:
@@ -273,10 +320,10 @@ class MenuControlledEnd(ControlledEnd):
 
     def __jumpByID(self, target, record=True):
         if record:
-            self.__routeList.append((self.__currentID, self.__currentIndex))
-        self.__currentID = target
-        self.__title = self.__optionList[self.__currentID].get('title', None)
-        self.__options = self.__optionList[self.__currentID]['options']
+            self.__routeList.append((self.__currentMenuID, self.__currentIndex))
+        self.__currentMenuID = target
+        self.__title = self.__optionList[self.__currentMenuID].get('title', None)
+        self.__options = self.__optionList[self.__currentMenuID]['options']
         self.__pageCount = math.ceil(len(self.__options) / self.__rowCount)
         self.__spaceCalc()
         self.__selectIndex = None
@@ -291,10 +338,9 @@ class MenuControlledEnd(ControlledEnd):
                 range(len(self.__currentOptions)),
                 self.__genItemStartCoordinate()
         ):
-            if index == self.__selectIndex:
-                color = self.__theme['cursor']
-            else:
-                color = self.__theme['text']
+            enable = self.__currentOptions[index].get('enable', True)
+            color = self.__theme['text'] if enable else self.__theme['textDisable']
+
             if self.__showIndex:
                 cv2.putText(
                     frame,
@@ -394,6 +440,8 @@ class MenuControlledEnd(ControlledEnd):
                 range(len(self.__currentOptions)),
                 self.__genItemStartCoordinate()
         ):
+            if not self.__currentOptions[index].get('enable', True):
+                continue
             if self.__currentIndex == index:
                 cv2.rectangle(
                     frame,
@@ -472,10 +520,8 @@ class MenuControlledEnd(ControlledEnd):
     def __drawCursor(self, frame):
         for index, i in enumerate(self.__genItemStartCoordinate()):
             if self.__currentIndex == index:
-                if self.__selectIndex is not None:
-                    color = self.__theme['text']
-                else:
-                    color = self.__theme['cursor']
+                enable = self.__currentOptions[index].get('enable', True)
+                color = self.__theme['cursor'] if enable else self.__theme['cursorDisable']
                 cv2.rectangle(
                     frame,
                     (

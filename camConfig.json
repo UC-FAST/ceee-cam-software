@@ -3,16 +3,19 @@
         "title": "Settings",
         "options": [
             {
+                "id": "camera settings",
                 "content": "Camera Settings",
                 "type": "menu",
                 "value": "Camera Settings"
             },
             {
+                "id": "gallery",
                 "content": "Gallery",
                 "type": "irq",
                 "value": "GalleryControlledEnd"
             },
             {
+                "id": "settings",
                 "content": "Settings",
                 "type": "menu",
                 "value": "2"
@@ -23,16 +26,19 @@
         "title": "Camera Settings",
         "options": [
             {
+                "id": "hdr",
                 "content": "HDR",
                 "type": "menu",
                 "value": "hdr"
             },
             {
+                "id": "expose",
                 "content": "Expose",
                 "type": "menu",
                 "value": "expose"
             },
             {
+                "id": "delay",
                 "content": "Delay",
                 "type": "numeral",
                 "value": 0,
@@ -41,6 +47,7 @@
                 "step": 1
             },
             {
+                "id": "resolution",
                 "content": "Resolution",
                 "type": "option",
                 "value": "800x600",
@@ -54,6 +61,7 @@
                 ]
             },
             {
+                "id": "pict format",
                 "content": "Pict Format",
                 "type": "option",
                 "value": "png",
@@ -65,21 +73,25 @@
                 ]
             },
             {
+                "id": "watermark",
                 "content": "Watermark",
                 "type": "bool",
                 "value": false
             },
             {
+                "id": "save metadata",
                 "content": "Save Metadata",
                 "type": "bool",
                 "value": false
             },
             {
+                "id": "dng enable",
                 "content": "DNG Enable",
                 "type": "bool",
                 "value": false
             },
             {
+                "id": "save exif",
                 "content": "Save EXIF",
                 "type": "bool",
                 "value": false
@@ -90,11 +102,15 @@
         "title": "HDR Menu",
         "options": [
             {
+                "id": "hdr enable",
                 "content": "HDR Enable",
                 "type": "bool",
-                "value": true
+                "value": true,
+                "setDisable": ["lower", "upper", "stack num", "algorithm"],
+                "setEnable": ["algorithm", "correction"]
             },
             {
+                "id": "lower",
                 "content": "Lower",
                 "type": "numeral",
                 "value": 9000,
@@ -105,9 +121,11 @@
                     1000,
                     10000,
                     100000
-                ]
+                ],
+                "enable": false
             },
             {
+                "id": "upper",
                 "content": "Upper",
                 "type": "numeral",
                 "value": 311000,
@@ -118,9 +136,11 @@
                     1000,
                     10000,
                     100000
-                ]
+                ],
+                "enable": true
             },
             {
+                "id": "stack num",
                 "content": "Stack Num",
                 "type": "option",
                 "value": 10,
@@ -129,9 +149,11 @@
                     5,
                     10,
                     30
-                ]
+                ],
+                "enable": true
             },
             {
+                "id": "algorithm",
                 "content": "Algorithm",
                 "type": "option",
                 "value": "EP Fusion",
@@ -140,12 +162,15 @@
                     "Drago",
                     "Reinhard",
                     "Mantiuk"
-                ]
+                ],
+                "enable": true
             },
             {
+                "id": "correction",
                 "content": "Correction",
                 "type": "bool",
-                "value": false
+                "value": false,
+                "enable": true
             }
         ]
     },
@@ -153,11 +178,13 @@
         "title": "Expose",
         "options": [
             {
+                "id": "auto expose",
                 "content": "Auto Expose",
                 "type": "bool",
                 "value": true
             },
             {
+                "id": "expose time",
                 "content": "Expose Time",
                 "type": "numeral",
                 "value": 1000,

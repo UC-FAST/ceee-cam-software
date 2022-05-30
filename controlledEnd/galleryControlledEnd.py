@@ -31,12 +31,12 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__rawFrame = None
         self.__from = None
 
-    def __findOptionByContent(self, key):
+    def __findOptionByID(self, key):
         for _ in self.__option.keys():
             if 'options' in self.__option[_].keys():
                 for j in self.__option[_]['options']:
-                    if 'content' in j.keys() and 'value' in j.keys():
-                        if j['content'] == key:
+                    if 'id' in j.keys() and 'value' in j.keys():
+                        if j['id'] == key:
                             return j['value']
         raise IndexError
 
@@ -64,7 +64,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         sleep(0.2)
 
     def __addHist(self):
-        if self.__findOptionByContent("Show Hist"):
+        if self.__findOptionByID("show hist"):
             self.__hist.decorate(self.__currentFrame)
         else:
             self.__currentFrame = self.__rawFrame.copy()
