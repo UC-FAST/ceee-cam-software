@@ -7,7 +7,6 @@ import numpy as np
 class Hdr:
     def __init__(self, timeList: list, imageList: list, correction=False):
         self.__exposureTimeList, self.__imageList = np.array(timeList, dtype=np.float32), imageList
-        print(self.__exposureTimeList)
         if correction:
             alignMTB = cv2.createAlignMTB()
             alignMTB.process(self.__imageList, self.__imageList)

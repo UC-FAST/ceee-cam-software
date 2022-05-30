@@ -32,10 +32,10 @@
                 "value": "hdr"
             },
             {
-                "id": "expose",
-                "content": "Expose",
+                "id": "exposure",
+                "content": "Exposure",
                 "type": "menu",
-                "value": "expose"
+                "value": "exposure"
             },
             {
                 "id": "delay",
@@ -106,8 +106,7 @@
                 "content": "HDR Enable",
                 "type": "bool",
                 "value": true,
-                "setDisable": ["lower", "upper", "stack num", "algorithm"],
-                "setEnable": ["algorithm", "correction"]
+                "setEnable": ["lower", "upper", "stack num", "algorithm", "algorithm", "correction"]
             },
             {
                 "id": "lower",
@@ -174,18 +173,19 @@
             }
         ]
     },
-    "expose": {
-        "title": "Expose",
+    "exposure": {
+        "title": "Exposure",
         "options": [
             {
                 "id": "auto expose",
                 "content": "Auto Expose",
                 "type": "bool",
-                "value": true
+                "value": true,
+                "setDisable": ["exposure time"]
             },
             {
-                "id": "expose time",
-                "content": "Expose Time",
+                "id": "exposure time",
+                "content": "Exposure Time",
                 "type": "numeral",
                 "value": 1000,
                 "min": 303,

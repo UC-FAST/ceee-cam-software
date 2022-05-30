@@ -261,13 +261,13 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if self.__findOptionByID('auto expose'):
             self.exposureTime = 0
         else:
-            self.exposureTime = self.__findOptionByID('expose time')
+            self.exposureTime = self.__findOptionByID('exposure time')
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
             with open(self.__config['camera']['configFilePath'], 'w') as f:
                 json.dump(self.__option, f, indent=4)
-            if msg['content'] in ('Auto Expose', 'Expose Time'):
+            if msg['id'] in ('auto expose', 'exposure time'):
                 self.__exposeSetting()
 
     def centerPressAction(self):
