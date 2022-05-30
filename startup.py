@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 
-from components import screen, configLoader
 import universalControl
+from components import screen, configLoader
 from controlledEnd import MenuControlledEnd, GalleryControlledEnd, CameraControlledEnd
 
 l = screen.Lcd()

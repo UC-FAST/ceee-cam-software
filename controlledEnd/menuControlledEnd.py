@@ -253,7 +253,7 @@ class MenuControlledEnd(ControlledEnd):
 
     def upAction(self):
         times = 1
-        for i in self.__options[self.__currentPage * self.__rowCount + self.__currentIndex-1::-1]:
+        for i in self.__options[self.__currentPage * self.__rowCount + self.__currentIndex - 1::-1]:
             enable = i.get('enable', True)
             if not enable:
                 times += 1

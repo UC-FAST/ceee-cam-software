@@ -7,13 +7,16 @@
 Python版本：3.9.2
 
 # 准备工作：
+
 ```
 sudo apt update
 sudo apt install python3-libcamera python3-kms++ libatlas-base-dev raspberrypi-ui-mods ffmpeg
 ```
+
 ```
 pip3 install -r requirements.txt
 ```
+
 ```
 cd ~
 git clone https://github.com/raspberrypi/picamera2.git
@@ -21,6 +24,7 @@ export PYTHONPATH=/home/pi/picamera2
 ```
 
 # universalControl.UniversalControl
+
 类universalControl.UniversalControl起到控制与协调本项目运行的作用，是程序主循环的入口
 
 ```
@@ -30,11 +34,12 @@ self, lcd: screen.Lcd, controlledEndList: List[controlledEnd.ControlledEnd]):
 
 # 摄像头类 picam2.cam
 
-
 类cam.camera用于创建摄像头句柄并录制图像，是cv2.VideoCapture的封装
+
 ```
 camera(self, camid=0, width=128, height=128)
 ```
+
 类的初始化函数
 
 参数：
@@ -47,11 +52,13 @@ height：期望输出的图像高度
 ```
 camera.preview(self)
 ```
+
 图像采集生成器函数，返回摄像头采集到的画面
 
 ```
 camera.saveFrame(self, filePath):
 ```
+
 保存当前的下一帧到磁盘，成功返回1，不成功返回0
 
 参数：
@@ -61,6 +68,7 @@ filePath：保存文件路径
 ```
 camera.rotate(self,angle)
 ```
+
 旋转图像
 
 参数：
@@ -70,19 +78,23 @@ angle：旋转角度
 ```
 camera.zoom(self,zoom)
 ```
+
 放大图像
 
 参数：
 
 zoom：放大系数，当系数输入小于1时不产生变化
+
 ```
 camera.release(self)
 ```
+
 释放摄像头资源
 
 ```
 camera.revive(self)
 ```
+
 重新获取摄像头资源
 
 ```
@@ -94,25 +106,31 @@ camera.frameQuality
 ```
 camera.framePerSecond
 ```
+
 摄像机帧率 只读
 
 ```
 camera.frameWidth
 ```
+
 图像宽度
 
 ```
 camera.frameHeight
 ```
+
 图像高度
 
 
 
 ----
+
 # 帧渲染模块 frameDecorator:
+
 frameDecorator用于将文字和菜单等添加至OpenCV传入的帧中。
 
 ## 简单文本类 frameDecorator.SimpleText
+
 frameDecorator.SimpleText是一个可以自动根据显示区域大小排版的用于显示单列文字的类，是cv2.putText的封装。
 
 ![SimpleText](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/SimpleText.png "SimpleText")
@@ -128,6 +146,7 @@ frameDecorator.SimpleText(
     thickness: float = 1
 )
 ```
+
 类的初始化函数
 
 参数：
@@ -144,15 +163,16 @@ color：字体颜色，BGR格式。该参数将被直接赋值给cv2.putText的c
 
 thickness: 字体粗细。该参数将被直接赋值给cv2.putText的thickness参数
 
-
 ```
 SimpleText.nextPage(self)
 ```
+
 用于选取函数列表中的下一个函数。当执行函数前已经是最后一个函数时，执行此方法可跳回第一个函数
 
 ```
 SimpleText.setPage(self, page: int):
 ```
+
 选取指定位置的函数
 
 参数：
@@ -162,6 +182,7 @@ page：函数在函数列表中的位置，当page超出函数列表的范围时
 ```
 SimpleText.decorate(self, frame)
 ```
+
 渲染一帧OpenCV的图像
 
 参数：
@@ -171,6 +192,7 @@ frame：OpenCV的图像数组
 ----
 
 ## 菜单类 frameDecorator.DialogBox
+
 类frameDecorator.DialogBox是一个可以自动根据显示区域大小排版的用于显示菜单的类，是cv2.putText和cv2.rectangle的封装。
 
 ![DialogBox](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/DialogBox.png "DialogBox")
@@ -190,10 +212,10 @@ frameDecorator.DialogBox(
                  
 )
 ```
+
 类的初始化函数
 
 参数：
-
 
 width：显示窗口的宽度
 
@@ -218,6 +240,7 @@ thickness: 字体粗细。该参数将被直接赋值给cv2.putText的thickness�
 ```
 DialogBox.setIndex(self, index:int):
 ```
+
 选取指定选项的函数
 
 参数：
@@ -227,8 +250,8 @@ index：选项在选项列表中的位置，当当options为None时或index超�
 ```
 DialogBox.getCurrentIndex(self)
 ```
-返回当前光标指向的选项在选项列表中的位置，从0开始。当options为None时产生IndexError
 
+返回当前光标指向的选项在选项列表中的位置，从0开始。当options为None时产生IndexError
 
 ```
 DialogBox.optionUp(self)
@@ -236,11 +259,13 @@ DialogBox.optionDown(self)
 DialogBox.optionRight(self)
 DialogBox.optionLeft(self)
 ```
+
 用于控制光标的运动方向，在光标超出边界时不产生任何效果
 
 ```
 DialogBox.decorate(self, frame)
 ```
+
 渲染一帧OpenCV的图像
 
 参数：
@@ -262,6 +287,7 @@ DialogBox.title
 ---
 
 ## 柱状图类 frameDecorator.BarChart
+
 类frameDecorator.BarChart是一个可以叠加在现有图像上的滚动柱状图显示类，是cv2.rectangle的封装。其内部维护了一个队列用于保存数据。
 
 ![BarChart](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/BarChart.png "BarChart")
@@ -279,6 +305,7 @@ frameDecorator.BarChart(
     alpha: float = 1
 )
 ```
+
 类的初始化函数
 
 参数：
@@ -303,6 +330,7 @@ alpha：柱状图透明度，范围0~1，为1时不透明
 BarChart.addData(self, data):
 
 ```
+
 向队列中添加数据
 参数：
 
@@ -311,6 +339,7 @@ data：添加的数据
 ```
 BarChart.decorate(self, frame):
 ```
+
 渲染一帧OpenCV的图像
 
 参数：
@@ -320,10 +349,11 @@ frame：OpenCV的图像数组
 ```
 BarChart.dataList
 ```
+
 数据列表，可将其他列表直接赋值。列表长度大于maxSize时会进行抽样。
 
-
 ## 帧直方图类 frameDecorator.Hist
+
 类frameDecorator.Hist是一个可以叠加在现有图像上的图像色彩直方图显示类，是cv2.rectangle的封装。渲染速度较慢，不建议用于……场合中
 
 ![Hist](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Hist.png "Hist")
@@ -339,6 +369,7 @@ frameDecorator.Hist(
     alpha: float = 1
 ):
 ```
+
 类的初始化函数
 
 参数：
@@ -358,6 +389,7 @@ alpha：柱状图透明度，范围0~1，为1时不透明
 ```
 BarChart.decorate(self, frame):
 ```
+
 渲染一帧OpenCV的图像
 
 参数：
@@ -365,9 +397,12 @@ BarChart.decorate(self, frame):
 frame：OpenCV的图像数组
 
 -----
+
 ## Busy frameDecorator.Busy
+
 类frameDecorator.Busy用于在图像的右上角绘制一个小方块表示程序正忙，是cv2.rectangle的封装。
 ![Busy](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/Busy.png "Busy")
+
 ```
 frameDecorator.Busy(
     self, 
@@ -376,6 +411,7 @@ frameDecorator.Busy(
     color=(0, 0, 255)
     ):
 ```
+
 类的初始化函数
 
 参数：
@@ -399,9 +435,11 @@ frame：OpenCV的图像数组
 ---
 
 ## 注入灵魂 frameDecorator.WaterMark
+
 加水印！
 
 ![WaterMark](https://github.com/UC-FAST/CEEE-HQ-CAMERA/blob/main/pict/WaterMark.png "WaterMark")
+
 ```
 frameDecorator.WaterMark(
     self, 
@@ -410,6 +448,7 @@ frameDecorator.WaterMark(
     fontHeight=0
     )
 ```
+
 类的初始化函数
 
 参数
@@ -423,6 +462,7 @@ fontHeight：字体高度，单位像素，为0时自动调整
 ```
 WaterMark.decorate(self, frame):
 ```
+
 渲染一帧OpenCV的图像
 
 参数：
@@ -431,13 +471,14 @@ frame：OpenCV的图像数组
 
 ----
 
+# Lcd类 screen.Lcd:
 
-#  Lcd类 screen.Lcd:
 类Lcd用于初始化屏幕并显示固定图像，在spi通信频率为17500000Hz、传入的图像为opencv生成时至少可达到30fps的显示帧率。（好用到哭）
 
 ```
 screen.Lcd(self, width=128, height=128, ScanDir=ScanDir.R2L_D2U):
 ```
+
 类的初始化函数
 
 参数：
@@ -451,29 +492,35 @@ ScanDir：刷新方向，见[screen.ScanDir](#ScanDir)
 ```
 Lcd.backlight(self, state: bool)
 ```
+
 背光开关
 
 参数：
 
 state：背光控制
+
 ```
 Lcd.reset(self)
 ```
+
 屏幕重置
 
 ```
 Lcd.init(self)
 ```
+
 屏幕初始化
 
 ```
 Lcd.clear(self)
 ```
+
 清屏
 
 ```
 showImage(self, image)
 ```
+
 显示一张图像
 
 参数：
@@ -483,6 +530,7 @@ image：图像数组，可以由PIL（有性能问题）或者opencv生成
 ------
 
 # 屏幕刷新方向<span id="ScanDir">screen.ScanDir</span>
+
 设置屏幕的刷新方向
 
 ```ScanDir.L2R_U2D```
@@ -517,18 +565,22 @@ image：图像数组，可以由PIL（有性能问题）或者opencv生成
 
 从下到上，从右到左
 
-
 # 设置开机自启动
+
 * 按需修改cam.service
 * 执行
+
 ```
 sudo cp cam.service /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
+
 * 检查是否能正常执行
+
 ```
 sudo systemctl start cam
 ```
+
 若无报错，进入下一步
 
 ```

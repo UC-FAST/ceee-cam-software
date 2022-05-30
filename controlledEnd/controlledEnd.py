@@ -78,7 +78,7 @@ class ControlledEnd(abc.ABC):
     def onExit(self):
         pass
 
-    def onEnter(self,lastID):
+    def onEnter(self, lastID):
         pass
 
     @property

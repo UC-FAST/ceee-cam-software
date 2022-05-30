@@ -21,7 +21,6 @@ class Cam:
             main={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
             lores={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
         )
-
         self.__cam.configure(self.__pictConfig)
         self.__encoder = H264Encoder(self.__config['camera']['video_bitrate'])
         self.__lock = threading.Lock()

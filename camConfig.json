@@ -106,7 +106,7 @@
                 "content": "HDR Enable",
                 "type": "bool",
                 "value": true,
-                "setEnable": ["lower", "upper", "stack num", "algorithm", "algorithm", "correction"]
+                "setE nable": ["lower", "upper", "stack num", "algorithm", "algorithm", "correction"]
             },
             {
                 "id": "lower",
