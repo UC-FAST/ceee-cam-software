@@ -38,6 +38,6 @@
         "alert_threshold": 3.1,
         "alert_pin": 28
     },
-    "debug_level": 0,
+    "debug_level": 1,
     "screenshot_path": "./pict/screenshot/"
 }

@@ -175,11 +175,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                         exposureTimeList.append(exposeTime / 1e6)
                         frameList.append(frame)
                         cv2.imwrite('./test/{}.png'.format(exposeTime), frame)
-                    print(lower, upper, step)
                     self.__toast.setText("Processing")
                     algorithm = self.__findOptionByID('algorithm')
                     hdr = Hdr(exposureTimeList, frameList, self.__findOptionByID('correction'))
-                    print(algorithm)
                     if algorithm == 'Drago':
                         hdrFrame = hdr.tonemapDrago()
                     elif algorithm == 'Reinhard':
@@ -248,6 +246,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         while wiringpi.digitalRead(self.__config['pin']['triangle']) and t < 1:
             t += 0.01
             time.sleep(0.01)
+
+        print('triangle {} {} {} {}'.format(t, self.__decorateEnable, self.__recordTimestamp, self.__isBusy))
         if t < 0.09:
             return
         if t >= 1:

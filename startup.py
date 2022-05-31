@@ -11,7 +11,8 @@ m = MenuControlledEnd(
     showPreview=True,
     rowCount=4,
     showIndex=True,
-    fontHeight=10
+    fontHeight=10,
+    padding=(5, 5, 5, 5)
 )
 
 debugLevel = configLoader.ConfigLoader('./config.json')['debug_level']

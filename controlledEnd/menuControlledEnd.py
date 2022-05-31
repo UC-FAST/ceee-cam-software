@@ -685,7 +685,7 @@ class MenuControlledEnd(ControlledEnd):
             'value']
         options: list = self.__currentOptions[self.__currentIndex]['options']
         selectIndex = options.index(value)
-        for index, i in enumerate(self.__genItemStartCoordinate(itemCount=5, ignoreTitle=True)):
+        for index, i in enumerate(self.__genItemStartCoordinate(itemCount=self.__rowCount + 1, ignoreTitle=True)):
             if index == 0:
                 cv2.putText(
                     frame,
