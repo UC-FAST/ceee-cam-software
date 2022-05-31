@@ -639,6 +639,8 @@ class MenuControlledEnd(ControlledEnd):
                 )
 
             elif index == 2:
+                if isinstance(value, float):
+                    value = round(value, 2)
                 cv2.putText(
                     frame,
                     str(value),

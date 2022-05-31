@@ -105,8 +105,15 @@
                 "id": "hdr enable",
                 "content": "HDR Enable",
                 "type": "bool",
-                "value": true,
-                "setE nable": ["lower", "upper", "stack num", "algorithm", "algorithm", "correction"]
+                "value": false,
+                "setEnable": [
+                    "lower",
+                    "upper",
+                    "stack num",
+                    "algorithm",
+                    "algorithm",
+                    "correction"
+                ]
             },
             {
                 "id": "lower",
@@ -136,7 +143,7 @@
                     10000,
                     100000
                 ],
-                "enable": true
+                "enable": false
             },
             {
                 "id": "stack num",
@@ -149,7 +156,7 @@
                     10,
                     30
                 ],
-                "enable": true
+                "enable": false
             },
             {
                 "id": "algorithm",
@@ -162,14 +169,14 @@
                     "Reinhard",
                     "Mantiuk"
                 ],
-                "enable": true
+                "enable": false
             },
             {
                 "id": "correction",
                 "content": "Correction",
                 "type": "bool",
                 "value": false,
-                "enable": true
+                "enable": false
             }
         ]
     },
@@ -181,7 +188,9 @@
                 "content": "Auto Expose",
                 "type": "bool",
                 "value": true,
-                "setDisable": ["exposure time"]
+                "setDisable": [
+                    "exposure time"
+                ]
             },
             {
                 "id": "exposure time",
@@ -195,7 +204,31 @@
                     100,
                     1000,
                     10000
+                ],
+                "enable": false
+            },
+            {
+                "id": "auto analog",
+                "content": "Auto Analog",
+                "type": "bool",
+                "value": true,
+                "setDisable": [
+                    "analog gain"
                 ]
+            },
+            {
+                "id": "analog gain",
+                "content": "Analog Gain",
+                "type": "numeral",
+                "value": 16.700000000000003,
+                "min": 0,
+                "max": 20,
+                "step": 1,
+                "stepOptions": [
+                    0.1,
+                    1
+                ],
+                "enable": false
             }
         ]
     }

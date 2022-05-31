@@ -5,11 +5,11 @@ import time
 
 import cv2
 import numpy as np
-
 import picamera2
 from picamera2 import YUV420_to_RGB
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
+
 from . import configLoader
 
 
@@ -54,31 +54,21 @@ class Cam:
 
     @property
     def framePerSecond(self):
-        '''if self.__metadata is None:
-            return 0
-        return 1 / self.__metadata['FrameDuration'] * 10e5'''
         return self.__framePerSecond
 
-    @property
+    '''@property
     def exposureTime(self):
         try:
             return self.__metadata['ExposureTime']
         except TypeError:
-            return None
+            return None'''
 
-    @exposureTime.setter
-    def exposureTime(self, value):
+    def setExposure(self, exposureTime, analogGain):
         self.__lock.acquire()
-        if value != 0:
-            self.__cam.set_controls({
-                "ExposureTime": int(value),
-                'AnalogueGain': 1
-            })
-        else:
-            self.__cam.set_controls({
-                "ExposureTime": 0,
-                'AnalogueGain': 0,
-            })
+        self.__cam.set_controls({
+            "ExposureTime": exposureTime,
+            'AnalogueGain': analogGain,
+        })
         self.__lock.release()
 
     @property
@@ -92,12 +82,6 @@ class Cam:
         return self.__metadata
 
     def preview(self):
-        '''
-        ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__',
-         '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
-         '__subclasshook__', '__weakref__', 'acquire', 'configure_count', 'get_metadata', 'lock', 'make_array', 'make_buffer', 'make_image', 'picam2', 'ref_count', 'release', 'request', 'save', 'save_dng', 'stop_count']
-        '''
-
         present, t = 0, 0
         while True:
             self.__lock.acquire()

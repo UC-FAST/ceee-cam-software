@@ -157,7 +157,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 led.off(led.blue)
                 self.__recordTimestamp = None
             else:
-                if self.__findOptionByID('HDR Enable'):
+                if self.__findOptionByID('hdr enable'):
                     try:
                         width, height = tuple(self.__findOptionByID('resolution').split('x'))
                     except ValueError:
@@ -259,15 +259,20 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
 
     def __exposeSetting(self):
         if self.__findOptionByID('auto expose'):
-            self.exposureTime = 0
+            exposure = 0
         else:
-            self.exposureTime = self.__findOptionByID('exposure time')
+            exposure = self.__findOptionByID('exposure time')
+        if self.__findOptionByID('auto analog'):
+            analog = 0
+        else:
+            analog = self.__findOptionByID('analog gain')
+        self.setExposure(exposure, analog)
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
             with open(self.__config['camera']['configFilePath'], 'w') as f:
                 json.dump(self.__option, f, indent=4)
-            if msg['id'] in ('auto expose', 'exposure time'):
+            if msg['id'] in ('auto expose', 'exposure time', 'auto analog', 'analog gain'):
                 self.__exposeSetting()
 
     def centerPressAction(self):
