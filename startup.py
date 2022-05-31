@@ -16,11 +16,10 @@ m = MenuControlledEnd(
 )
 
 debugLevel = configLoader.ConfigLoader('./config.json')['debug_level']
-
 u = universalControl.UniversalControl(
     l,
     [
-        CameraControlledEnd(verbose_console=debugLevel),
+        CameraControlledEnd(verbose_console=debugLevel, tuningFilePath='./tuning/imx477.json'),
         m,
         GalleryControlledEnd()
     ]

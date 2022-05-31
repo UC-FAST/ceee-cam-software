@@ -29,7 +29,6 @@ class Cam:
         self.__height = self.__config['screen']['height']
         self.__digitalZoom = 1
         self.__metadata = None
-        self.__cam.set_controls({"AeEnable": False, "ExposureTime": 11544})
         self.__frame = np.zeros((self.__height, self.__width, 3), np.uint8)
         self.__cam.start_preview()
         self.__cam.start()

@@ -5,6 +5,7 @@ import time
 import typing
 
 import cv2
+import picamera2
 import psutil
 import wiringpi
 
@@ -15,8 +16,13 @@ from . import controlledEnd
 
 
 class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
-    def __init__(self, _id='CameraControlledEnd', verbose_console=None, tuning=None):
+    def __init__(self, _id='CameraControlledEnd', verbose_console=None, tuningFilePath=None):
         controlledEnd.ControlledEnd.__init__(self, _id)
+        if tuningFilePath:
+            with open(tuningFilePath, 'r') as f:
+                tuning = json.load(f)
+        else:
+            tuning = None
         picam2.Cam.__init__(self, verbose_console=verbose_console, tuning=tuning)
         self.__zoom = 1
         self.__config = configLoader.ConfigLoader('./config.json')
