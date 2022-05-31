@@ -1,5 +1,6 @@
 import json
 import queue
+import time
 import typing
 from time import sleep
 
@@ -15,10 +16,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
     def __init__(self, _id='GalleryControlledEnd', width=128, height=128):
         controlledEnd.ControlledEnd.__init__(self, _id)
         self.__config = configLoader.ConfigLoader('./config.json')
-        try:
-            galleryBrowser.GalleryBrowser.__init__(self, self.__config['camera']['path'], width, height)
-        except FileNotFoundError:
-            pass
+        galleryBrowser.GalleryBrowser.__init__(self, self.__config['camera']['path'], width, height)
         self.__width, self.__height = width, height
         self.__direction = 0
         with open(self.__config['gallery']['configFilePath']) as f:
@@ -118,13 +116,13 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__frameList.put(self.__currentFrame)
 
     def onExit(self):
-        self.__frameList.put(self.__currentFrame)
+        self.__frameList.put(frameDecorator.Warining().decorate("Empty"))
 
     def onEnter(self, lastID):
         try:
             self.refreshPictList()
+            self.__from = lastID
+            self._msgSender(self._id, "MenuControlledEnd", self.__option)
+            self.__refreshFrame()
         except FileNotFoundError:
-            self._irq(lastID)
-        self.__from = lastID
-        self.__refreshFrame()
-        self._msgSender(self._id, "MenuControlledEnd", self.__option)
+            self.__frameList.put(frameDecorator.Warining().decorate("Empty"))
