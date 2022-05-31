@@ -407,7 +407,7 @@ class MenuControlledEnd(ControlledEnd):
         elif t == 'menu':
             return
         else:
-            raise KeyError('Unrecognized Type {}'.format(t))
+            raise TypeError(t)
 
         coordinate = (
             (
@@ -489,7 +489,7 @@ class MenuControlledEnd(ControlledEnd):
                     value = round(value, 2)
                 backgroundColor = self.__theme[t]
             else:
-                raise KeyError('Unrecognized Type {}'.format(t))
+                raise TypeError(t)
 
             cv2.rectangle(
                 frame,
@@ -690,7 +690,10 @@ class MenuControlledEnd(ControlledEnd):
             'value']
         options: list = self.__currentOptions[self.__currentIndex]['options']
         selectIndex = options.index(value)
-        for index, i in enumerate(self.__genItemStartCoordinate(itemCount=self.__rowCount + 1, ignoreTitle=True)):
+        for _, (index, i) in zip(
+                range(len(self.__currentOptions[self.__currentIndex]['options']) + 1),
+                enumerate(self.__genItemStartCoordinate(itemCount=self.__rowCount + 1, ignoreTitle=True))
+        ):
             if index == 0:
                 cv2.putText(
                     frame,

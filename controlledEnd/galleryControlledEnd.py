@@ -38,7 +38,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
                     if 'id' in j.keys() and 'value' in j.keys():
                         if j['id'] == target:
                             return j['value']
-        raise IndexError
+        raise LookupError('target')
 
     def centerPressAction(self):
         pass

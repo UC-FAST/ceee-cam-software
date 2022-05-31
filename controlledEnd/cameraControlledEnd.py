@@ -87,7 +87,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     if 'id' in j.keys() and 'value' in j.keys():
                         if j['id'] == target:
                             return j['value']
-        raise IndexError(target)
+        raise LookupError(target)
 
     def upPressAction(self):
         if self.__decorateEnable:
@@ -193,7 +193,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     elif algorithm == 'EP Fusion':
                         hdrFrame = hdr.exposureFusion()
                     else:
-                        raise KeyError
+                        raise LookupError(algorithm)
                     cv2.imwrite(
                         os.path.join(
                             self.__config['camera']['path'],

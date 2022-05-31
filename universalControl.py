@@ -92,7 +92,7 @@ class UniversalControl:
                 self.__controlledEndList[oldRights].onExit()
                 break
         else:
-            raise IndexError(_id)
+            raise LookupError(_id)
 
     @exceptionRecorder()
     def __msgSender(self, sender: str, receiver: str, msg):
@@ -103,7 +103,7 @@ class UniversalControl:
                 widget.msgReceiver(sender, msg)
                 break
         else:
-            raise IndexError
+            raise LookupError(receiver)
 
     @exceptionRecorder()
     def showImageInAnotherThread(self, imgList: list):
