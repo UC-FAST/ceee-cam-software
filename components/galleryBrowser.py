@@ -77,7 +77,6 @@ class GalleryBrowser:
         return self
 
     def __loadImgInAnotherThread(self, pos, index):
-
         self.__cache[pos] = (
             index,
             cv2.resize(
