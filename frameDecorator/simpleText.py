@@ -1,3 +1,4 @@
+from collections import Iterable
 from math import ceil
 
 import cv2
@@ -44,18 +45,29 @@ class SimpleText:
         sketch = np.zeros(frame.shape, np.uint8)
         widget = self.funcList[self.__index]()
         totalHeight = self.__height - self.__padding[1] - self.__padding[3]
-        textCount = len(widget.keys())
+        textCount = len(widget)
         spaceCount = 1 if textCount == 1 else textCount - 1
         step = ceil((totalHeight - textCount * self.__fontHeight) / spaceCount)
-        for index, key in enumerate(widget.keys()):
-            cv2.putText(
-                sketch,
-                key.format(widget[key]),
-                (self.__padding[0], self.__padding[1] + index * (step + self.__fontHeight)),
-                cv2.FONT_ITALIC,
-                self.__fontSize,
-                self.__color,
-                self.__thickness
-            )
+        for index, (key, value) in enumerate(widget.items()):
+            if isinstance(value, Iterable):
+                cv2.putText(
+                    sketch,
+                    key.format(*tuple(value)),
+                    (self.__padding[0], self.__padding[1] + index * (step + self.__fontHeight)),
+                    cv2.FONT_ITALIC,
+                    self.__fontSize,
+                    self.__color,
+                    self.__thickness
+                )
+            else:
+                cv2.putText(
+                    sketch,
+                    key.format(value),
+                    (self.__padding[0], self.__padding[1] + index * (step + self.__fontHeight)),
+                    cv2.FONT_ITALIC,
+                    self.__fontSize,
+                    self.__color,
+                    self.__thickness
+                )
         sketch = np.rot90(sketch, -rotate // 90)
         cv2.addWeighted(sketch, 1, frame, 1, 0, frame)

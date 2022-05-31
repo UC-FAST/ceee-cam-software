@@ -33,12 +33,6 @@
                 "value": "hdr"
             },
             {
-                "id": "exposure",
-                "content": "Exposure",
-                "type": "menu",
-                "value": "exposure"
-            },
-            {
                 "id": "delay",
                 "content": "Delay",
                 "type": "numeral",
@@ -46,6 +40,17 @@
                 "min": 0,
                 "max": 30,
                 "step": 1
+            },
+            {
+                "id": "exposure",
+                "content": "Exposure",
+                "type": "menu",
+                "value": "exposure"
+            },
+            {
+                "content": "Color Gains",
+                "type": "menu",
+                "value": "color gains"
             },
             {
                 "id": "resolution",
@@ -216,16 +221,60 @@
                 "type": "bool",
                 "value": true,
                 "setDisable": [
-                    "analog gain"
+                    "analogue gain"
                 ]
             },
             {
-                "id": "analog gain",
-                "content": "Analog Gain",
+                "id": "analogue gain",
+                "content": "Analogue Gain",
                 "type": "numeral",
-                "value": 16.700000000000003,
+                "value": 20,
                 "min": 0,
-                "max": 20,
+                "max": 23,
+                "step": 1,
+                "stepOptions": [
+                    0.1,
+                    1,
+                    10
+                ],
+                "enable": false
+            }
+        ]
+    },
+    "color gains": {
+        "title": "Color Gains",
+        "options": [
+            {
+                "id": "color gains",
+                "content": "Auto Gains",
+                "type": "bool",
+                "value": true,
+                "setDisable": [
+                    "red gain",
+                    "blue gain"
+                ]
+            },
+            {
+                "id": "red gain",
+                "content": "Red Gain",
+                "type": "numeral",
+                "value": 4,
+                "min": 0.1,
+                "max": 10,
+                "step": 1,
+                "stepOptions": [
+                    0.1,
+                    1
+                ],
+                "enable": false
+            },
+            {
+                "id": "blue gain",
+                "content": "Blue Gain",
+                "type": "numeral",
+                "value": 10,
+                "min": 0.1,
+                "max": 10,
                 "step": 1,
                 "stepOptions": [
                     0.1,

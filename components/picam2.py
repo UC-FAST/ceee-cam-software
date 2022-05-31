@@ -29,6 +29,7 @@ class Cam:
         self.__height = self.__config['screen']['height']
         self.__digitalZoom = 1
         self.__metadata = None
+
         self.__frame = np.zeros((self.__height, self.__width, 3), np.uint8)
         self.__cam.start_preview()
         self.__cam.start()
@@ -56,20 +57,16 @@ class Cam:
     def framePerSecond(self):
         return self.__framePerSecond
 
-    '''@property
-    def exposureTime(self):
-        try:
-            return self.__metadata['ExposureTime']
-        except TypeError:
-            return None'''
-
-    def setExposure(self, exposureTime, analogGain):
+    def setExposure(self, exposureTime, analogueGain):
         self.__lock.acquire()
         self.__cam.set_controls({
             "ExposureTime": exposureTime,
-            'AnalogueGain': analogGain,
+            'AnalogueGain': analogueGain,
         })
         self.__lock.release()
+
+    def setColourGains(self, red, blue):
+        self.__cam.set_controls({"ColourGains": (red, blue)})
 
     @property
     def frameQuality(self):

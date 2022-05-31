@@ -51,6 +51,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__frameList = queue.SimpleQueue()
 
         self.__exposeSetting()
+        self.__colourGainsSetting()
 
     def __worker2(self):
         return {
@@ -66,7 +67,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def __worker1(self):
         return {
             # "BAT {}v": round(self.__m.getBat(), 2),
-            "BAT {}%": int(self.__m.soc() * 100),
+            "BAT {}v": round(self.__m.getBat(), 2),
             "FPS {}": round(self.framePerSecond, 1),
             "MEM {}%": round((psutil.virtual_memory().used / psutil.virtual_memory().total) * 100, 2),
             "TEMP {}": psutil.sensors_temperatures()['cpu_thermal'][0].current,
@@ -74,14 +75,14 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             "FocusFoM {}": int(self.__filter.calc())
         }
 
-    def __findOptionByID(self, key):
-        for _ in self.__option.keys():
-            if 'options' in self.__option[_].keys():
-                for j in self.__option[_]['options']:
+    def __findOptionByID(self, target):
+        for key, value in self.__option.items():
+            if 'options' in value.keys():
+                for j in value['options']:
                     if 'id' in j.keys() and 'value' in j.keys():
-                        if j['id'] == key:
+                        if j['id'] == target:
                             return j['value']
-        raise IndexError
+        raise IndexError(target)
 
     def upPressAction(self):
         if self.__decorateEnable:
@@ -265,8 +266,15 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if self.__findOptionByID('auto analog'):
             analog = 0
         else:
-            analog = self.__findOptionByID('analog gain')
+            analog = self.__findOptionByID('analogue gain')
         self.setExposure(exposure, analog)
+
+    def __colourGainsSetting(self):
+        if self.__findOptionByID('color gains'):
+            red, blue = 0, 0
+        else:
+            red, blue = self.__findOptionByID('red gain'), self.__findOptionByID('blue gain')
+        self.setColourGains(red, blue)
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
@@ -274,6 +282,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 json.dump(self.__option, f, indent=4)
             if msg['id'] in ('auto expose', 'exposure time', 'auto analog', 'analog gain'):
                 self.__exposeSetting()
+            if msg['id'] in ('color gains', 'red gain', 'blue gain'):
+                self.__colourGainsSetting()
 
     def centerPressAction(self):
         pass

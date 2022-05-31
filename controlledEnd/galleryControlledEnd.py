@@ -31,12 +31,12 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__rawFrame = None
         self.__from = None
 
-    def __findOptionByID(self, key):
-        for _ in self.__option.keys():
-            if 'options' in self.__option[_].keys():
-                for j in self.__option[_]['options']:
+    def __findOptionByID(self, target):
+        for key, value in self.__option.items():
+            if 'options' in value.keys():
+                for j in value['options']:
                     if 'id' in j.keys() and 'value' in j.keys():
-                        if j['id'] == key:
+                        if j['id'] == target:
                             return j['value']
         raise IndexError
 
