@@ -74,4 +74,31 @@ ______
 
 ```python3 startup.py```
 
+# 使用方法(简明版)
+
+## circle按钮
+短按：拍照、确认
+
+长按：录像
+
+## triangle按钮
+短按：菜单、返回
+
+长按：返回至camera
+
+## rectangle按钮
+短按：旋转显示方向
+
+长按：截图
+
+## cross按钮
+短按：熄屏
+
+长按：关机
+
+# 如果需要二次开发(简明版)
+frameDecorator是关界面渲染的相关组件
+
+逻辑部分需要继承controlledEnd.ControlledEnd，随后放入universalControl.UniversalControl的列表类型的参数controlledEndList中
+
 

@@ -179,7 +179,7 @@ class UniversalControl:
         self.__logger.debug("Triangle release action")
         if not self.__enable:
             return
-        self.__controlledEndList[self.__rights].circleReleaseAction()
+        self.__controlledEndList[self.__rights].triangleReleaseAction()
 
     @exceptionRecorder()
     def __squareAction(self):
@@ -187,13 +187,16 @@ class UniversalControl:
         if not self.__enable:
             return
         t = 0
-        while wiringpi.digitalRead(self.__config['pin']['square']) and t < 2:
+        while wiringpi.digitalRead(self.__config['pin']['square']) and t < 1:
             t += 0.01
             time.sleep(0.01)
         if t < 0.09:
             return
-        if t >= 2:
+        if t >= 1:
             filename = os.path.join(self.__config['screenshot_path'], 'Screenshot{}.png'.format(int(time.time())))
+            path = os.path.split(filename)[0]
+            if not os.path.exists(path) or not os.path.isdir(path):
+                os.makedirs(path)
             self.__logger.info("Screenshot {}".format(filename))
             cv2.imwrite(
                 filename,
