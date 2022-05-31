@@ -387,16 +387,22 @@ class MenuControlledEnd(ControlledEnd):
             else:
                 backgroundColor = self.__theme['boolFalse']
                 text = 'N'
-        elif t in ('option', 'numeral', 'irq'):
+        elif t in ('option', 'irq'):
             backgroundColor = self.__theme[t]
-            text = '{}'.format(self.__currentOptions[self.__currentIndex]['value'])
+            text = str(self.__currentOptions[self.__currentIndex]['value'])
+        elif t == 'numeral':
+            value = self.__currentOptions[self.__currentIndex]['value']
+            if isinstance(value, float):
+                value = round(value, 2)
+            text = str(value)
+            backgroundColor = self.__theme[t]
         elif t == 'msg':
             backgroundColor = self.__theme[t]
-            text = '{}'.format(
-                self.__currentOptions[self.__currentIndex]['receiver']
-            )
-        else:
+            text = str(self.__currentOptions[self.__currentIndex]['receiver'])
+        elif t == 'menu':
             return
+        else:
+            raise KeyError('Unrecognized Type {}'.format(t))
 
         coordinate = (
             (
@@ -428,7 +434,6 @@ class MenuControlledEnd(ControlledEnd):
             (self.__width - self.__padding[2] - self.__width // 21, coordinate[1][1]),
             self.__theme['background'],
             -1
-
         )
 
     def __drawData(self, frame):
@@ -460,21 +465,26 @@ class MenuControlledEnd(ControlledEnd):
             t = self.__currentOptions[index]['type'].lower()
             if t == 'bool':
                 if self.__currentOptions[index]['value']:
-                    text = 'Y'
+                    value = 'Y'
                     backgroundColor = self.__theme['boolTrue']
                 else:
-                    text = 'N'
+                    value = 'N'
                     backgroundColor = self.__theme['boolFalse']
             elif t == 'msg':
-                text = self.__currentOptions[index]['receiver']
+                value = self.__currentOptions[index]['receiver']
                 backgroundColor = self.__theme[t]
             elif t == 'menu':
                 continue
-            elif t in ('option', 'irq', 'numeral'):
-                text = self.__currentOptions[index]['value']
+            elif t in ('option', 'irq'):
+                value = self.__currentOptions[index]['value']
+                backgroundColor = self.__theme[t]
+            elif t == 'numeral':
+                value = self.__currentOptions[index]['value']
+                if isinstance(value, float):
+                    value = round(value, 2)
                 backgroundColor = self.__theme[t]
             else:
-                continue
+                raise KeyError('Unrecognized Type {}'.format(t))
 
             cv2.rectangle(
                 frame,
@@ -491,7 +501,7 @@ class MenuControlledEnd(ControlledEnd):
             )
             cv2.putText(
                 frame,
-                "{}".format(text),
+                "{}".format(value),
                 (
                     self.__width - self.__padding[
                         2] - self.__width // 42 - self.__width // 21 - 3 * self.__fontHeight,
