@@ -193,7 +193,7 @@ class Cam:
         self.__cam.switch_mode(config)
         self.__lock.release()
         self.__setZoom()
-        self.exposureTime = exposeTime
+        self.setExposure(exposeTime, 1)
         time.sleep(0.5)
         self.__lock.acquire()
         request = self.__cam.capture_request()
@@ -203,7 +203,7 @@ class Cam:
         self.__cam.switch_mode(self.__pictConfig)
         self.__lock.release()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        self.exposureTime = 0
+        self.setExposure(0, 0)
         return metadata['ExposureTime'], frame
 
     def stop(self):

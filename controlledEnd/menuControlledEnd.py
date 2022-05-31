@@ -72,6 +72,14 @@ class MenuControlledEnd(ControlledEnd):
         self.__direction = 0
         self.__config = configLoader.ConfigLoader('./config.json')
 
+    def __pageCountCalc(self):
+        enableOptionRange = 0
+        for index, option in enumerate(self.__options, start=1):
+            enable = option.get('enable', True)
+            if enable:
+                enableOptionRange = index
+        self.__pageCount = math.ceil(enableOptionRange / self.__rowCount)
+
     @property
     def options(self):
         return self.__optionList
@@ -83,17 +91,12 @@ class MenuControlledEnd(ControlledEnd):
         self.__routeList = list()
         self.__title = self.__title = self.__optionList[self.__currentMenuID].get('title', None)
         self.__options = self.__optionList[self.__currentMenuID]['options']
-        self.__pageCount = math.ceil(len(self.__options) / self.__rowCount)
+        self.__pageCountCalc()
         self.__spaceCalc()
         self.__selectIndex = None
         self.__currentPage = 0
         self.__currentIndex = 0
         self.__currentOptions = self.__options[0:self.__rowCount]
-
-    def __pageCountCalc(self):
-        if self.__options:
-            self.__pageCount = math.ceil(len(self.__options) / self.__rowCount) - 1
-            self.__currentPage = 0
 
     def __spaceCalc(self):
         lineCount = self.__rowCount
@@ -223,6 +226,7 @@ class MenuControlledEnd(ControlledEnd):
                 self.__from,
                 self.__currentOptions[self.__currentIndex]
             )
+            self.__pageCountCalc()
         elif t == 'menu':
             self.__jumpByIndex(self.__currentIndex)
             self.decorate()
@@ -322,7 +326,8 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentMenuID = target
         self.__title = self.__optionList[self.__currentMenuID].get('title', None)
         self.__options = self.__optionList[self.__currentMenuID]['options']
-        self.__pageCount = math.ceil(len(self.__options) / self.__rowCount)
+
+        self.__pageCountCalc()
         self.__spaceCalc()
         self.__selectIndex = None
         self.__currentPage = 0

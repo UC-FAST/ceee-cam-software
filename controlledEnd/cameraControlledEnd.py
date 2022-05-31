@@ -5,7 +5,6 @@ import time
 import typing
 
 import cv2
-import picamera2
 import psutil
 import wiringpi
 
