@@ -29,7 +29,7 @@ class Cam:
         self.__height = self.__config['screen']['height']
         self.__digitalZoom = 1
         self.__metadata = None
-
+        self.__cam.set_controls({"AeEnable": False, "ExposureTime": 11544})
         self.__frame = np.zeros((self.__height, self.__width, 3), np.uint8)
         self.__cam.start_preview()
         self.__cam.start()
@@ -58,15 +58,34 @@ class Cam:
         return self.__framePerSecond
 
     def setExposure(self, exposureTime, analogueGain):
-        self.__lock.acquire()
-        self.__cam.set_controls({
-            "ExposureTime": exposureTime,
-            'AnalogueGain': analogueGain,
-        })
-        self.__lock.release()
+        if exposureTime or analogueGain:
+            self.__cam.set_controls({
+                'AeEnable': False,
+                "ExposureTime": exposureTime,
+                'AnalogueGain': analogueGain,
+            })
+        else:
+            self.__cam.set_controls({
+                'AeEnable': True,
+                "ExposureTime": exposureTime,
+                'AnalogueGain': analogueGain,
+            })
 
     def setColourGains(self, red, blue):
-        self.__cam.set_controls({"ColourGains": (red, blue)})
+        if red or blue:
+            self.__cam.set_controls(
+                {
+                    "AwbEnable": False,
+                    "ColourGains": (red, blue)
+                }
+            )
+        else:
+            self.__cam.set_controls(
+                {
+                    "AwbEnable": True,
+                    "ColourGains": (red, blue)
+                }
+            )
 
     @property
     def frameQuality(self):
