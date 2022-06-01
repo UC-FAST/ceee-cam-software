@@ -48,6 +48,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__isHdrProcessing = False
         self.__decorateEnable = False
         self.__zoomHold = False
+        self.__brightHold = False
         self.__rotate = 0
         self.__recordTimestamp = None
         with open(self.__config['camera']['configFilePath']) as f:
@@ -94,6 +95,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         else:
             if self.__isHdrProcessing:
                 return
+            self.__brightHold = True
             if self.__brightness + 0.01 > 1:
                 self.__brightness = 1
             else:
@@ -102,6 +104,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.brightness(self.__brightness)
             time.sleep(0.05)
 
+    def upReleaseAction(self):
+        self.__brightHold = False
+
     def downPressAction(self):
         if self.__decorateEnable:
             self.__decorator.nextPage()
@@ -109,6 +114,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         else:
             if self.__isHdrProcessing:
                 return
+            self.__brightHold = True
             if self.__brightness - 0.01 < -1:
                 self.__brightness = -1
             else:
@@ -116,6 +122,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__toast.setText("BRT {}".format(int(self.__brightness * 100)))
             self.brightness(self.__brightness)
             time.sleep(0.05)
+
+    def downReleaseAction(self):
+        self.__brightHold = False
 
     def leftPressAction(self):
         if self.__isHdrProcessing:
@@ -350,6 +359,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 hours, minutes = divmod(int(minutes), 60)
                 self.__toast.setText('{}:{}:{}:{}'.format(hours, minutes, seconds, milliseconds))
             if self.__zoomHold:
+                self.__toast.decorate(frame, self.__rotate)
+            if self.__brightHold:
                 self.__toast.decorate(frame, self.__rotate)
             if self.__toast.isUpdate:
                 self.__toast.decorate(frame, self.__rotate)

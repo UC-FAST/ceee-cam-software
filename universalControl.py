@@ -102,7 +102,6 @@ class UniversalControl:
     def __msgSender(self, sender: str, receiver: str, msg):
         self.__logger.info("Message from {} to {}".format(sender, receiver))
         self.__logger.debug("Message: {}".format(msg))
-        print(receiver)
         if receiver == 'UniversalControl':
             self.__msgReceiver(msg)
             return
