@@ -12,6 +12,16 @@ from picamera2.outputs import FfmpegOutput
 
 from . import configLoader
 
+awbMode = {
+    "Auto": 0,
+    "Incandescent": 1,
+    "Tungsten": 2,
+    "Fluorescent": 3,
+    "Indoor": 4,
+    "Daylight": 5,
+    "Cloudy": 6
+}
+
 
 class Cam:
     def __init__(self, verbose_console=None, tuning=None):
@@ -28,6 +38,8 @@ class Cam:
         self.__width = self.__config['screen']['width']
         self.__height = self.__config['screen']['height']
         self.__digitalZoom = 1
+        self.__brightness = 0
+        self.__controls = dict()
         self.__metadata = None
         self.__frame = np.zeros((self.__height, self.__width, 3), np.uint8)
         self.__cam.start_preview()
@@ -37,13 +49,9 @@ class Cam:
         if zoom < 1:
             zoom = 1
         self.__digitalZoom = zoom
-        self.__setZoom()
-
-    def __setZoom(self):
         # [2, 0, 4052, 3040]
         # [508,0,3040,3040]
         # 4056,3040
-        s = self.__metadata['ScalerCrop']
         if self.__digitalZoom == 1:
             self.__cam.set_controls({"ScalerCrop": [508, 0, 3040, 3040]})
             return
@@ -51,42 +59,63 @@ class Cam:
         pwidth, pheight = swidth // self.__digitalZoom, sheight // self.__digitalZoom
         offset = [int((swidth - pwidth) // 2 + 508), int((sheight - pheight) // 2)]
         size = [int(pwidth), int(pheight)]
-
-        self.__cam.set_controls({"ScalerCrop": offset + size})
+        control = {"ScalerCrop": offset + size}
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
 
     @property
     def framePerSecond(self):
         return self.__framePerSecond
 
+    def setAwbMode(self, code):
+        if isinstance(code, str):
+            code = awbMode[code]
+        control = {
+            "AwbEnable": True,
+            "AwbMode": code
+        }
+        self.__controls.update(control)
+        self.__cam.set_controls(control)
+
+    def brightness(self, brightness):
+        if brightness <= -1:
+            brightness = -1
+        if brightness >= 1:
+            brightness = 1
+        self.__brightness = brightness
+        control = {'Brightness': brightness}
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
+
     def setExposure(self, exposureTime, analogueGain):
         if exposureTime or analogueGain:
-            self.__cam.set_controls({
+            control = {
                 'AeEnable': False,
                 "ExposureTime": exposureTime,
                 'AnalogueGain': analogueGain,
-            })
+            }
         else:
-            self.__cam.set_controls({
+            control = {
                 'AeEnable': True,
                 "ExposureTime": exposureTime,
                 'AnalogueGain': analogueGain,
-            })
+            }
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
 
     def setColourGains(self, red, blue):
         if red or blue:
-            self.__cam.set_controls(
-                {
-                    "AwbEnable": False,
-                    "ColourGains": (red, blue)
-                }
-            )
+            control = {
+                "AwbEnable": False,
+                "ColourGains": (red, blue)
+            }
+
         else:
-            self.__cam.set_controls(
-                {
-                    "AwbEnable": True,
-                    "ColourGains": (red, blue)
-                }
-            )
+            control = {
+                "AwbEnable": True,
+            }
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
 
     @property
     def frameQuality(self):
@@ -136,6 +165,7 @@ class Cam:
             lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
         )
         self.__cam.configure(videoConfig)
+        self.__cam.set_controls(self.__controls)
         output = FfmpegOutput(filePath)
         self.__cam.start_recording(self.__encoder, output)
         self.__lock.release()
@@ -143,6 +173,7 @@ class Cam:
     def stopRecording(self):
         self.__lock.acquire()
         self.__cam.stop_recording()
+        self.__cam.set_controls(self.__controls)
         self.__cam.start()
         self.__lock.release()
 
@@ -165,8 +196,8 @@ class Cam:
             )
         self.__lock.acquire()
         self.__cam.switch_mode(config)
-        self.__setZoom()
-        time.sleep(0.2)
+        self.__cam.set_controls(self.__controls)
+        time.sleep(1)
         request = self.__cam.capture_request()
         if fmat:
             frame = request.make_array("main")
@@ -182,7 +213,8 @@ class Cam:
             request.save_dng('{}.{}'.format(filePath, 'dng'))
         request.release()
         self.__cam.switch_mode(self.__pictConfig)
-        self.__setZoom()
+        self.__cam.set_controls(self.__controls)
+        time.sleep(0.5)
         self.__lock.release()
 
     def exposureCapture(self, exposeTime, width, height):
@@ -195,18 +227,19 @@ class Cam:
         self.__lock.acquire()
         self.__cam.switch_mode(config)
         self.__lock.release()
-        self.__setZoom()
-        self.setExposure(exposeTime, 1)
-        time.sleep(0.5)
         self.__lock.acquire()
+        self.__cam.set_controls(self.__controls)
+        self.setExposure(exposeTime, 1)
+        time.sleep(1)
         request = self.__cam.capture_request()
         frame = request.make_array("main")
         metadata = request.get_metadata()
         request.release()
         self.__cam.switch_mode(self.__pictConfig)
+        self.__cam.set_controls(self.__controls)
+        time.sleep(0.5)
         self.__lock.release()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        self.setExposure(0, 0)
         return metadata['ExposureTime'], frame
 
     def stop(self):

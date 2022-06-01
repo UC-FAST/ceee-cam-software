@@ -227,6 +227,13 @@ class MenuControlledEnd(ControlledEnd):
                 self.__currentOptions[self.__currentIndex]
             )
             self.__pageCountCalc()
+            receiver = self.__currentOptions[self.__currentIndex].get('receiver', None)
+            if receiver:
+                self._msgSender(
+                    receiver,
+                    receiver,
+                    self.__currentOptions[self.__currentIndex]['value']
+                )
         elif t == 'menu':
             self.__jumpByIndex(self.__currentIndex)
             self.decorate()
@@ -253,6 +260,13 @@ class MenuControlledEnd(ControlledEnd):
             self.__from,
             self.__currentOptions[self.__currentIndex]
         )
+        receiver = self.__currentOptions[self.__selectIndex].get('receiver', None)
+        if receiver and 'value' in self.__currentOptions[self.__selectIndex].keys():
+            self._msgSender(
+                None,
+                receiver,
+                self.__currentOptions[self.__selectIndex]
+            )
         self.__selectIndex = None
 
     def upAction(self):

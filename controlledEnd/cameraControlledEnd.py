@@ -24,6 +24,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             tuning = None
         picam2.Cam.__init__(self, verbose_console=verbose_console, tuning=tuning)
         self.__zoom = 1
+        self.__brightness = 0
         self.__config = configLoader.ConfigLoader('./config.json')
         self.__barChart = frameDecorator.BarChart(
             self.__config['screen']['width'],
@@ -54,9 +55,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__m = max17048.Max17048()
         self.__filter = SlidingWindowFilter(10)
         self.__frameList = queue.SimpleQueue()
-
-        self.__exposeSetting()
-        self.__colourGainsSetting()
 
     def __worker2(self):
         return {
@@ -92,12 +90,32 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def upPressAction(self):
         if self.__decorateEnable:
             self.__decorator.previousPage()
-        time.sleep(0.3)
+            time.sleep(0.3)
+        else:
+            if self.__isHdrProcessing:
+                return
+            if self.__brightness + 0.01 > 1:
+                self.__brightness = 1
+            else:
+                self.__brightness += 0.01
+            self.__toast.setText("BRT {}".format(int(self.__brightness * 100)))
+            self.brightness(self.__brightness)
+            time.sleep(0.05)
 
     def downPressAction(self):
         if self.__decorateEnable:
             self.__decorator.nextPage()
-        time.sleep(0.3)
+            time.sleep(0.3)
+        else:
+            if self.__isHdrProcessing:
+                return
+            if self.__brightness - 0.01 < -1:
+                self.__brightness = -1
+            else:
+                self.__brightness -= 0.01
+            self.__toast.setText("BRT {}".format(int(self.__brightness * 100)))
+            self.brightness(self.__brightness)
+            time.sleep(0.05)
 
     def leftPressAction(self):
         if self.__isHdrProcessing:
@@ -127,7 +145,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__zoomHold = False
 
     def circlePressAction(self):
-        if self.__isBusy:
+        if self.__isBusy or self.__isHdrProcessing:
             return
         t = 0
         while wiringpi.digitalRead(self.__config['pin']['circle']) and t < 1:
@@ -242,7 +260,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                         saveRaw=self.__findOptionByID("dng enable")
                     )
                     if self.__findOptionByID('watermark'):
-
                         frame = cv2.imread('{}.{}'.format(path, fmat))
                         frameDecorator.WaterMark(int(width), int(height)).decorate(frame)
                         cv2.imwrite('{}.{}'.format(path, fmat), frame)
@@ -256,7 +273,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             t += 0.01
             time.sleep(0.01)
 
-        print('triangle {} {} {} {}'.format(t, self.__decorateEnable, self.__recordTimestamp, self.__isBusy))
         if t < 0.09:
             return
         if t >= 1:
@@ -278,11 +294,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.setExposure(exposure, analog)
 
     def __colourGainsSetting(self):
-        if self.__findOptionByID('color gains'):
-            red, blue = 0, 0
-        else:
+        if not self.__findOptionByID('auto awb'):
             red, blue = self.__findOptionByID('red gain'), self.__findOptionByID('blue gain')
-        self.setColourGains(red, blue)
+            self.setColourGains(red, blue)
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
@@ -290,11 +304,22 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 json.dump(self.__option, f, indent=4)
             if msg['id'] in ('auto expose', 'exposure time', 'auto analog', 'analog gain'):
                 self.__exposeSetting()
-            if msg['id'] in ('color gains', 'red gain', 'blue gain'):
+            if msg['id'] in ('red gain', 'blue gain'):
                 self.__colourGainsSetting()
+            if msg['id'] == 'awb mode':
+                self.setAwbMode(msg['value'])
 
     def centerPressAction(self):
-        pass
+        t = 0
+        while wiringpi.digitalRead(self.__config['pin']['center']) and t < 1:
+            t += 0.01
+            time.sleep(0.01)
+        if t < 0.09:
+            return
+        self.__zoom = 1
+        self.__brightness = 0
+        self.zoom(self.__zoom)
+        self.brightness(self.__brightness)
 
     def direction(self, direction):
         self.__rotate = direction
@@ -303,12 +328,16 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if not os.path.exists(self.__config['camera']['path']) or not os.path.isdir(self.__config['camera']['path']):
             os.mkdir(self.__config['camera']['path'])
         self._msgSender(self._id, 'MenuControlledEnd', self.__option)
+        self.__exposeSetting()
+        self.__colourGainsSetting()
+        if self.__findOptionByID('auto awb'):
+            self.setAwbMode(self.__findOptionByID('awb mode'))
 
     def mainLoop(self):
         for index, frame in enumerate(self.preview()):
             self.__filter.addData(self.frameQuality)
             self.__barChart.addData(int(self.__filter.calc()))
-            if self.__decorateEnable and not self.__zoomHold:
+            if self.__decorateEnable and not self.__zoomHold and self.__recordTimestamp is None:
                 self.__barChart.decorate(frame, rotate=self.__rotate)
                 self.__decorator.decorate(frame, rotate=self.__rotate)
             if self.__isBusy:
@@ -324,7 +353,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 self.__toast.decorate(frame, self.__rotate)
             if self.__toast.isUpdate:
                 self.__toast.decorate(frame, self.__rotate)
-
             if self.__isHdrProcessing:
                 self.__toast.decorate(frame, self.__rotate)
+
             yield frame

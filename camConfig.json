@@ -18,8 +18,7 @@
                 "id": "settings",
                 "content": "Settings",
                 "type": "menu",
-                "value": "2",
-                "enable": false
+                "value": "settings"
             }
         ]
     },
@@ -48,9 +47,9 @@
                 "value": "exposure"
             },
             {
-                "content": "Color Gains",
+                "content": "White Balance",
                 "type": "menu",
-                "value": "color gains"
+                "value": "white balance"
             },
             {
                 "id": "resolution",
@@ -133,6 +132,7 @@
                 "max": 200000,
                 "step": 1000,
                 "stepOptions": [
+                    100,
                     1000,
                     10000,
                     100000
@@ -148,6 +148,7 @@
                 "max": 1000000,
                 "step": 100000,
                 "stepOptions": [
+                    100,
                     1000,
                     10000,
                     100000
@@ -242,19 +243,43 @@
             }
         ]
     },
+    "white balance": {
+        "title": "White Balance",
+        "options": [
+            {
+                "id": "auto awb",
+                "content": "Auto Awb",
+                "type": "bool",
+                "value": true,
+                "setEnable": ["awb mode"],
+                "setDisable": ["color gains"]
+            },
+            {
+                "id": "awb mode",
+                "content": "Awb Mode",
+                "type": "option",
+                "value": "Auto",
+                "options": [
+                    "Auto",
+                    "Incandescent",
+                    "Tungsten",
+                    "Fluorescent",
+                    "Indoor",
+                    "Daylight",
+                    "Cloudy"
+                ]
+            },
+            {
+                "id": "color gains",
+                "content": "Color Gains",
+                "type": "menu",
+                "value": "color gains"
+            }
+        ]
+    },
     "color gains": {
         "title": "Color Gains",
         "options": [
-            {
-                "id": "color gains",
-                "content": "Auto Gains",
-                "type": "bool",
-                "value": true,
-                "setDisable": [
-                    "red gain",
-                    "blue gain"
-                ]
-            },
             {
                 "id": "red gain",
                 "content": "Red Gain",
@@ -266,8 +291,7 @@
                 "stepOptions": [
                     0.1,
                     1
-                ],
-                "enable": false
+                ]
             },
             {
                 "id": "blue gain",
@@ -280,8 +304,23 @@
                 "stepOptions": [
                     0.1,
                     1
+                ]
+            }
+        ]
+    },
+    "settings": {
+        "title": "Settings",
+        "options": [
+            {
+                "id": "auto poweroff",
+                "content": "Auto Poweroff",
+                "type": "option",
+                "value": 60,
+                "options": [
+                    60,
+                    360
                 ],
-                "enable": false
+                "receiver": "UniversalControl"
             }
         ]
     }

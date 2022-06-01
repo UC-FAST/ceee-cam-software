@@ -80,6 +80,10 @@ class UniversalControl:
         self.__t = multiprocessing.Process(target=self.showImageInAnotherProcess, args=(self.__frameList,))
         self.__logger.info("UniversalControl initialized")
 
+    def __msgReceiver(self, msg):
+        if msg['id'] == 'auto poweroff':
+            print(1)
+
     @exceptionRecorder()
     def __irq(self, _id: str):
         self.__logger.info("Irq to {}".format(_id))
@@ -98,6 +102,10 @@ class UniversalControl:
     def __msgSender(self, sender: str, receiver: str, msg):
         self.__logger.info("Message from {} to {}".format(sender, receiver))
         self.__logger.debug("Message: {}".format(msg))
+        print(receiver)
+        if receiver == 'UniversalControl':
+            self.__msgReceiver(msg)
+            return
         for widget in self.__controlledEndList:
             if widget.id == receiver:
                 widget.msgReceiver(sender, msg)
