@@ -180,7 +180,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                         exposeTime, frame = self.exposureCapture(i, int(width), int(height))
                         exposureTimeList.append(exposeTime / 1e6)
                         frameList.append(frame)
-                        cv2.imwrite('./test/{}.png'.format(exposeTime), frame)
                     self.__toast.setText("Processing")
                     algorithm = self.__findOptionByID('algorithm')
                     hdr = Hdr(exposureTimeList, frameList, self.__findOptionByID('correction'))
@@ -194,6 +193,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                         hdrFrame = hdr.exposureFusion()
                     else:
                         raise LookupError(algorithm)
+                    if self.__findOptionByID('watermark'):
+                        frameDecorator.WaterMark(int(width), int(height)).decorate(hdrFrame)
                     cv2.imwrite(
                         os.path.join(
                             self.__config['camera']['path'],
@@ -229,21 +230,23 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     self.__isBusy = True
                     led.on(led.green)
                     self.__toast.setText("Processing")
+                    path = os.path.join(self.__config['camera']['path'], "{}".format(int(time.time())))
+                    fmat = self.__findOptionByID('pict format')
                     self.saveFrame(
-                        os.path.join(
-                            self.__config['camera']['path'],
-                            "{}{}".format(
-                                int(time.time()),
-                                '{}'.format(self.__findOptionByID('pict format'))
-                                if self.__findOptionByID('pict format').startswith('.')
-                                else '.{}'.format(self.__findOptionByID('pict format'))
-                            )
-                        ),
-                        int(width), int(height),
-                        self.__rotate,
+                        filePath=path,
+                        fmat=fmat,
+                        width=int(width),
+                        height=int(height),
+                        rotate=self.__rotate,
                         saveMetadata=self.__findOptionByID("save metadata"),
                         saveRaw=self.__findOptionByID("dng enable")
                     )
+                    if self.__findOptionByID('watermark'):
+
+                        frame = cv2.imread('{}.{}'.format(path, fmat))
+                        frameDecorator.WaterMark(int(width), int(height)).decorate(frame)
+                        cv2.imwrite('{}.{}'.format(path, fmat), frame)
+
                     led.off(led.green)
                     self.__isBusy = False
 

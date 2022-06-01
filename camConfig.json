@@ -103,8 +103,7 @@
                 "id": "watermark",
                 "content": "Watermark",
                 "type": "bool",
-                "value": false,
-                "enable": false
+                "value": true
             }
         ]
     },
@@ -115,7 +114,7 @@
                 "id": "hdr enable",
                 "content": "HDR Enable",
                 "type": "bool",
-                "value": false,
+                "value": true,
                 "setEnable": [
                     "lower",
                     "upper",
@@ -138,7 +137,7 @@
                     10000,
                     100000
                 ],
-                "enable": false
+                "enable": true
             },
             {
                 "id": "upper",
@@ -153,20 +152,20 @@
                     10000,
                     100000
                 ],
-                "enable": false
+                "enable": true
             },
             {
                 "id": "stack num",
                 "content": "Stack Num",
                 "type": "option",
-                "value": 10,
+                "value": 3,
                 "options": [
                     3,
                     5,
                     10,
                     30
                 ],
-                "enable": false
+                "enable": true
             },
             {
                 "id": "algorithm",
@@ -179,14 +178,14 @@
                     "Reinhard",
                     "Mantiuk"
                 ],
-                "enable": false
+                "enable": true
             },
             {
                 "id": "correction",
                 "content": "Correction",
                 "type": "bool",
-                "value": false,
-                "enable": false
+                "value": true,
+                "enable": true
             }
         ]
     },
@@ -221,7 +220,7 @@
                 "id": "auto analog",
                 "content": "Auto Analog",
                 "type": "bool",
-                "value": true,
+                "value": false,
                 "setDisable": [
                     "analogue gain"
                 ]
@@ -239,7 +238,7 @@
                     1,
                     10
                 ],
-                "enable": false
+                "enable": true
             }
         ]
     },

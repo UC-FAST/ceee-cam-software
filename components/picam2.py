@@ -43,13 +43,15 @@ class Cam:
         # [2, 0, 4052, 3040]
         # [508,0,3040,3040]
         # 4056,3040
+        s = self.__metadata['ScalerCrop']
         if self.__digitalZoom == 1:
             self.__cam.set_controls({"ScalerCrop": [508, 0, 3040, 3040]})
             return
-        swidth, sheight = (3040 - 508, 3040 - 0)
+        swidth, sheight = (3040, 3040)
         pwidth, pheight = swidth // self.__digitalZoom, sheight // self.__digitalZoom
         offset = [int((swidth - pwidth) // 2 + 508), int((sheight - pheight) // 2)]
         size = [int(pwidth), int(pheight)]
+
         self.__cam.set_controls({"ScalerCrop": offset + size})
 
     @property
@@ -144,11 +146,11 @@ class Cam:
         self.__cam.start()
         self.__lock.release()
 
-    def saveFrame(self, filePath, width, height, rotate=0, saveMetadata=False, saveRaw=False):
-        directoryPath = os.path.split(filePath)[0]
-        if directoryPath:
-            if not os.path.exists(directoryPath):
-                os.makedirs(directoryPath)
+    def saveFrame(self, filePath: str, fmat, width, height, rotate=0, saveMetadata=False, saveRaw=False):
+        path, filename = os.path.split(filePath)
+
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         if width == 0 or height == 0:
             width, height = self.__cam.sensor_resolution
@@ -166,21 +168,22 @@ class Cam:
         self.__setZoom()
         time.sleep(0.2)
         request = self.__cam.capture_request()
-        frame = request.make_array("main")
-        if rotate:
-            frame = np.rot90(frame, -rotate // 90)
+        if fmat:
+            frame = request.make_array("main")
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            if rotate:
+                frame = np.rot90(frame, -rotate // 90)
+            cv2.imwrite("{}.{}".format(filePath, fmat), frame)
         if saveMetadata:
             metadata = request.get_metadata()
-            with open('{}.{}'.format(os.path.splitext(filePath)[0], 'json'), 'w') as f:
+            with open('{}.{}'.format(filePath, 'json'), 'w') as f:
                 json.dump(metadata, f, indent=4)
         if saveRaw:
-            request.save_dng('{}.{}'.format(os.path.splitext(filePath)[0], 'dng'))
+            request.save_dng('{}.{}'.format(filePath, 'dng'))
         request.release()
         self.__cam.switch_mode(self.__pictConfig)
         self.__setZoom()
         self.__lock.release()
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        threading.Thread(target=cv2.imwrite, args=(filePath, frame)).start()
 
     def exposureCapture(self, exposeTime, width, height):
         if width == 0 or height == 0:
