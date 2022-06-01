@@ -106,4 +106,36 @@ frameDecorator是关界面渲染的相关组件
 
 逻辑部分需要继承controlledEnd.ControlledEnd，随后放入universalControl.UniversalControl的列表类型的参数controlledEndList中
 
+# 如果需要二次开发(编辑中)
+## 目录结构
+* components：一些不便分类的组件
+* controlledEnd：提供与交互相关的逻辑实现
+* frameDecorator：帧渲染工具
+* tuning：相机的配置文件目录
+* utils：一些工具
 
+具体说明查看相应目录内readme文件
+
+## universalControl.py
+在本项目中，实现交互的单元为controlledEnd.ControlledEnd。需要继承ControlledEnd类实现从交互到逻辑的控制。
+universalControl.UniversalControl则是控制ControlledEnd的最上层逻辑。
+
+```
+UniversalControl(
+    self, 
+    lcd: screen.Lcd, 
+    controlledEndList: List[controlledEnd.ControlledEnd]
+)
+```
+UniversalControl类的构造函数
+
+参数：
+
+lcd：screen.Lcd类变量
+
+controlledEndList：由controlledEnd.ControlledEnd的子类构成的列表
+
+```
+UniversalControl.mainLoop(self)
+```
+主循环
