@@ -1,6 +1,5 @@
 import json
 import queue
-import time
 import typing
 from time import sleep
 
@@ -28,6 +27,8 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__hist = frameDecorator.Hist(fill=True)
         self.__rawFrame = None
         self.__from = None
+        self.__delete = False
+        self.__empty = False
 
     def __findOptionByID(self, target):
         for key, value in self.__option.items():
@@ -39,24 +40,43 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         raise LookupError('target')
 
     def centerPressAction(self):
-        pass
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
 
     def upPressAction(self):
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
         self.previous()
         self.__refreshFrame()
         sleep(0.2)
 
     def downPressAction(self):
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
         self.next()
         self.__refreshFrame()
         sleep(0.2)
 
     def leftPressAction(self):
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
         self.previous()
         self.__refreshFrame()
         sleep(0.2)
 
     def rightPressAction(self):
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
         self.next()
         self.__refreshFrame()
         sleep(0.2)
@@ -68,9 +88,16 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
             self.__currentFrame = self.__rawFrame.copy()
 
     def circlePressAction(self):
-        pass
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
 
     def trianglePressAction(self):
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
         t = 0
         while wiringpi.digitalRead(self.__config['pin']['triangle']) and t < 1:
             t += 0.01
@@ -85,6 +112,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
             if msg == 'delete':
+                self.__delete = True
                 self.delete()
                 self.__refreshFrame()
             elif msg == 'update':
@@ -100,8 +128,12 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         if self.__currentFrame is not None:
             self.__busy.decorate(self.__currentFrame)
             self.__frameList.put(self.__currentFrame)
-
-        self.__rawFrame = self.getPict()
+        try:
+            self.__rawFrame = self.getPict()
+        except TypeError:
+            self.__empty = True
+            self._irq("CameraControlledEnd")
+            return
         self.__currentFrame = self.__rawFrame.copy()
         self.__addHist()
         self.__frameList.put(self.__currentFrame)
@@ -120,9 +152,12 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
 
     def onEnter(self, lastID):
         try:
-            self.refreshPictList()
-            self.__from = lastID
+            if not self.__delete:
+                self.__from = lastID
+                self.refreshPictList()
+            self.__delete = False
             self._msgSender(self._id, "MenuControlledEnd", self.__option)
             self.__refreshFrame()
         except FileNotFoundError:
+            self.__empty = True
             self.__frameList.put(frameDecorator.Warining().decorate("Empty"))
