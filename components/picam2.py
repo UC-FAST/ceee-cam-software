@@ -45,20 +45,21 @@ class Cam:
         self.__cam.start_preview()
         self.__cam.start()
 
+        with self.__lock:
+            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = self.__cam.capture_metadata()['ScalerCrop']
+
     def zoom(self, zoom):
         if zoom < 1:
             zoom = 1
         self.__digitalZoom = zoom
-        # [2, 0, 4052, 3040]
-        # [508,0,3040,3040]
-        # 4056,3040
-        if self.__digitalZoom == 1:
-            self.__cam.set_controls({"ScalerCrop": [508, 0, 3040, 3040]})
-            return
-        swidth, sheight = (3040, 3040)
-        pwidth, pheight = swidth // self.__digitalZoom, sheight // self.__digitalZoom
-        offset = [int((swidth - pwidth) // 2 + 508), int((sheight - pheight) // 2)]
-        size = [int(pwidth), int(pheight)]
+
+        pWidth, pHeight = self.__fWidth // self.__digitalZoom, self.__fHeight // self.__digitalZoom
+        offset = [
+            int((self.__fWidth - pWidth) // 2 + self.__wOffset),
+            int((self.__fHeight - pHeight) // 2 + self.__hOffset)
+        ]
+
+        size = [int(pWidth), int(pHeight)]
         control = {"ScalerCrop": offset + size}
         self.__cam.set_controls(control)
         self.__controls.update(control)
@@ -67,23 +68,23 @@ class Cam:
     def framePerSecond(self):
         return self.__framePerSecond
 
-    def setAwbMode(self, code):
-        if isinstance(code, str):
-            code = awbMode[code]
+    def setAwbMode(self, mode):
+        if isinstance(mode, str):
+            mode = awbMode[mode]
         control = {
             "AwbEnable": True,
-            "AwbMode": code
+            "AwbMode": mode
         }
         self.__controls.update(control)
         self.__cam.set_controls(control)
 
-    def brightness(self, brightness):
-        if brightness <= -1:
-            brightness = -1
-        if brightness >= 1:
-            brightness = 1
-        self.__brightness = brightness
-        control = {'Brightness': brightness}
+    def brightness(self, brt):
+        if brt <= -1:
+            brt = -1
+        if brt >= 1:
+            brt = 1
+        self.__brightness = brt
+        control = {'Brightness': brt}
         self.__cam.set_controls(control)
         self.__controls.update(control)
 
@@ -130,12 +131,12 @@ class Cam:
     def preview(self):
         present, t = 0, 0
         while True:
-            self.__lock.acquire()
-            request = self.__cam.capture_request()
+            with self.__lock:
+                request = self.__cam.capture_request()
             buffer = request.make_buffer(name="lores")
             self.__metadata = request.get_metadata()
             request.release()
-            self.__lock.release()
+
             self.__frame = YUV420_to_RGB(
                 buffer,
                 (
@@ -157,25 +158,24 @@ class Cam:
             if not os.path.exists(directoryPath):
                 os.makedirs(directoryPath)
 
-        self.__lock.acquire()
-        self.__cam.stop()
-
         videoConfig = self.__cam.video_configuration(
             main={"size": (int(width), int(height))},
             lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
         )
-        self.__cam.configure(videoConfig)
-        self.__cam.set_controls(self.__controls)
-        output = FfmpegOutput(filePath)
-        self.__cam.start_recording(self.__encoder, output)
-        self.__lock.release()
+
+        with self.__lock:
+            self.__cam.stop()
+
+            self.__cam.configure(videoConfig)
+            self.__cam.set_controls(self.__controls)
+            output = FfmpegOutput(filePath)
+            self.__cam.start_recording(self.__encoder, output)
 
     def stopRecording(self):
-        self.__lock.acquire()
-        self.__cam.stop_recording()
-        self.__cam.set_controls(self.__controls)
-        self.__cam.start()
-        self.__lock.release()
+        with self.__lock:
+            self.__cam.stop_recording()
+            self.__cam.set_controls(self.__controls)
+            self.__cam.start()
 
     def saveFrame(self, filePath: str, fmat, width, height, rotate=0, saveMetadata=False, saveRaw=False):
         path, filename = os.path.split(filePath)
@@ -194,28 +194,27 @@ class Cam:
             config = self.__cam.still_configuration(
                 main={"size": (width, height)},
             )
-        self.__lock.acquire()
-        self.__cam.switch_mode(config)
-        self.__cam.set_controls(self.__controls)
-        time.sleep(1)
-        request = self.__cam.capture_request()
-        if fmat:
-            frame = request.make_array("main")
-            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            if rotate:
-                frame = np.rot90(frame, -rotate // 90)
-            cv2.imwrite("{}.{}".format(filePath, fmat), frame)
-        if saveMetadata:
-            metadata = request.get_metadata()
-            with open('{}.{}'.format(filePath, 'json'), 'w') as f:
-                json.dump(metadata, f, indent=4)
-        if saveRaw:
-            request.save_dng('{}.{}'.format(filePath, 'dng'))
-        request.release()
-        self.__cam.switch_mode(self.__pictConfig)
-        self.__cam.set_controls(self.__controls)
-        time.sleep(0.5)
-        self.__lock.release()
+        with self.__lock:
+            self.__cam.switch_mode(config)
+            self.__cam.set_controls(self.__controls)
+            time.sleep(1)
+            request = self.__cam.capture_request()
+            if fmat:
+                frame = request.make_array("main")
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                if rotate:
+                    frame = np.rot90(frame, -rotate // 90)
+                cv2.imwrite("{}.{}".format(filePath, fmat), frame)
+            if saveMetadata:
+                metadata = request.get_metadata()
+                with open('{}.{}'.format(filePath, 'json'), 'w') as f:
+                    json.dump(metadata, f, indent=4)
+            if saveRaw:
+                request.save_dng('{}.{}'.format(filePath, 'dng'))
+            request.release()
+            self.__cam.switch_mode(self.__pictConfig)
+            self.__cam.set_controls(self.__controls)
+            time.sleep(0.5)
 
     def exposureCapture(self, exposeTime, width, height):
         if width == 0 or height == 0:
@@ -224,28 +223,24 @@ class Cam:
             main={"size": (width, height)},
             lores={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)}
         )
-        self.__lock.acquire()
-        self.__cam.switch_mode(config)
-        self.__lock.release()
-        self.__lock.acquire()
-        self.__cam.set_controls(self.__controls)
-        self.setExposure(exposeTime, 1)
-        time.sleep(1)
-        request = self.__cam.capture_request()
-        frame = request.make_array("main")
-        metadata = request.get_metadata()
-        request.release()
-        self.__cam.switch_mode(self.__pictConfig)
-        self.__cam.set_controls(self.__controls)
-        time.sleep(0.5)
-        self.__lock.release()
+        with self.__lock:
+            self.__cam.switch_mode(config)
+            self.__cam.set_controls(self.__controls)
+            self.setExposure(exposeTime, 1)
+            time.sleep(1)
+            request = self.__cam.capture_request()
+            frame = request.make_array("main")
+            metadata = request.get_metadata()
+            request.release()
+            self.__cam.switch_mode(self.__pictConfig)
+            self.__cam.set_controls(self.__controls)
+            time.sleep(0.5)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return metadata['ExposureTime'], frame
 
     def stop(self):
-        self.__lock.acquire()
-        self.__cam.stop()
-        self.__lock.release()
+        with self.__lock:
+            self.__cam.stop()
 
     def release(self):
         self.__cam.close()
