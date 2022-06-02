@@ -193,8 +193,77 @@
                 "type": "bool",
                 "value": true,
                 "setDisable": [
-                    "exposure time"
+                    "manual expose",
+                    "exposure time",
+                    "manual analog",
+                    "analogue gain"
+                ],
+                "setEnable": [
+                    "exposure mode",
+                    "metering mode"
                 ]
+            },
+            {
+                "id": "exposure mode",
+                "content": "Exposure Mode",
+                "type": "option",
+                "value": [
+                    "Normal",
+                    0
+                ],
+                "options": [
+                    [
+                        "Normal",
+                        0
+                    ],
+                    [
+                        "Short",
+                        1
+                    ],
+                    [
+                        "Long",
+                        2
+                    ],
+                    [
+                        "Custom",
+                        3
+                    ]
+                ],
+                "enable": true
+            },
+            {
+                "id": "metering mode",
+                "content": "Metering Mode",
+                "type": "option",
+                "value": [
+                    "Centre Weighted",
+                    0
+                ],
+                "options": [
+                    [
+                        "Centre Weighted",
+                        0
+                    ],
+                    [
+                        "Spot",
+                        1
+                    ],
+                    [
+                        "Matrix",
+                        2
+                    ]
+                ],
+                "enable": true
+            },
+            {
+                "id": "manual expose",
+                "content": "Manual Expose",
+                "type": "bool",
+                "value": true,
+                "setEnable": [
+                    "exposure time"
+                ],
+                "enable": false
             },
             {
                 "id": "exposure time",
@@ -212,13 +281,14 @@
                 "enable": false
             },
             {
-                "id": "auto analog",
-                "content": "Auto Analog",
+                "id": "manual analog",
+                "content": "Manual Analog",
                 "type": "bool",
                 "value": true,
-                "setDisable": [
+                "setEnable": [
                     "analogue gain"
-                ]
+                ],
+                "enable": false
             },
             {
                 "id": "analogue gain",
@@ -242,7 +312,7 @@
         "options": [
             {
                 "id": "awb",
-                "content": "Awb",
+                "content": "AWB",
                 "type": "bool",
                 "value": true,
                 "setEnable": [
@@ -254,17 +324,41 @@
             },
             {
                 "id": "awb mode",
-                "content": "Awb Mode",
+                "content": "AWB Mode",
                 "type": "option",
-                "value": "Auto",
-                "options": [
+                "value": [
                     "Auto",
-                    "Incandescent",
-                    "Tungsten",
-                    "Fluorescent",
-                    "Indoor",
-                    "Daylight",
-                    "Cloudy"
+                    0
+                ],
+                "options": [
+                    [
+                        "Auto",
+                        0
+                    ],
+                    [
+                        "Incandescent",
+                        1
+                    ],
+                    [
+                        "Tungsten",
+                        2
+                    ],
+                    [
+                        "Fluorescent",
+                        3
+                    ],
+                    [
+                        "Indoor",
+                        4
+                    ],
+                    [
+                        "Daylight",
+                        5
+                    ],
+                    [
+                        "Cloudy",
+                        6
+                    ]
                 ],
                 "enable": true
             },

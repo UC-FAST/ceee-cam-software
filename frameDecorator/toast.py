@@ -42,7 +42,10 @@ class Toast:
             cv2.putText(
                 sketch,
                 self.__text,
-                (self.__offsetRight + self.__fontHeight, int(self.__height * 0.96)),
+                (
+                    (self.__width - self.__fontHeight * len(self.__text)) // 2,
+                    int(self.__height * 0.96)
+                ),
                 cv2.FONT_ITALIC,
                 self.__fontScale,
                 (255, 255, 255)

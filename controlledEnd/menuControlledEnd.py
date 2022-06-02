@@ -224,7 +224,10 @@ class MenuControlledEnd(ControlledEnd):
             self._msgSender(
                 self._id,
                 self.__from,
-                self.__currentOptions[self.__currentIndex]
+                (
+                    self.__currentMenuID,
+                    self.__currentOptions[self.__currentIndex]
+                )
             )
             self.__pageCountCalc()
             receiver = self.__currentOptions[self.__currentIndex].get('receiver', None)
@@ -258,7 +261,10 @@ class MenuControlledEnd(ControlledEnd):
         self._msgSender(
             self._id,
             self.__from,
-            self.__currentOptions[self.__currentIndex]
+            (
+                self.__currentMenuID,
+                self.__currentOptions[self.__currentIndex]
+            )
         )
         receiver = self.__currentOptions[self.__selectIndex].get('receiver', None)
         if receiver and 'value' in self.__currentOptions[self.__selectIndex].keys():
@@ -406,9 +412,16 @@ class MenuControlledEnd(ControlledEnd):
             else:
                 backgroundColor = self.__theme['boolFalse']
                 text = 'N'
-        elif t in ('option', 'irq'):
+        elif t == 'irq':
             backgroundColor = self.__theme[t]
             text = str(self.__currentOptions[self.__currentIndex]['value'])
+        elif t == 'option':
+            backgroundColor = self.__theme[t]
+            value = self.__currentOptions[self.__currentIndex]['value']
+            if isinstance(value, list):
+                text = str(value[0])
+            else:
+                text = str(value)
         elif t == 'numeral':
             value = self.__currentOptions[self.__currentIndex]['value']
             if isinstance(value, float):
@@ -494,8 +507,14 @@ class MenuControlledEnd(ControlledEnd):
                 backgroundColor = self.__theme[t]
             elif t == 'menu':
                 continue
-            elif t in ('option', 'irq'):
+            elif t == 'irq':
                 value = self.__currentOptions[index]['value']
+                backgroundColor = self.__theme[t]
+
+            elif t == 'option':
+                value = self.__currentOptions[index]['value']
+                if isinstance(value, list):
+                    value = value[0]
                 backgroundColor = self.__theme[t]
             elif t == 'numeral':
                 value = self.__currentOptions[index]['value']
@@ -704,6 +723,8 @@ class MenuControlledEnd(ControlledEnd):
             'value']
         options: list = self.__currentOptions[self.__currentIndex]['options']
         selectIndex = options.index(value)
+        if isinstance(value, list):
+            value = value[0]
         for _, (index, i) in zip(
                 range(len(self.__currentOptions[self.__currentIndex]['options']) + 1),
                 enumerate(self.__genItemStartCoordinate(itemCount=self.__rowCount + 1, ignoreTitle=True))
@@ -737,7 +758,11 @@ class MenuControlledEnd(ControlledEnd):
                 )
             else:
                 try:
-                    text = str(options[(selectIndex + index - 2) % len(options)])
+                    option = options[(selectIndex + index - 2) % len(options)]
+                    if isinstance(option, list):
+                        text = str(option[0])
+                    else:
+                        text = str(option)
                 except IndexError:
                     break
                 cv2.putText(

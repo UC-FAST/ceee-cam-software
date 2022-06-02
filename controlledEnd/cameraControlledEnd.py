@@ -294,14 +294,18 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
 
     def __exposeSetting(self):
         if self.__findOptionByID('auto expose'):
-            exposure = 0
+            self.setAeExposureMode(self.__findOptionByID('exposure mode')[1])
+            self.setAeMeteringMode(self.__findOptionByID('metering mode')[1])
         else:
-            exposure = self.__findOptionByID('exposure time')
-        if self.__findOptionByID('auto analog'):
-            analog = 0
-        else:
-            analog = self.__findOptionByID('analogue gain')
-        self.setExposure(exposure, analog)
+            if self.__findOptionByID('manual expose'):
+                exposure = self.__findOptionByID('exposure time')
+            else:
+                exposure = 0
+            if self.__findOptionByID('manual analog'):
+                analog = self.__findOptionByID('analogue gain')
+            else:
+                analog = 0
+            self.setExposure(exposure, analog)
 
     def __colourGainsSetting(self):
         if not self.__findOptionByID('awb'):
@@ -312,12 +316,12 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if sender == 'MenuControlledEnd':
             with open(self.__config['camera']['configFilePath'], 'w') as f:
                 json.dump(self.__option, f, indent=4)
-            if msg['id'] in ('auto expose', 'exposure time', 'auto analog', 'analog gain'):
+            if msg[0] == 'exposure':
                 self.__exposeSetting()
-            if msg['id'] in ('red gain', 'blue gain'):
+            if msg[0] == 'color gains':
                 self.__colourGainsSetting()
-            if msg['id'] == 'awb mode':
-                self.setAwbMode(msg['value'])
+            if msg[0] == 'white balance':
+                self.setAwbMode(msg[1]['value'][1])
 
     def centerPressAction(self):
         t = 0
@@ -341,7 +345,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__exposeSetting()
         self.__colourGainsSetting()
         if self.__findOptionByID('awb'):
-            self.setAwbMode(self.__findOptionByID('awb mode'))
+            self.setAwbMode(self.__findOptionByID('awb mode')[1])
 
     def mainLoop(self):
         for index, frame in enumerate(self.preview()):

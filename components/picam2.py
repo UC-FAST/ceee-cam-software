@@ -12,16 +12,6 @@ from picamera2.outputs import FfmpegOutput
 
 from . import configLoader
 
-awbMode = {
-    "Auto": 0,
-    "Incandescent": 1,
-    "Tungsten": 2,
-    "Fluorescent": 3,
-    "Indoor": 4,
-    "Daylight": 5,
-    "Cloudy": 6
-}
-
 
 class Cam:
     def __init__(self, verbose_console=None, tuning=None):
@@ -33,6 +23,7 @@ class Cam:
         )
         self.__cam.configure(self.__pictConfig)
         self.__encoder = H264Encoder(self.__config['camera']['video_bitrate'])
+        self.__cam.set_controls({'AeExposureMode': 3})
         self.__lock = threading.Lock()
         self.__framePerSecond = 0
         self.__width = self.__config['screen']['width']
@@ -75,12 +66,18 @@ class Cam:
     def framePerSecond(self):
         return self.__framePerSecond
 
-    def setAwbMode(self, mode):
-        if isinstance(mode, str):
-            mode = awbMode[mode]
+    def setAeExposureMode(self, code):
+        control = {
+            "AeEnable": True,
+            "AeExposureMode": code
+        }
+        self.__controls.update(control)
+        self.__cam.set_controls(control)
+
+    def setAwbMode(self, code):
         control = {
             "AwbEnable": True,
-            "AwbMode": mode
+            "AwbMode": code
         }
         self.__controls.update(control)
         self.__cam.set_controls(control)
@@ -108,6 +105,14 @@ class Cam:
                 "ExposureTime": exposureTime,
                 'AnalogueGain': analogueGain,
             }
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
+
+    def setAeMeteringMode(self, code):
+        control = {
+            'AeEnable': True,
+            'AeMeteringMode': code
+        }
         self.__cam.set_controls(control)
         self.__controls.update(control)
 
@@ -156,8 +161,8 @@ class Cam:
             t = present
 
     def startRecording(self, width, height, filePath):
-        if width == 0 or height == 0:
-            width, height = self.__cam.sensor_resolution
+        if width == 0 or height == 0 or width > 1920 or height > 1920:
+            width, height = 1920, 1080
 
         directoryPath = os.path.split(filePath)[0]
         if directoryPath:
@@ -233,8 +238,8 @@ class Cam:
             self.__cam.set_controls(self.__controls)
 
     def exposureCapture(self, exposeTime, width, height):
-        if width == 0 or height == 0:
-            width, height = 3000, 2000
+        if width == 0 or height == 0 or width > 1920 or height > 1920:
+            width, height = 1920, 1080
         config = self.__cam.still_configuration(
             main={"size": (width, height)},
         )
