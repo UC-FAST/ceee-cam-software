@@ -11,3 +11,5 @@ simplejpeg     ~=  1.6.4
 pidng          ~=  4.0.9
 python-prctl   ~=  1.7
 picamera2      ~=  0.2.1
+imageio        ~=  2.19.3
+imageio-ffmpeg ~= 0.4.7
