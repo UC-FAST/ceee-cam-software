@@ -107,7 +107,7 @@
                 "id": "hdr enable",
                 "content": "HDR Enable",
                 "type": "bool",
-                "value": true,
+                "value": false,
                 "setEnable": [
                     "lower",
                     "upper",
@@ -131,7 +131,7 @@
                     10000,
                     100000
                 ],
-                "enable": true
+                "enable": false
             },
             {
                 "id": "upper",
@@ -147,7 +147,7 @@
                     10000,
                     100000
                 ],
-                "enable": true
+                "enable": false
             },
             {
                 "id": "stack num",
@@ -160,7 +160,7 @@
                     10,
                     30
                 ],
-                "enable": true
+                "enable": false
             },
             {
                 "id": "algorithm",
@@ -173,14 +173,14 @@
                     "Reinhard",
                     "Mantiuk"
                 ],
-                "enable": true
+                "enable": false
             },
             {
                 "id": "correction",
                 "content": "Correction",
                 "type": "bool",
                 "value": true,
-                "enable": true
+                "enable": false
             }
         ]
     },
@@ -200,10 +200,10 @@
                 "id": "exposure time",
                 "content": "Exposure Time",
                 "type": "numeral",
-                "value": 1000,
+                "value": 31500,
                 "min": 303,
                 "max": 1000000,
-                "step": 100,
+                "step": 10000,
                 "stepOptions": [
                     100,
                     1000,
@@ -215,7 +215,7 @@
                 "id": "auto analog",
                 "content": "Auto Analog",
                 "type": "bool",
-                "value": false,
+                "value": true,
                 "setDisable": [
                     "analogue gain"
                 ]
@@ -224,7 +224,7 @@
                 "id": "analogue gain",
                 "content": "Analogue Gain",
                 "type": "numeral",
-                "value": 20,
+                "value": 3,
                 "min": 0,
                 "max": 23,
                 "step": 1,
@@ -233,7 +233,7 @@
                     1,
                     10
                 ],
-                "enable": true
+                "enable": false
             }
         ]
     },
@@ -241,12 +241,16 @@
         "title": "White Balance",
         "options": [
             {
-                "id": "auto awb",
-                "content": "Auto Awb",
+                "id": "awb",
+                "content": "Awb",
                 "type": "bool",
                 "value": true,
-                "setEnable": ["awb mode"],
-                "setDisable": ["color gains"]
+                "setEnable": [
+                    "awb mode"
+                ],
+                "setDisable": [
+                    "color gains"
+                ]
             },
             {
                 "id": "awb mode",
@@ -261,13 +265,15 @@
                     "Indoor",
                     "Daylight",
                     "Cloudy"
-                ]
+                ],
+                "enable": true
             },
             {
                 "id": "color gains",
                 "content": "Color Gains",
                 "type": "menu",
-                "value": "color gains"
+                "value": "color gains",
+                "enable": false
             }
         ]
     },

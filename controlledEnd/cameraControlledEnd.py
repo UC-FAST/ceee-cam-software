@@ -303,7 +303,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.setExposure(exposure, analog)
 
     def __colourGainsSetting(self):
-        if not self.__findOptionByID('auto awb'):
+        if not self.__findOptionByID('awb'):
             red, blue = self.__findOptionByID('red gain'), self.__findOptionByID('blue gain')
             self.setColourGains(red, blue)
 
@@ -339,7 +339,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self._msgSender(self._id, 'MenuControlledEnd', self.__option)
         self.__exposeSetting()
         self.__colourGainsSetting()
-        if self.__findOptionByID('auto awb'):
+        if self.__findOptionByID('awb'):
             self.setAwbMode(self.__findOptionByID('awb mode'))
 
     def mainLoop(self):
