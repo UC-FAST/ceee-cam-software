@@ -7,7 +7,7 @@ import cv2
 
 
 class GalleryBrowser:
-    def __init__(self, pictPath='./pict', width=128, height=128):
+    def __init__(self, pictPath='./pict', width=None, height=None):
         self.__pictPath = pictPath
         if not os.path.exists(self.__pictPath):
             os.makedirs(self.__pictPath)
@@ -34,21 +34,15 @@ class GalleryBrowser:
         self.__index = 0
 
         self.__cache[0] = None
-        self.__cache[1] = (
-            0,
-            cv2.resize(
-                cv2.imread(self.__filePathList[self.__index]),
-                (self.__width, self.__height)
-            )
-        )
+        frame = cv2.imread(self.__filePathList[self.__index])
+        if self.__width and self.__height:
+            frame = cv2.resize(frame, (self.__width, self.__height))
+        self.__cache[1] = (0, frame)
         try:
-            self.__cache[2] = (
-                1,
-                cv2.resize(
-                    cv2.imread(self.__filePathList[self.__index + 1]),
-                    (self.__width, self.__height)
-                )
-            )
+            frame = cv2.imread(self.__filePathList[self.__index + 1])
+            if self.__width and self.__height:
+                frame = cv2.resize(frame, (self.__width, self.__height))
+            self.__cache[2] = (1, frame)
         except IndexError:
             self.__cache[2] = None
 
@@ -80,21 +74,18 @@ class GalleryBrowser:
         return self
 
     def __loadImgInAnotherThread(self, pos, index):
-        self.__cache[pos] = (
-            index,
-            cv2.resize(
-                cv2.imread(self.__filePathList[index]),
-                (self.__width, self.__height)
-            )
-        )
+        frame = cv2.imread(self.__filePathList[index])
+        if self.__width and self.__height:
+            frame = cv2.resize(frame, (self.__width, self.__height))
+        self.__cache[pos] = (index, frame)
         self.__load = None
 
     def getPict(self):
+        if len(self.__filePathList) == 0:
+            raise FileNotFoundError
+
         if self.__load is not None:
             self.__load.join()
-
-        if len(self.__filePathList) == 0:
-            raise TypeError
 
         if self.__cache[0] is None and self.__index != 0:
             self.__load = threading.Thread(

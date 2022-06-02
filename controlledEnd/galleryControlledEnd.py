@@ -130,7 +130,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
             self.__frameList.put(self.__currentFrame)
         try:
             self.__rawFrame = self.getPict()
-        except TypeError:
+        except FileNotFoundError:
             self.__empty = True
             self._irq("CameraControlledEnd")
             return

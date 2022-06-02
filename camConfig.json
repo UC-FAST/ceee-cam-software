@@ -92,13 +92,6 @@
                 "value": false
             },
             {
-                "id": "save exif",
-                "content": "Save EXIF",
-                "type": "bool",
-                "value": false,
-                "enable": false
-            },
-            {
                 "id": "watermark",
                 "content": "Watermark",
                 "type": "bool",

@@ -6,7 +6,7 @@ import smbus2
 
 
 class Max17048:
-    def __init__(self, record=False):
+    def __init__(self):
         self.__i2c = smbus2.SMBus(1)
         self.__MAX17048_ADDR = 0x36
         self.__reg = {
@@ -24,7 +24,7 @@ class Max17048:
         }
 
         self.__powersave()
-        self.__recordEnable = record
+        self.__recordEnable = False
         if self.__recordEnable:
             with open('record.csv', 'a', newline='') as f:
                 c = csv.DictWriter(f, ['time', 'v'])

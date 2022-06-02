@@ -138,4 +138,4 @@ controlledEndList：由controlledEnd.ControlledEnd的子类构成的列表
 ```
 UniversalControl.mainLoop(self)
 ```
-主循环
+主循环，将ControlledEnd.mainloop返回的图像序列送入显示队列

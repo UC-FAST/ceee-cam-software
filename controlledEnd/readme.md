@@ -66,6 +66,11 @@ onEnter(self)
 虚方法，ControlledEnd组件上下文切换时调用
 
 ```
+mainLoop(self)
+```
+抽象方法，必须返回一个可迭代的图像序列
+
+```
 id
 ```
 
