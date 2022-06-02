@@ -152,9 +152,9 @@ def toBgr(color: str) -> typing.Tuple[int, int, int]:
 
 
 def toHex(color: Colors):
-    b, g, r = color
+    b, g, r = color.value
     return "#" + ('{:02X}' * 3).format(r, g, b)
 
 
 if __name__ == '__main__':
-    print(toHex((255, 255, 255)))
+    print(toHex(Colors.violet))

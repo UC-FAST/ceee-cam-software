@@ -52,17 +52,24 @@ class Cam:
         if zoom < 1:
             zoom = 1
         self.__digitalZoom = zoom
+        self.__zoom(update=True)
 
-        pWidth, pHeight = self.__fWidth // self.__digitalZoom, self.__fHeight // self.__digitalZoom
+    def __zoom(self, coordinate=None, update=False):
+        if coordinate:
+            wOffset, hOffset, fWidth, fHeight = tuple(coordinate)
+        else:
+            wOffset, hOffset, fWidth, fHeight = self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight
+        pWidth, pHeight = fWidth // self.__digitalZoom, fHeight // self.__digitalZoom
         offset = [
-            int((self.__fWidth - pWidth) // 2 + self.__wOffset),
-            int((self.__fHeight - pHeight) // 2 + self.__hOffset)
+            int((fWidth - pWidth) // 2 + wOffset),
+            int((fHeight - pHeight) // 2 + hOffset)
         ]
 
         size = [int(pWidth), int(pHeight)]
         control = {"ScalerCrop": offset + size}
         self.__cam.set_controls(control)
-        self.__controls.update(control)
+        if update:
+            self.__controls.update(control)
 
     @property
     def framePerSecond(self):
@@ -133,10 +140,9 @@ class Cam:
         while True:
             with self.__lock:
                 request = self.__cam.capture_request()
-            buffer = request.make_buffer(name="lores")
-            self.__metadata = request.get_metadata()
-            request.release()
-
+                buffer = request.make_buffer(name="lores")
+                self.__metadata = request.get_metadata()
+                request.release()
             self.__frame = YUV420_to_RGB(
                 buffer,
                 (
@@ -163,19 +169,26 @@ class Cam:
             lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
         )
 
-        with self.__lock:
-            self.__cam.stop()
+        tempConfig = self.__cam.preview_configuration(
+            main={"size": (int(width), int(height))},
+            lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
+        )
 
+        with self.__lock:
+            request = self.__cam.switch_mode_capture_request_and_stop(tempConfig)
+            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = request.get_metadata()['ScalerCrop']
             self.__cam.configure(videoConfig)
-            self.__cam.set_controls(self.__controls)
+            self.__zoom()
             output = FfmpegOutput(filePath)
             self.__cam.start_recording(self.__encoder, output)
 
     def stopRecording(self):
         with self.__lock:
             self.__cam.stop_recording()
-            self.__cam.set_controls(self.__controls)
+            self.__cam.configure(self.__pictConfig)
             self.__cam.start()
+            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = self.__cam.capture_metadata()['ScalerCrop']
+            self.__zoom()
 
     def saveFrame(self, filePath: str, fmat, width, height, rotate=0, saveMetadata=False, saveRaw=False):
         path, filename = os.path.split(filePath)
@@ -196,7 +209,8 @@ class Cam:
             )
         with self.__lock:
             self.__cam.switch_mode(config)
-            self.__cam.set_controls(self.__controls)
+            coordinate = self.__cam.capture_metadata()['ScalerCrop']
+            self.__zoom(coordinate)
             time.sleep(1)
             request = self.__cam.capture_request()
             if fmat:
@@ -213,7 +227,6 @@ class Cam:
                 request.save_dng('{}.{}'.format(filePath, 'dng'))
             request.release()
             self.__cam.switch_mode(self.__pictConfig)
-            self.__cam.set_controls(self.__controls)
             time.sleep(0.5)
 
     def exposureCapture(self, exposeTime, width, height):
@@ -221,11 +234,11 @@ class Cam:
             width, height = 3000, 2000
         config = self.__cam.still_configuration(
             main={"size": (width, height)},
-            lores={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)}
         )
         with self.__lock:
             self.__cam.switch_mode(config)
-            self.__cam.set_controls(self.__controls)
+            coordinate = self.__cam.capture_metadata()['ScalerCrop']
+            self.__zoom(coordinate)
             self.setExposure(exposeTime, 1)
             time.sleep(1)
             request = self.__cam.capture_request()
@@ -233,8 +246,6 @@ class Cam:
             metadata = request.get_metadata()
             request.release()
             self.__cam.switch_mode(self.__pictConfig)
-            self.__cam.set_controls(self.__controls)
-            time.sleep(0.5)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return metadata['ExposureTime'], frame
 

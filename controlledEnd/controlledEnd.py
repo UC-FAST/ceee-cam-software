@@ -6,7 +6,6 @@ class ControlledEnd(abc.ABC):
         self._id = _id
         self._irq = None
         self._msgSender = None
-        self._msgReceiver = None
 
     @abc.abstractmethod
     def centerPressAction(self):

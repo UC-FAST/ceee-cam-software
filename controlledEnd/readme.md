@@ -94,7 +94,7 @@ msg：消息内容
 _irq(self, _id: str)
 ```
 
-用于退出并拉起另一个ControlledEnd
+用于退出并拉起另一个ControlledEnd,在UniversalControl初始化时被初始化
 
 参数：
 
