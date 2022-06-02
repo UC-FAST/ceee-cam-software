@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
+import os
+import time
+
+import wiringpi
+
 import universalControl
 from components import screen, configLoader
 from controlledEnd import MenuControlledEnd, GalleryControlledEnd, CameraControlledEnd
+
+tuning = './tuning/imx477.json'
+t = 0
+config = configLoader.ConfigLoader('./config.json')
+while wiringpi.digitalRead(config['pin']['square']) and t < 1:
+    t += 0.01
+    time.sleep(0.01)
+if t >= 1:
+    if os.path.exists('./tuning.json'):
+        tuning = './tuning.json'
 
 u = universalControl.UniversalControl(
     screen.Lcd(),
     [
         CameraControlledEnd(
             verbose_console=configLoader.ConfigLoader('./config.json')['debug_level'],
-            tuningFilePath='./tuning/imx477.json'
+            tuningFilePath=tuning
         ),
         MenuControlledEnd(
             showPreview=True,

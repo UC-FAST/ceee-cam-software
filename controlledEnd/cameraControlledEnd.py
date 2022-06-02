@@ -200,13 +200,14 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     led.on(led.green)
                     lower, upper, stackNum = self.__findOptionByID('lower'), self.__findOptionByID(
                         'upper'), self.__findOptionByID('stack num')
-                    step = (upper - lower) // stackNum
+                    step = (upper - lower) // (stackNum - 1)
                     exposureTimeList, frameList = list(), list()
-                    for index, i in enumerate(range(lower, upper, step), start=1):
+                    for index, i in enumerate(range(lower, upper + step, step), start=1):
                         self.__toast.setText("{}/{}".format(index, stackNum))
                         exposeTime, frame = self.exposureCapture(i, int(width), int(height))
                         exposureTimeList.append(exposeTime / 1e6)
                         frameList.append(frame)
+
                     self.__toast.setText("Processing")
                     algorithm = self.__findOptionByID('algorithm')
                     hdr = Hdr(exposureTimeList, frameList, self.__findOptionByID('correction'))

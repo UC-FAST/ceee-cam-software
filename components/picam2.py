@@ -178,6 +178,7 @@ class Cam:
             request = self.__cam.switch_mode_capture_request_and_stop(tempConfig)
             self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = request.get_metadata()['ScalerCrop']
             self.__cam.configure(videoConfig)
+            self.__cam.set_controls(self.__controls)
             self.__zoom()
             output = FfmpegOutput(filePath)
             self.__cam.start_recording(self.__encoder, output)
@@ -211,6 +212,7 @@ class Cam:
         with self.__lock:
             self.__cam.switch_mode(config)
             coordinate = self.__cam.capture_metadata()['ScalerCrop']
+            self.__cam.set_controls(self.__controls)
             self.__zoom(coordinate)
             time.sleep(1)
             request = self.__cam.capture_request()
@@ -229,7 +231,6 @@ class Cam:
             request.release()
             self.__cam.switch_mode(self.__pictConfig)
             self.__cam.set_controls(self.__controls)
-            time.sleep(0.5)
 
     def exposureCapture(self, exposeTime, width, height):
         if width == 0 or height == 0:
@@ -240,6 +241,7 @@ class Cam:
         with self.__lock:
             self.__cam.switch_mode(config)
             coordinate = self.__cam.capture_metadata()['ScalerCrop']
+            self.__cam.set_controls(self.__controls)
             self.__zoom(coordinate)
             self.setExposure(exposeTime, 1)
             time.sleep(1)

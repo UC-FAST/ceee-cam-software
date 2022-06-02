@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import subprocess
+import threading
 import time
 from typing import List
 
@@ -79,10 +80,24 @@ class UniversalControl:
         self.__frameList = multiprocessing.Queue()
         self.__t = multiprocessing.Process(target=self.showImageInAnotherProcess, args=(self.__frameList,))
         self.__logger.info("UniversalControl initialized")
+        # self.__poweroffTime = 5 * 60
+        # self.__poweroffTimer = threading.Timer(self.__poweroffTime, self.__powerOff)
+        # self.__poweroffTimer.start()
 
     def __msgReceiver(self, msg):
         if msg['id'] == 'auto poweroff':
             print(1)
+
+    @staticmethod
+    def __powerOff():
+        subprocess.run(['sudo', 'poweroff'])
+
+    def __refreshTimer(self):
+        return
+        if self.__poweroffTimer.is_alive():
+            self.__poweroffTimer.cancel()
+        self.__poweroffTimer = threading.Timer(self.__poweroffTime, self.__powerOff)
+        self.__poweroffTimer.start()
 
     @exceptionRecorder()
     def __irq(self, _id: str):
@@ -138,12 +153,14 @@ class UniversalControl:
         self.__logger.debug("Center press action")
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__controlledEndList[self.__rights].centerPressAction()
 
     def __centerReleaseAction(self):
         self.__logger.debug("Center release action")
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__controlledEndList[self.__rights].centerReleaseAction()
 
     @exceptionRecorder()
@@ -159,12 +176,14 @@ class UniversalControl:
         self.__logger.debug("Circle press action")
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__controlledEndList[self.__rights].circlePressAction()
 
     def __circleReleaseAction(self):
         self.__logger.debug("Circle release action")
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__controlledEndList[self.__rights].circleReleaseAction()
 
     @exceptionRecorder()
@@ -180,12 +199,14 @@ class UniversalControl:
         self.__logger.debug("Triangle press action")
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__controlledEndList[self.__rights].trianglePressAction()
 
     def __triangleReleaseAction(self):
         self.__logger.debug("Triangle release action")
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__controlledEndList[self.__rights].triangleReleaseAction()
 
     @exceptionRecorder()
@@ -193,12 +214,14 @@ class UniversalControl:
         self.__logger.debug("Square action")
         if not self.__enable:
             return
+        self.__refreshTimer()
         t = 0
         while wiringpi.digitalRead(self.__config['pin']['square']) and t < 1:
             t += 0.01
             time.sleep(0.01)
         if t < 0.09:
             return
+        self.__refreshTimer()
         if t >= 1:
             filename = os.path.join(self.__config['screenshot_path'], 'Screenshot{}.png'.format(int(time.time())))
             path = os.path.split(filename)[0]
@@ -227,6 +250,7 @@ class UniversalControl:
             time.sleep(0.01)
         if t < 0.09:
             return
+        self.__refreshTimer()
         if t >= 2:
             # self.__frameList.put()
             self.__logger.info('Poweroff')
@@ -248,12 +272,14 @@ class UniversalControl:
     def __d1PressAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         while wiringpi.digitalRead(self.__config['pin']['d1']):
             self.__directionPressActionSheet[(self.__direction // 90) * 3 % 4]()
 
     def __d1ReleaseAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__directionReleaseActionSheet[(self.__direction // 90) * 3 % 4]()
 
     @exceptionRecorder()
@@ -268,12 +294,14 @@ class UniversalControl:
     def __d2PressAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         while wiringpi.digitalRead(self.__config['pin']['d2']):
             self.__directionPressActionSheet[((self.__direction // 90) * 3 + 1) % 4]()
 
     def __d2ReleaseAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__directionReleaseActionSheet[((self.__direction // 90) * 3 + 1) % 4]()
 
     @exceptionRecorder()
@@ -288,12 +316,14 @@ class UniversalControl:
     def __d3PressAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         while wiringpi.digitalRead(self.__config['pin']['d3']):
             self.__directionPressActionSheet[((self.__direction // 90) * 3 + 2) % 4]()
 
     def __d3ReleaseAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__directionReleaseActionSheet[((self.__direction // 90) * 3 + 2) % 4]()
 
     @exceptionRecorder()
@@ -308,12 +338,14 @@ class UniversalControl:
     def __d4PressAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         while wiringpi.digitalRead(self.__config['pin']['d4']):
             self.__directionPressActionSheet[((self.__direction // 90) * 3 + 3) % 4]()
 
     def __d4ReleaseAction(self):
         if not self.__enable:
             return
+        self.__refreshTimer()
         self.__directionReleaseActionSheet[((self.__direction // 90) * 3 + 3) % 4]()
 
     def __upPressAction(self):
