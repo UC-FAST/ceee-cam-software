@@ -189,6 +189,7 @@ class Cam:
             self.__cam.start()
             self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = self.__cam.capture_metadata()['ScalerCrop']
             self.__zoom()
+            self.__cam.set_controls(self.__controls)
 
     def saveFrame(self, filePath: str, fmat, width, height, rotate=0, saveMetadata=False, saveRaw=False):
         path, filename = os.path.split(filePath)
@@ -227,6 +228,7 @@ class Cam:
                 request.save_dng('{}.{}'.format(filePath, 'dng'))
             request.release()
             self.__cam.switch_mode(self.__pictConfig)
+            self.__cam.set_controls(self.__controls)
             time.sleep(0.5)
 
     def exposureCapture(self, exposeTime, width, height):
@@ -246,6 +248,7 @@ class Cam:
             metadata = request.get_metadata()
             request.release()
             self.__cam.switch_mode(self.__pictConfig)
+            self.__cam.set_controls(self.__controls)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return metadata['ExposureTime'], frame
 
