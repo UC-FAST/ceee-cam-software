@@ -18,7 +18,8 @@
                 "id": "settings",
                 "content": "Settings",
                 "type": "menu",
-                "value": "settings"
+                "value": "settings",
+                "enable": false
             }
         ]
     },
