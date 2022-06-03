@@ -194,8 +194,8 @@
                 "value": true,
                 "setDisable": [
                     "manual expose",
-                    "exposure time",
                     "manual analog",
+                    "exposure time",
                     "analogue gain"
                 ],
                 "setEnable": [
@@ -260,10 +260,9 @@
                 "content": "Manual Expose",
                 "type": "bool",
                 "value": true,
-                "setEnable": [
-                    "exposure time"
-                ],
-                "enable": false
+                "enable": false,
+                "setEnable": ["exposure time"],
+                "enableWith": ["exposure time"]
             },
             {
                 "id": "exposure time",
@@ -285,10 +284,13 @@
                 "content": "Manual Analog",
                 "type": "bool",
                 "value": true,
+                "enable": false,
                 "setEnable": [
                     "analogue gain"
                 ],
-                "enable": false
+                "enableWith": [
+                    "analogue gain"
+                ]
             },
             {
                 "id": "analogue gain",

@@ -201,26 +201,51 @@ class MenuControlledEnd(ControlledEnd):
         self.__jumpByID(last[0], record=False)
         self.__currentIndex = last[1]
 
+    def __setEnableState(self, option):
+        handledList = set()
+        if 'setDisable' in option.keys():
+            shotListDisable = option['setDisable']
+            for i in self.__options:
+                if i['id'] in shotListDisable:
+                    i['enable'] = not self.__currentOptions[self.__currentIndex]['value']
+                    handledList.update(self.__setEnableState(i))
+                    if i['id'] in handledList:
+                        continue
+                    handledList.add(i['id'])
+
+        if 'setEnable' in option.keys():
+            shotListEnable = option['setEnable']
+            print(option['id'], 'setEnable', shotListEnable)
+            for i in self.__options:
+                if i['id'] in shotListEnable:
+                    i['enable'] = self.__currentOptions[self.__currentIndex]['value']
+                    handledList.update(self.__setEnableState(i))
+                    if i['id'] in handledList:
+                        continue
+                    handledList.add(i['id'])
+        return handledList
+
+    def __setRecoverState(self, option):
+        handledList = set()
+        if 'enableWith' in option.keys():
+            shotListEnable = option['enableWith']
+            for i in self.__options:
+                if i['id'] in shotListEnable:
+                    i['enable'] = option['enable']
+                    handledList.update(self.__setRecoverState(i))
+                    if i['id'] in handledList:
+                        continue
+                    handledList.add(i['id'])
+
+        return handledList
+
     def select(self):
         t = self.__currentOptions[self.__currentIndex]['type'].lower()
         if t == 'bool':
             self.__currentOptions[self.__currentIndex]['value'] = not self.__currentOptions[self.__currentIndex][
                 'value']
-            if 'setDisable' in self.__currentOptions[self.__currentIndex].keys():
-                shotList = list()
-                for i in self.__currentOptions[self.__currentIndex]['setDisable']:
-                    shotList.append(i)
-                for i in self.__options:
-                    if i['id'] in shotList:
-                        i['enable'] = not self.__currentOptions[self.__currentIndex]['value']
-
-            if 'setEnable' in self.__currentOptions[self.__currentIndex].keys():
-                shotList = list()
-                for i in self.__currentOptions[self.__currentIndex]['setEnable']:
-                    shotList.append(i)
-                for i in self.__options:
-                    if i['id'] in shotList:
-                        i['enable'] = self.__currentOptions[self.__currentIndex]['value']
+            self.__setEnableState(self.__currentOptions[self.__currentIndex])
+            self.__setRecoverState(self.__currentOptions[self.__currentIndex])
             self._msgSender(
                 self._id,
                 self.__from,
