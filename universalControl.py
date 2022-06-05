@@ -85,8 +85,8 @@ class UniversalControl:
         # self.__poweroffTimer.start()
 
     def __msgReceiver(self, msg):
-        if msg['id'] == 'auto poweroff':
-            print(1)
+        if msg == 'restart':
+            subprocess.run(['sudo', 'reboot'])
 
     @staticmethod
     def __powerOff():

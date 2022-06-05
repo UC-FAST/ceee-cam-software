@@ -321,7 +321,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             if msg[0] == 'color gains':
                 self.__colourGainsSetting()
             if msg[0] == 'white balance':
-                self.setAwbMode(msg[1]['value'][1])
+                if self.__findOptionByID('awb'):
+                    self.setAwbMode(self.__findOptionByID('awb mode')[1])
 
     def centerPressAction(self):
         t = 0

@@ -19,7 +19,7 @@
                 "content": "Settings",
                 "type": "menu",
                 "value": "settings",
-                "enable": false
+                "enable": true
             }
         ]
     },
@@ -408,14 +408,10 @@
         "title": "Settings",
         "options": [
             {
-                "id": "auto poweroff",
-                "content": "Auto Poweroff",
-                "type": "option",
-                "value": 60,
-                "options": [
-                    60,
-                    360
-                ],
+                "id": "restart",
+                "content": "Restart",
+                "type": "msg",
+                "value": "restart",
                 "receiver": "UniversalControl"
             }
         ]

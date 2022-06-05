@@ -16,6 +16,7 @@ class MenuControlledEnd(ControlledEnd):
     def __init__(
             self,
             _id='MenuControlledEnd',
+            path='./menu.conf',
             width: int = 128,
             height: int = 128,
             options: dict = None,
@@ -79,6 +80,8 @@ class MenuControlledEnd(ControlledEnd):
             if enable:
                 enableOptionRange = index
         self.__pageCount = math.ceil(enableOptionRange / self.__rowCount)
+        if self.__pageCount == 0:
+            self.__pageCount = 1
 
     @property
     def options(self):
@@ -98,6 +101,9 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentIndex = 0
         self.__currentOptions = self.__options[0:self.__rowCount]
 
+    def writeConfig(self):
+        pass
+    
     def __spaceCalc(self):
         lineCount = self.__rowCount
         if self.__showPreview:
@@ -202,42 +208,45 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentIndex = last[1]
 
     def __setEnableState(self, option):
-        handledList = set()
-        if 'setDisable' in option.keys():
-            shotListDisable = option['setDisable']
-            for i in self.__options:
-                if i['id'] in shotListDisable:
-                    i['enable'] = not self.__currentOptions[self.__currentIndex]['value']
-                    handledList.update(self.__setEnableState(i))
-                    if i['id'] in handledList:
-                        continue
-                    handledList.add(i['id'])
+        setDisable: list = option.get('setDisable', [])
+        setEnable: list = option.get('setEnable', [])
+        enableWith: list = option.get('enableWith', [])
+        if not setDisable and not setEnable and not enableWith:
+            return
+        readyToEnable, readyToDisable = [], []
 
-        if 'setEnable' in option.keys():
-            shotListEnable = option['setEnable']
-            print(option['id'], 'setEnable', shotListEnable)
-            for i in self.__options:
-                if i['id'] in shotListEnable:
-                    i['enable'] = self.__currentOptions[self.__currentIndex]['value']
-                    handledList.update(self.__setEnableState(i))
-                    if i['id'] in handledList:
-                        continue
-                    handledList.add(i['id'])
-        return handledList
+        for i in self.__options:
+            print(i)
+            if i['id'] in setDisable:
+                if option['value']:
+                    readyToDisable.append(i)
+                else:
+                    readyToEnable.append(i)
+            if i['id'] in setEnable:
+                if option['value']:
+                    readyToEnable.append(i)
+                else:
+                    readyToDisable.append(i)
 
-    def __setRecoverState(self, option):
-        handledList = set()
-        if 'enableWith' in option.keys():
-            shotListEnable = option['enableWith']
+        if option.get('enable', True):
             for i in self.__options:
-                if i['id'] in shotListEnable:
-                    i['enable'] = option['enable']
-                    handledList.update(self.__setRecoverState(i))
-                    if i['id'] in handledList:
+                if i['id'] in enableWith:
+                    if i in readyToDisable:
                         continue
-                    handledList.add(i['id'])
+                    readyToEnable.append(i)
+        else:
+            for i in self.__options:
+                if i['id'] in enableWith:
+                    if i in readyToEnable:
+                        readyToEnable.remove(i)
+                    readyToDisable.append(i)
 
-        return handledList
+        for i in readyToEnable:
+            print('enable', i['id'])
+            i['enable'] = True
+        for j in readyToDisable:
+            print('disable', j['id'])
+            j['enable'] = False
 
     def select(self):
         t = self.__currentOptions[self.__currentIndex]['type'].lower()
@@ -245,7 +254,6 @@ class MenuControlledEnd(ControlledEnd):
             self.__currentOptions[self.__currentIndex]['value'] = not self.__currentOptions[self.__currentIndex][
                 'value']
             self.__setEnableState(self.__currentOptions[self.__currentIndex])
-            self.__setRecoverState(self.__currentOptions[self.__currentIndex])
             self._msgSender(
                 self._id,
                 self.__from,
