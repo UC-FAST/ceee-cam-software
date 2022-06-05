@@ -51,8 +51,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__brightHold = False
         self.__rotate = 0
         self.__recordTimestamp = None
-        with open(self.__config['camera']['configFilePath']) as f:
-            self.__option: typing.Dict[typing.Dict] = json.load(f)
+        self.__option: typing.Dict[typing.Dict] = None
         self.__m = max17048.Max17048()
         self.__filter = SlidingWindowFilter(10)
         self.__frameList = queue.SimpleQueue()
@@ -314,15 +313,11 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
-            with open(self.__config['camera']['configFilePath'], 'w') as f:
-                json.dump(self.__option, f, indent=4)
-            if msg[0] == 'exposure':
-                self.__exposeSetting()
-            if msg[0] == 'color gains':
-                self.__colourGainsSetting()
-            if msg[0] == 'white balance':
-                if self.__findOptionByID('awb'):
-                    self.setAwbMode(self.__findOptionByID('awb mode')[1])
+            self.__option = msg[1]
+            self.__exposeSetting()
+            self.__colourGainsSetting()
+            if self.__findOptionByID('awb'):
+                self.setAwbMode(self.__findOptionByID('awb mode')[1])
 
     def centerPressAction(self):
         t = 0
@@ -342,11 +337,13 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def onEnter(self, lastID):
         if not os.path.exists(self.__config['camera']['path']) or not os.path.isdir(self.__config['camera']['path']):
             os.mkdir(self.__config['camera']['path'])
-        self._msgSender(self._id, 'MenuControlledEnd', self.__option)
-        self.__exposeSetting()
-        self.__colourGainsSetting()
-        if self.__findOptionByID('awb'):
-            self.setAwbMode(self.__findOptionByID('awb mode')[1])
+        self._msgSender(self._id, 'MenuControlledEnd', self._id)
+
+    def active(self):
+        self.start()
+
+    def inactive(self):
+        self.stop()
 
     def mainLoop(self):
         for index, frame in enumerate(self.preview()):

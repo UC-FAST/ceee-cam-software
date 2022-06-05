@@ -263,5 +263,9 @@ class Cam:
         with self.__lock:
             self.__cam.stop()
 
+    def start(self):
+        with self.__lock:
+            self.__cam.start()
+
     def release(self):
         self.__cam.close()

@@ -1,3 +1,4 @@
+import json
 import math
 import queue
 import time
@@ -16,10 +17,9 @@ class MenuControlledEnd(ControlledEnd):
     def __init__(
             self,
             _id='MenuControlledEnd',
-            path='./menu.conf',
+            path='./menu.json',
             width: int = 128,
             height: int = 128,
-            options: dict = None,
             padding: tuple = (10, 10, 10, 10),
             rowCount: int = 4,
             showIndex: bool = False,
@@ -28,8 +28,12 @@ class MenuControlledEnd(ControlledEnd):
             thickness: int = 1
     ):
         ControlledEnd.__init__(self, _id)
-        self.__width, self.__height, self.__rowCount = width, height, rowCount
-        self.__optionList = options
+        self.__options = None
+        self.__optionList = None
+        self.__path, self.__width, self.__height, self.__rowCount = path, width, height, rowCount
+        with open(self.__path) as f:
+            self.__menuOptions = json.load(f)
+
         self.__fontHeight = fontHeight
         self.__fontScale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, self.__fontHeight)
         self.__highLightFontScale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, int(self.__fontHeight * 1.5))
@@ -59,15 +63,6 @@ class MenuControlledEnd(ControlledEnd):
             'cursorDisable': Colors.darkgray.value,
             'textDisable': Colors.gray.value
         }
-        if self.__optionList:
-            self.__currentMenuID = "0"
-            self.__title = self.__optionList[self.__currentMenuID].get('title', None)
-            self.__options = self.__optionList[self.__currentMenuID]['options']
-            self.__pageCount = math.ceil(len(self.__options) / self.__rowCount)
-            self.__spaceCalc()
-            self.__currentPage = 0
-            self.__currentIndex = 0
-            self.__currentOptions = self.__options[0:self.__rowCount]
 
         self.__frameList = None
         self.__direction = 0
@@ -87,9 +82,8 @@ class MenuControlledEnd(ControlledEnd):
     def options(self):
         return self.__optionList
 
-    @options.setter
-    def options(self, optionList):
-        self.__optionList = optionList
+    def setOption(self, key):
+        self.__optionList = self.__menuOptions[key]
         self.__currentMenuID = "0"
         self.__routeList = list()
         self.__title = self.__title = self.__optionList[self.__currentMenuID].get('title', None)
@@ -101,9 +95,10 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentIndex = 0
         self.__currentOptions = self.__options[0:self.__rowCount]
 
-    def writeConfig(self):
-        pass
-    
+    def dumpConfig(self):
+        with open(self.__path, 'w') as f:
+            json.dump(self.__menuOptions, f, indent=4)
+
     def __spaceCalc(self):
         lineCount = self.__rowCount
         if self.__showPreview:
@@ -216,7 +211,6 @@ class MenuControlledEnd(ControlledEnd):
         readyToEnable, readyToDisable = [], []
 
         for i in self.__options:
-            print(i)
             if i['id'] in setDisable:
                 if option['value']:
                     readyToDisable.append(i)
@@ -242,10 +236,8 @@ class MenuControlledEnd(ControlledEnd):
                     readyToDisable.append(i)
 
         for i in readyToEnable:
-            print('enable', i['id'])
             i['enable'] = True
         for j in readyToDisable:
-            print('disable', j['id'])
             j['enable'] = False
 
     def select(self):
@@ -259,7 +251,7 @@ class MenuControlledEnd(ControlledEnd):
                 self.__from,
                 (
                     self.__currentMenuID,
-                    self.__currentOptions[self.__currentIndex]
+                    self.__menuOptions[self.__from]
                 )
             )
             self.__pageCountCalc()
@@ -270,6 +262,7 @@ class MenuControlledEnd(ControlledEnd):
                     receiver,
                     self.__currentOptions[self.__currentIndex]['value']
                 )
+            self.dumpConfig()
         elif t == 'menu':
             self.__jumpByIndex(self.__currentIndex)
             self.decorate()
@@ -296,7 +289,7 @@ class MenuControlledEnd(ControlledEnd):
             self.__from,
             (
                 self.__currentMenuID,
-                self.__currentOptions[self.__currentIndex]
+                self.__menuOptions[self.__from]
             )
         )
         receiver = self.__currentOptions[self.__selectIndex].get('receiver', None)
@@ -307,6 +300,7 @@ class MenuControlledEnd(ControlledEnd):
                 self.__currentOptions[self.__selectIndex]
             )
         self.__selectIndex = None
+        self.dumpConfig()
 
     def upAction(self):
         times = 1
@@ -997,11 +991,20 @@ class MenuControlledEnd(ControlledEnd):
                 self._irq(self.__from)
 
     def msgReceiver(self, sender, msg):
-        self.options = msg
+        self.setOption(msg)
         self.__from = sender
+        self._msgSender(
+            self._id,
+            self.__from,
+            (
+                self.__currentMenuID,
+                self.__menuOptions[self.__from]
+            )
+        )
 
     def onEnter(self, lastID):
         self.__frameList = queue.SimpleQueue()
+        self.decorate()
 
     def onExit(self):
         self.__frameList.put(
@@ -1010,6 +1013,5 @@ class MenuControlledEnd(ControlledEnd):
         )
 
     def mainLoop(self):
-        self.decorate()
         while True:
             yield self.__frameList.get(True)

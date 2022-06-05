@@ -259,6 +259,10 @@ class UniversalControl:
             self.__logger.info('Toggle enable')
             self.__enable = not self.__enable
             self.__lcd.backlight(self.__enable)
+            if self.__enable:
+                self.__controlledEndList[self.__rights].active()
+            else:
+                self.__controlledEndList[self.__rights].inactive()
 
     @exceptionRecorder()
     def __d1Action(self):

@@ -80,6 +80,12 @@ class ControlledEnd(abc.ABC):
     def onEnter(self, lastID):
         pass
 
+    def active(self):
+        pass
+
+    def inactive(self):
+        pass
+
     @property
     def id(self):
         return self._id

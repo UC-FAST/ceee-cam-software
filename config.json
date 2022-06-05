@@ -15,12 +15,10 @@
     },
     "camera": {
         "path": "./pict",
-        "configFilePath": "./camConfig.json",
         "video_path": "./pict/video",
         "video_bitrate": 1000000
     },
     "gallery": {
-        "configFilePath": "./galleryConfig.json",
         "url": "https://microfish.club/api",
         "params": {
             "mode": "pictUpdate"

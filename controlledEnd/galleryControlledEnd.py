@@ -1,4 +1,3 @@
-import json
 import queue
 import typing
 from time import sleep
@@ -18,8 +17,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         galleryBrowser.GalleryBrowser.__init__(self, self.__config['camera']['path'], width, height)
         self.__width, self.__height = width, height
         self.__direction = 0
-        with open(self.__config['gallery']['configFilePath']) as f:
-            self.__option: typing.Dict[typing.Dict] = json.load(f)
+        self.__option: typing.Dict[typing.Dict] = None
         self.__frameList = queue.SimpleQueue()
         self.__busy = frameDecorator.Busy()
         self.__rotate = 0
@@ -111,15 +109,13 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
-            if msg == 'delete':
+            self.__option = msg[1]
+            if msg[0] == 'delete':
                 self.__delete = True
                 self.delete()
                 self.__refreshFrame()
-            elif msg == 'update':
+            elif msg[0] == 'update':
                 self.update()
-            else:
-                with open(self.__config['gallery']['configFilePath'], 'w') as f:
-                    json.dump(self.__option, f, indent=4)
 
     def update(self):
         pass
@@ -156,7 +152,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
                 self.__from = lastID
                 self.refreshPictList()
             self.__delete = False
-            self._msgSender(self._id, "MenuControlledEnd", self.__option)
+            self._msgSender(self._id, "MenuControlledEnd", self._id)
             self.__refreshFrame()
         except FileNotFoundError:
             self.__empty = True
