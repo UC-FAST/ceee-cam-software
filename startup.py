@@ -8,7 +8,7 @@ import universalControl
 from components import screen, configLoader
 from controlledEnd import MenuControlledEnd, GalleryControlledEnd, CameraControlledEnd
 
-tuning = './tuning.json'
+tuning = './tuning/imx477.json'
 t = 0
 config = configLoader.ConfigLoader('./config.json')
 while wiringpi.digitalRead(config['pin']['square']) and t < 1:

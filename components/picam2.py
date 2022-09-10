@@ -17,7 +17,7 @@ class Cam:
     def __init__(self, verbose_console=None, tuning=None):
         self.__cam = picamera2.Picamera2(verbose_console=verbose_console, tuning=tuning)
         self.__config = configLoader.ConfigLoader('./config.json')
-        self.__pictConfig = self.__cam.preview_configuration(
+        self.__pictConfig = self.__cam.create_preview_configuration(
             main={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
             lores={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
         )
@@ -169,12 +169,12 @@ class Cam:
             if not os.path.exists(directoryPath):
                 os.makedirs(directoryPath)
 
-        videoConfig = self.__cam.video_configuration(
+        videoConfig = self.__cam.create_video_configuration(
             main={"size": (int(width), int(height))},
             lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
         )
 
-        tempConfig = self.__cam.preview_configuration(
+        tempConfig = self.__cam.create_preview_configuration(
             main={"size": (int(width), int(height))},
             lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
         )
@@ -206,12 +206,12 @@ class Cam:
         if width == 0 or height == 0:
             width, height = self.__cam.sensor_resolution
         if saveRaw:
-            config = self.__cam.still_configuration(
+            config = self.__cam.create_still_configuration(
                 main={"size": (width, height)},
                 raw={"size": self.__cam.sensor_resolution}
             )
         else:
-            config = self.__cam.still_configuration(
+            config = self.__cam.create_still_configuration(
                 main={"size": (width, height)},
             )
         with self.__lock:

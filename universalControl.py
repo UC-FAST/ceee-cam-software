@@ -71,11 +71,6 @@ class UniversalControl:
         wiringpi.wiringPiISR(self.__config['pin']['cross'], wiringpi.GPIO.INT_EDGE_RISING, self.__crossAction)
 
         self.__w = frameDecorator.Warining()
-        self.__h = frameDecorator.Hist(
-            self.__config['screen']['width'],
-            self.__config['screen']['height'],
-            fill=0
-        )
 
         self.__frameList = multiprocessing.Queue()
         self.__t = multiprocessing.Process(target=self.showImageInAnotherProcess, args=(self.__frameList,))

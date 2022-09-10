@@ -168,7 +168,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 except ValueError:
                     width, height = 0, 0
                 self.startRecording(
-                    width, height,
+                    int(width), int(height),
                     '{}'.format(
                         os.path.join(
                             self.__config['camera']['video_path'],
