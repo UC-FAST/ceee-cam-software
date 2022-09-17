@@ -105,6 +105,7 @@ class GalleryBrowser:
 
     def delete(self):
         filename = self.__filePathList[self.__index]
+        print(filename)
         os.remove(filename)
         self.__filePathList.pop(self.__index)
 

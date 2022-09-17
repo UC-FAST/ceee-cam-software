@@ -274,7 +274,10 @@ class MenuControlledEnd(ControlledEnd):
             self._msgSender(
                 self._id,
                 self.__currentOptions[self.__currentIndex]['receiver'],
-                self.__currentOptions[self.__currentIndex]['value']
+                (
+                    self.__currentOptions[self.__currentIndex]['value'],
+                    self.__menuOptions[self.__from]
+                )
             )
             self._irq(self.__from)
         else:
@@ -959,12 +962,6 @@ class MenuControlledEnd(ControlledEnd):
                 time.sleep(0.2)
 
     def circlePressAction(self):
-        t = 0
-        while wiringpi.digitalRead(self.__config['pin']['circle']) and t < 1:
-            t += 0.01
-            time.sleep(0.01)
-        if t < 0.09:
-            return
         if self.__selectIndex is not None:
             self.unselect()
         else:
@@ -972,14 +969,6 @@ class MenuControlledEnd(ControlledEnd):
         self.decorate()
 
     def trianglePressAction(self):
-        '''t = 0
-        while wiringpi.digitalRead(self.__config['pin']['triangle']) and t < 1:
-            t += 0.01
-            time.sleep(0.01)
-        if t < 0.09:
-            return'''
-        '''if t >= 1:
-            self._irq(self.__from)'''
         if self.__selectIndex is not None:
             self.__selectIndex = None
             self.decorate()

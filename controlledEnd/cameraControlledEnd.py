@@ -166,37 +166,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__zoomHold = False
 
     def circlePressAction(self):
-        if self.__isBusy or self.__isHdrProcessing:
-            return
-        '''t = 0
-        while wiringpi.digitalRead(self.__config['pin']['circle']) and t < 1:
-            t += 0.01
-            time.sleep(0.01)
-        if t < 0.09:
-            return
-        if t >= 1:
-            if self.__recordTimestamp is None:
-                try:
-                    width, height = tuple(self.__findOptionByID('resolution').split('x'))
-                except ValueError:
-                    width, height = 0, 0
-                self.startRecording(
-                    int(width), int(height),
-                    '{}'.format(
-                        os.path.join(
-                            self.__config['camera']['video_path'],
-                            str(int(time.time())) + '.mp4'
-                        )
-                    )
-                )
-                led.on(led.blue)
-                self.__recordTimestamp = time.time()
-            else:
-                self.stopRecording()
-                led.off(led.blue)
-                self.__recordTimestamp = None
-
-        else:'''
         if self.__recordTimestamp is not None:
             self.stopRecording()
             led.off(led.blue)
@@ -314,15 +283,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__recordTimestamp = None
 
     def trianglePressAction(self):
-        '''t = 0
-        while wiringpi.digitalRead(self.__config['pin']['triangle']) and t < 1:
-            t += 0.01
-            time.sleep(0.01)
-
-        if t < 0.09:
-            return
-        if t >= 1:
-            self.__decorateEnable = not self.__decorateEnable'''
         if self.__decorateEnable:
             self.__decorateEnable = False
         elif not self.__decorateEnable and self.__recordTimestamp is None and not self.__isBusy:
