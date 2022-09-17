@@ -171,8 +171,17 @@ class UniversalControl:
         self.__logger.debug("Circle press action")
         if not self.__enable:
             return
+        t = 0
+        while wiringpi.digitalRead(self.__config['pin']['circle']) and t < 1:
+            t += 0.01
+            time.sleep(0.01)
+        if t < 0.09:
+            return
         self.__refreshTimer()
-        self.__controlledEndList[self.__rights].circlePressAction()
+        if t >= 1:
+            self.__controlledEndList[self.__rights].circleLongPressAction()
+        else:
+            self.__controlledEndList[self.__rights].circlePressAction()
 
     def __circleReleaseAction(self):
         self.__logger.debug("Circle release action")
@@ -194,8 +203,20 @@ class UniversalControl:
         self.__logger.debug("Triangle press action")
         if not self.__enable:
             return
+
+        t = 0
+        while wiringpi.digitalRead(self.__config['pin']['triangle']) and t < 1:
+            t += 0.01
+            time.sleep(0.01)
+
+        if t < 0.09:
+            return
+
         self.__refreshTimer()
-        self.__controlledEndList[self.__rights].trianglePressAction()
+        if t >= 1:
+            self.__controlledEndList[self.__rights].triangleLongPressAction()
+        else:
+            self.__controlledEndList[self.__rights].trianglePressAction()
 
     def __triangleReleaseAction(self):
         self.__logger.debug("Triangle release action")

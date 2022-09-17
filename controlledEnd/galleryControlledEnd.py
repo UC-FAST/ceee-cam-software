@@ -3,18 +3,17 @@ import typing
 from time import sleep
 
 import numpy as np
-import wiringpi
 
 import controlledEnd
 import frameDecorator
-from components import galleryBrowser, configLoader
+from components import galleryBrowser
 
 
 class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBrowser):
-    def __init__(self, _id='GalleryControlledEnd', width=128, height=128):
+    def __init__(self, _id='GalleryControlledEnd', width=128, height=128, pictPath='./pict/'):
         controlledEnd.ControlledEnd.__init__(self, _id)
-        self.__config = configLoader.ConfigLoader('./config.json')
-        galleryBrowser.GalleryBrowser.__init__(self, self.__config['camera']['path'], width, height)
+        pictPath = pictPath if pictPath.endswith('/') else pictPath + '/'
+        galleryBrowser.GalleryBrowser.__init__(self, pictPath, width, height)
         self.__width, self.__height = width, height
         self.__direction = 0
         self.__option: typing.Dict[typing.Dict] = None
@@ -27,6 +26,20 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__from = None
         self.__delete = False
         self.__empty = False
+
+        self.__decorator = frameDecorator.SimpleText(
+            [self.__worker1],
+            height=self.__height,
+            padding=(10, 20, 0, 0),
+            fontHeight=10,
+            color=frameDecorator.Colors.gold.value
+        )
+        self.__simpleTextEnable = False
+
+    def __worker1(self):
+        return {
+            "{}": self.getPictName(),
+        }
 
     def __findOptionByID(self, target):
         for key, value in self.__option.items():
@@ -90,22 +103,22 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
             self.__empty = False
             self._irq(self.__from)
             return
+        self.__simpleTextEnable = not self.__simpleTextEnable
+        self.__refreshFrame()
 
     def trianglePressAction(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
             return
-        t = 0
-        while wiringpi.digitalRead(self.__config['pin']['triangle']) and t < 1:
-            t += 0.01
-            sleep(0.01)
-        if t < 0.09:
+        self._irq('MenuControlledEnd')
+
+    def triangleLongPressAction(self):
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
             return
-        if t >= 1:
-            self._irq('CameraControlledEnd')
-        else:
-            self._irq('MenuControlledEnd')
+        self._irq('CameraControlledEnd')
 
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
@@ -137,6 +150,8 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
     def mainLoop(self):
         while True:
             pict = self.__frameList.get(block=True)
+            if self.__simpleTextEnable:
+                self.__decorator.decorate(pict)
             yield np.rot90(pict, -self.__rotate // 90)
 
     def direction(self, direction):

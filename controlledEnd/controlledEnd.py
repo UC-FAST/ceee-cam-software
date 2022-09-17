@@ -31,8 +31,14 @@ class ControlledEnd(abc.ABC):
     def circlePressAction(self):
         pass
 
+    def circleLongPressAction(self):
+        pass
+
     @abc.abstractmethod
     def trianglePressAction(self):
+        pass
+
+    def triangleLongPressAction(self):
         pass
 
     @abc.abstractmethod

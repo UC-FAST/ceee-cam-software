@@ -237,17 +237,9 @@ class Lcd:
 
     def showImage(self, img):
         try:
-            if type(img) == np.ndarray:  # opencv format
-                imwidth, imheight, _ = img.shape
-                if imwidth != self.width or imheight != self.height:
-                    img = cv2.resize(img, (self.width, self.height))
-
-            else:  # PIL format
-                img = np.asarray(img)
-                imwidth, imheight, _ = img.shape
-                if imwidth != self.width or imheight != self.height:
-                    img = cv2.resize(img, (self.width, self.height))
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            imwidth, imheight, _ = img.shape
+            if imwidth != self.width or imheight != self.height:
+                img = cv2.resize(img, (self.width, self.height))
         except ValueError:
             return
 
@@ -256,7 +248,7 @@ class Lcd:
         pix[..., [1]] = np.add(np.bitwise_and(np.left_shift(img[..., [1]], 3), 0xE0), np.right_shift(img[..., [2]], 3))
         pix = pix.flatten().tolist()
 
-        self.__setWindows(0, 0, self.width, self.height)
+        #self.__setWindows(0, 0, self.width, self.height)
         wiringpi.digitalWrite(self.__config['pin']['dc'], 1)
         for i in range(0, len(pix), 4096):
             self.__spi.writebytes(pix[i:i + 4096])

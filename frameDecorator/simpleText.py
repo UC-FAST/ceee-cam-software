@@ -49,7 +49,17 @@ class SimpleText:
         spaceCount = 1 if textCount == 1 else textCount - 1
         step = ceil((totalHeight - textCount * self.__fontHeight) / spaceCount)
         for index, (key, value) in enumerate(widget.items()):
-            if isinstance(value, Iterable):
+            if isinstance(value, str):
+                cv2.putText(
+                    sketch,
+                    key.format(value),
+                    (self.__padding[0], self.__padding[1] + index * (step + self.__fontHeight)),
+                    cv2.FONT_ITALIC,
+                    self.__fontSize,
+                    self.__color,
+                    self.__thickness
+                )
+            elif isinstance(value, Iterable):
                 cv2.putText(
                     sketch,
                     key.format(*tuple(value)),

@@ -23,7 +23,7 @@ class Cam:
         )
         self.__cam.configure(self.__pictConfig)
         self.__encoder = H264Encoder(self.__config['camera']['video_bitrate'])
-        self.__cam.set_controls({'AeExposureMode': 3})
+        
         self.__lock = threading.Lock()
         self.__framePerSecond = 0
         self.__width = self.__config['screen']['width']
@@ -133,7 +133,10 @@ class Cam:
     @property
     def frameQuality(self):
         if self.__metadata:
-            return self.__metadata['FocusFoM']
+            try:
+                return self.__metadata['FocusFoM']
+            except KeyError:
+                return 0
         return None
 
     @property

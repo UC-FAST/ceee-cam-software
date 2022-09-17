@@ -1,6 +1,8 @@
 import json
 import os
 import queue
+import re
+import subprocess
 import time
 import typing
 
@@ -34,7 +36,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         )
         self.__toast = frameDecorator.Toast()
         self.__decorator = frameDecorator.SimpleText(
-            [self.__worker2, self.__worker1],
+            [self.__worker2, self.__worker1, self.__worker3],
             height=self.__config['screen']['height'],
             padding=(10, 20, 0, 0),
             fontHeight=10,
@@ -54,12 +56,23 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__option: typing.Dict[typing.Dict] = None
         self.__m = max17048.Max17048()
         self.__filter = SlidingWindowFilter(10)
-        self.__frameList = queue.SimpleQueue()
+        self.__frameList = queue.Queue(maxsize=5)
+
+    def __worker3(self):
+        result = subprocess.run(["ifconfig"], capture_output=True).stdout.decode()
+        pattern = 'wlan0:.*inet (.*)  netmask'
+        try:
+            target = re.findall(pattern=pattern, string=result, flags=re.DOTALL)[0]
+        except IndexError:
+            target = 'NULL'
+        return {
+            'IP {}': target,
+        }
 
     def __worker2(self):
         return {
             "EPTime {}": self.metadata['ExposureTime'],
-            'FocusFoM {}': self.metadata['FocusFoM'],
+            'FocusFoM {}': self.frameQuality,
             'FrameDur {}': self.metadata['FrameDuration'],
             'AnGain {}': round(self.metadata['AnalogueGain'], 2),
             'DigGain {}': round(self.metadata['DigitalGain'], 2),
@@ -155,7 +168,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def circlePressAction(self):
         if self.__isBusy or self.__isHdrProcessing:
             return
-        t = 0
+        '''t = 0
         while wiringpi.digitalRead(self.__config['pin']['circle']) and t < 1:
             t += 0.01
             time.sleep(0.01)
@@ -183,101 +196,125 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 led.off(led.blue)
                 self.__recordTimestamp = None
 
+        else:'''
+        if self.__recordTimestamp is not None:
+            self.stopRecording()
+            led.off(led.blue)
+            self.__recordTimestamp = None
         else:
-            if self.__recordTimestamp is not None:
-                self.stopRecording()
-                led.off(led.blue)
-                self.__recordTimestamp = None
-            else:
-                if self.__findOptionByID('hdr enable'):
-                    try:
-                        width, height = tuple(self.__findOptionByID('resolution').split('x'))
-                    except ValueError:
-                        width, height = 0, 0
-                    self.__isBusy = True
-                    self.__isHdrProcessing = True
-                    led.on(led.green)
-                    lower, upper, stackNum = self.__findOptionByID('lower'), self.__findOptionByID(
-                        'upper'), self.__findOptionByID('stack num')
-                    step = (upper - lower) // (stackNum - 1)
-                    exposureTimeList, frameList = list(), list()
-                    for index, i in enumerate(range(lower, upper + step, step), start=1):
-                        self.__toast.setText("{}/{}".format(index, stackNum))
-                        exposeTime, frame = self.exposureCapture(i, int(width), int(height))
-                        exposureTimeList.append(exposeTime / 1e6)
-                        frameList.append(frame)
+            if self.__findOptionByID('hdr enable'):
+                try:
+                    width, height = tuple(self.__findOptionByID('resolution').split('x'))
+                except ValueError:
+                    width, height = 0, 0
+                self.__isBusy = True
+                self.__isHdrProcessing = True
+                led.on(led.green)
+                lower, upper, stackNum = self.__findOptionByID('lower'), self.__findOptionByID(
+                    'upper'), self.__findOptionByID('stack num')
+                step = (upper - lower) // (stackNum - 1)
+                exposureTimeList, frameList = list(), list()
+                for index, i in enumerate(range(lower, upper + step, step), start=1):
+                    self.__toast.setText("{}/{}".format(index, stackNum))
+                    exposeTime, frame = self.exposureCapture(i, int(width), int(height))
+                    exposureTimeList.append(exposeTime / 1e6)
+                    frameList.append(frame)
 
-                    self.__toast.setText("Processing")
-                    algorithm = self.__findOptionByID('algorithm')
-                    hdr = Hdr(exposureTimeList, frameList, self.__findOptionByID('correction'))
-                    if algorithm == 'Drago':
-                        hdrFrame = hdr.tonemapDrago()
-                    elif algorithm == 'Reinhard':
-                        hdrFrame = hdr.tonemapReinhard()
-                    elif algorithm == 'Mantiuk':
-                        hdrFrame = hdr.tonemapMantiuk()
-                    elif algorithm == 'EP Fusion':
-                        hdrFrame = hdr.exposureFusion()
-                    else:
-                        raise LookupError(algorithm)
-                    if self.__findOptionByID('watermark'):
-                        frameDecorator.WaterMark(int(width), int(height)).decorate(hdrFrame)
-                    cv2.imwrite(
-                        os.path.join(
-                            self.__config['camera']['path'],
-                            "{}{}".format(
-                                int(time.time()),
-                                '{}'.format(self.__findOptionByID('pict format'))
-                                if self.__findOptionByID('pict format').startswith('.')
-                                else '.{}'.format(self.__findOptionByID('pict format'))
-                            )
-                        ),
-                        hdrFrame
-                    )
-                    led.off(led.green)
-                    self.__isHdrProcessing = False
-                    self.__isBusy = False
-                    self.__exposeSetting()
+                self.__toast.setText("Processing")
+                algorithm = self.__findOptionByID('algorithm')
+                hdr = Hdr(exposureTimeList, frameList, self.__findOptionByID('correction'))
+                if algorithm == 'Drago':
+                    hdrFrame = hdr.tonemapDrago()
+                elif algorithm == 'Reinhard':
+                    hdrFrame = hdr.tonemapReinhard()
+                elif algorithm == 'Mantiuk':
+                    hdrFrame = hdr.tonemapMantiuk()
+                elif algorithm == 'EP Fusion':
+                    hdrFrame = hdr.exposureFusion()
                 else:
-                    try:
-                        width, height = tuple(self.__findOptionByID('resolution').split('x'))
-                    except ValueError:
-                        width, height = 0, 0
+                    raise LookupError(algorithm)
+                if self.__findOptionByID('watermark'):
+                    frameDecorator.WaterMark(int(width), int(height)).decorate(hdrFrame)
+                cv2.imwrite(
+                    os.path.join(
+                        self.__config['camera']['path'],
+                        "{}{}".format(
+                            int(time.time()),
+                            '{}'.format(self.__findOptionByID('pict format'))
+                            if self.__findOptionByID('pict format').startswith('.')
+                            else '.{}'.format(self.__findOptionByID('pict format'))
+                        )
+                    ),
+                    hdrFrame
+                )
+                led.off(led.green)
+                self.__isHdrProcessing = False
+                self.__isBusy = False
+                self.__exposeSetting()
+            else:
+                try:
+                    width, height = tuple(self.__findOptionByID('resolution').split('x'))
+                except ValueError:
+                    width, height = 0, 0
 
-                    delay = self.__findOptionByID('delay')
-                    for i in range(delay):
-                        if delay - i <= 3:
-                            led.toggleState(led.green)
-                            time.sleep(0.5)
-                            led.toggleState(led.green)
-                            time.sleep(0.5)
-                        else:
-                            led.toggleState(led.green)
-                            time.sleep(1)
-                    self.__isBusy = True
-                    led.on(led.green)
-                    self.__toast.setText("Processing")
-                    path = os.path.join(self.__config['camera']['path'], "{}".format(int(time.time())))
-                    fmat = self.__findOptionByID('pict format')
-                    self.saveFrame(
-                        filePath=path,
-                        fmat=fmat,
-                        width=int(width),
-                        height=int(height),
-                        rotate=self.__rotate,
-                        saveMetadata=self.__findOptionByID("save metadata"),
-                        saveRaw=self.__findOptionByID("dng enable")
+                delay = self.__findOptionByID('delay')
+                for i in range(delay):
+                    if delay - i <= 3:
+                        led.toggleState(led.green)
+                        time.sleep(0.5)
+                        led.toggleState(led.green)
+                        time.sleep(0.5)
+                    else:
+                        led.toggleState(led.green)
+                        time.sleep(1)
+                self.__isBusy = True
+                led.on(led.green)
+                self.__toast.setText("Processing")
+                path = os.path.join(self.__config['camera']['path'], "{}".format(int(time.time())))
+                fmat = self.__findOptionByID('pict format')
+                self.saveFrame(
+                    filePath=path,
+                    fmat=fmat,
+                    width=int(width),
+                    height=int(height),
+                    rotate=self.__rotate,
+                    saveMetadata=self.__findOptionByID("save metadata"),
+                    saveRaw=self.__findOptionByID("dng enable")
+                )
+                if self.__findOptionByID('watermark'):
+                    frame = cv2.imread('{}.{}'.format(path, fmat))
+                    frameDecorator.WaterMark(int(width), int(height)).decorate(frame)
+                    cv2.imwrite('{}.{}'.format(path, fmat), frame)
+
+                led.off(led.green)
+                self.__isBusy = False
+
+    def circleLongPressAction(self):
+        if self.__isBusy or self.__isHdrProcessing:
+            return
+        if self.__recordTimestamp is None:
+            try:
+                width, height = tuple(self.__findOptionByID('resolution').split('x'))
+            except ValueError:
+                width, height = 0, 0
+            self.startRecording(
+                int(width), int(height),
+                '{}'.format(
+                    os.path.join(
+                        self.__config['camera']['video_path'],
+                        str(int(time.time())) + '.mp4'
                     )
-                    if self.__findOptionByID('watermark'):
-                        frame = cv2.imread('{}.{}'.format(path, fmat))
-                        frameDecorator.WaterMark(int(width), int(height)).decorate(frame)
-                        cv2.imwrite('{}.{}'.format(path, fmat), frame)
-
-                    led.off(led.green)
-                    self.__isBusy = False
+                )
+            )
+            led.on(led.blue)
+            self.__recordTimestamp = time.time()
+        else:
+            self.stopRecording()
+            led.off(led.blue)
+            self.__recordTimestamp = None
 
     def trianglePressAction(self):
-        t = 0
+        '''t = 0
         while wiringpi.digitalRead(self.__config['pin']['triangle']) and t < 1:
             t += 0.01
             time.sleep(0.01)
@@ -285,11 +322,14 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if t < 0.09:
             return
         if t >= 1:
-            self.__decorateEnable = not self.__decorateEnable
-        elif self.__decorateEnable:
+            self.__decorateEnable = not self.__decorateEnable'''
+        if self.__decorateEnable:
             self.__decorateEnable = False
         elif not self.__decorateEnable and self.__recordTimestamp is None and not self.__isBusy:
             self._irq('MenuControlledEnd')
+
+    def triangleLongPressAction(self):
+        self.__decorateEnable = not self.__decorateEnable
 
     def __exposeSetting(self):
         if self.__findOptionByID('auto expose'):

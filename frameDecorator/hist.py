@@ -6,6 +6,7 @@ import numpy as np
 
 class Hist:
     def __init__(self, width=128, height=128, padding=(0, 0, 0, 0), thickness=1, fill=False):
+        self.__width = width
         self.__padding = padding
         horizontal = width - self.__padding[0] - self.__padding[2]
         self.__maxSize = 256 if horizontal > 256 else horizontal
@@ -21,9 +22,9 @@ class Hist:
         self.__max = -inf
         self.__min = inf
         frameDataList = (
-            [i[0] for i in cv2.calcHist([frame], [0], None, [256], [0, 255])],
-            [i[0] for i in cv2.calcHist([frame], [1], None, [256], [0, 255])],
-            [i[0] for i in cv2.calcHist([frame], [2], None, [256], [0, 255])]
+            [i[0] for i in cv2.calcHist([frame], [0], None, [self.__width], [0, 255])],
+            [i[0] for i in cv2.calcHist([frame], [1], None, [self.__width], [0, 255])],
+            [i[0] for i in cv2.calcHist([frame], [2], None, [self.__width], [0, 255])]
         )
 
         minListSize = min(len(frameDataList[0]), len(frameDataList[1]), len(frameDataList[2]))
@@ -49,8 +50,8 @@ class Hist:
 
     def decorate(self, frame, rotate=0):
         self.__frameCalc(frame)
+        sketch = np.zeros(frame.shape, np.uint8)
         for index, i in enumerate(zip(self.__dataList[0], self.__dataList[1], self.__dataList[2])):
-            sketch = np.zeros(frame.shape, np.uint8)
             if self.__max == self.__min:
                 b, g, r = 0, 0, 0
             else:

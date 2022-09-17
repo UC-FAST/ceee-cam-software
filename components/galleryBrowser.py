@@ -7,7 +7,7 @@ import cv2
 
 
 class GalleryBrowser:
-    def __init__(self, pictPath='./pict', width=None, height=None):
+    def __init__(self, pictPath='./pict/', width=None, height=None):
         self.__pictPath = pictPath
         if not os.path.exists(self.__pictPath):
             os.makedirs(self.__pictPath)
@@ -126,8 +126,10 @@ class GalleryBrowser:
                 self.__cache[1] = self.__cache[0]
                 self.__cache[0] = None
 
-    def getPictName(self):
-        return self.__filePathList[self.__index]
+    def getPictName(self, fullPath=False):
+        if fullPath:
+            return self.__filePathList[self.__index]
+        return self.__filePathList[self.__index].replace(self.__pictPath, '')
 
 
 if __name__ == '__main__':
