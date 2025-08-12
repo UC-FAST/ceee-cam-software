@@ -174,99 +174,45 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             led.off(led.blue)
             self.__recordTimestamp = None
         else:
-            if self.__findOptionByID('hdr enable'):
-                try:
-                    width, height = tuple(
-                        self.__findOptionByID('resolution').split('x'))
-                except ValueError:
-                    width, height = 0, 0
-                self.__isBusy = True
-                self.__isHdrProcessing = True
-                led.on(led.blue)
-                lower, upper, stackNum = self.__findOptionByID('lower'), self.__findOptionByID(
-                    'upper'), self.__findOptionByID('stack num')
-                step = (upper - lower) // (stackNum - 1)
-                exposureTimeList, frameList = list(), list()
-                for index, i in enumerate(range(lower, upper + step, step), start=1):
-                    self.__toast.setText("{}/{}".format(index, stackNum))
-                    exposeTime, frame = self.exposureCapture(
-                        i, int(width), int(height))
-                    exposureTimeList.append(exposeTime / 1e6)
-                    frameList.append(frame)
+            try:
+                width, height = tuple(
+                    self.__findOptionByID('resolution')['value'])
+            except ValueError:
+                width, height = 0, 0
 
-                self.__toast.setText("Processing")
-                algorithm = self.__findOptionByID('algorithm')
-                hdr = Hdr(exposureTimeList, frameList,
-                          self.__findOptionByID('correction'))
-                if algorithm == 'Drago':
-                    hdrFrame = hdr.tonemapDrago()
-                elif algorithm == 'Reinhard':
-                    hdrFrame = hdr.tonemapReinhard()
-                elif algorithm == 'Mantiuk':
-                    hdrFrame = hdr.tonemapMantiuk()
-                elif algorithm == 'EP Fusion':
-                    hdrFrame = hdr.exposureFusion()
+            delay = self.__findOptionByID('delay')
+            for i in range(delay):
+                if delay - i <= 3:
+                    led.toggleState(led.green)
+                    time.sleep(0.5)
+                    led.toggleState(led.green)
+                    time.sleep(0.5)
                 else:
-                    raise LookupError(algorithm)
-                if self.__findOptionByID('watermark'):
-                    frameDecorator.WaterMark(
-                        int(width), int(height)).decorate(hdrFrame)
-                cv2.imwrite(
-                    os.path.join(
-                        self.__config['camera']['path'],
-                        "{}{}".format(
-                            int(time.time()),
-                            '{}'.format(self.__findOptionByID('pict format'))
-                            if self.__findOptionByID('pict format').startswith('.')
-                            else '.{}'.format(self.__findOptionByID('pict format'))
-                        )
-                    ),
-                    hdrFrame
-                )
-                led.off(led.green)
-                self.__isHdrProcessing = False
-                self.__isBusy = False
-                self.__exposeSetting()
-            else:
-                try:
-                    width, height = tuple(
-                        self.__findOptionByID('resolution').split('x'))
-                except ValueError:
-                    width, height = 0, 0
+                    led.toggleState(led.green)
+                    time.sleep(1)
+            self.__isBusy = True
+            led.on(led.green)
+            self.__toast.setText("Processing")
+            path = os.path.join(
+                self.__config['camera']['path'], "{}".format(int(time.time())))
+            fmat = self.__findOptionByID('pict format')
+            self.saveFrame(
+                filePath=path,
+                fmat=fmat,
+                width=int(width),
+                height=int(height),
+                rotate=self.__rotate,
+                saveMetadata=self.__findOptionByID("save metadata"),
+                saveRaw=self.__findOptionByID("dng enable")
+            )
+            if self.__findOptionByID('watermark'):
+                frame = cv2.imread('{}.{}'.format(path, fmat))
+                frameDecorator.WaterMark(
+                    int(width), int(height)).decorate(frame)
+                cv2.imwrite('{}.{}'.format(path, fmat), frame)
 
-                delay = self.__findOptionByID('delay')
-                for i in range(delay):
-                    if delay - i <= 3:
-                        led.toggleState(led.green)
-                        time.sleep(0.5)
-                        led.toggleState(led.green)
-                        time.sleep(0.5)
-                    else:
-                        led.toggleState(led.green)
-                        time.sleep(1)
-                self.__isBusy = True
-                led.on(led.green)
-                self.__toast.setText("Processing")
-                path = os.path.join(
-                    self.__config['camera']['path'], "{}".format(int(time.time())))
-                fmat = self.__findOptionByID('pict format')
-                self.saveFrame(
-                    filePath=path,
-                    fmat=fmat,
-                    width=int(width),
-                    height=int(height),
-                    rotate=self.__rotate,
-                    saveMetadata=self.__findOptionByID("save metadata"),
-                    saveRaw=self.__findOptionByID("dng enable")
-                )
-                if self.__findOptionByID('watermark'):
-                    frame = cv2.imread('{}.{}'.format(path, fmat))
-                    frameDecorator.WaterMark(
-                        int(width), int(height)).decorate(frame)
-                    cv2.imwrite('{}.{}'.format(path, fmat), frame)
-
-                led.off(led.green)
-                self.__isBusy = False
+            led.off(led.green)
+            self.__isBusy = False
 
     def shutterLongPressAction(self):
         if self.__isBusy or self.__isHdrProcessing:

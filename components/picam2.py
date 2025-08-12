@@ -126,6 +126,7 @@ class Cam:
         self.__controls.update(control)
 
     def setColourGains(self, red, blue):
+        return
         if red or blue:
             control = {
                 "AwbEnable": False,
@@ -238,7 +239,7 @@ class Cam:
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
                 if rotate:
                     frame = np.rot90(frame, -rotate // 90)
-                cv2.imwrite("{}.{}".format(filePath, fmat), frame)
+                cv2.imwrite("{}.{}".format(filePath, fmat['value']), frame)
             if saveMetadata:
                 metadata = request.get_metadata()
                 with open('{}.{}'.format(filePath, 'json'), 'w') as f:

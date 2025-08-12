@@ -310,8 +310,7 @@ class MenuControlledEnd(ControlledEnd):
                 )
             )
             self._irq(self.__from)
-        elif t == 'option':
-            print('wqerewqe',self.__currentOptions[self.__currentIndex])
+        elif t == 'option' or t=='numeral':
             self.__valueTemp = self.__currentOptions[self.__currentIndex]['value']
             self.__selectIndex = self.__currentIndex
         else:

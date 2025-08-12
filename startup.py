@@ -16,7 +16,7 @@ u = universalControl.UniversalControl(
     [
         CameraControlledEnd(
             verbose_console=config['debug_level'],
-            tuningFilePath=tuning
+            #tuningFilePath=tuning
         ),
         MenuControlledEnd(
             path='a.json',

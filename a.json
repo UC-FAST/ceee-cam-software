@@ -90,40 +90,67 @@
                     "type": "option",
                     "value": {
                         "content": "Full Resolution",
-                        "value": "4608x2592"
+                        "value": [
+                            4608,
+                            2592
+                        ]
                     },
                     "options": [
                         {
                             "content": "640x480",
-                            "value": "640x480"
+                            "value": [
+                                640,
+                                480
+                            ]
                         },
                         {
                             "content": "800x600",
-                            "value": "800x600"
+                            "value": [
+                                800,
+                                600
+                            ]
                         },
                         {
                             "content": "1024x768",
-                            "value": "1024x768"
+                            "value": [
+                                1024,
+                                768
+                            ]
                         },
                         {
                             "content": "1280x720",
-                            "value": "1280x720"
+                            "value": [
+                                1280,
+                                720
+                            ]
                         },
                         {
                             "content": "1280x960",
-                            "value": "1280x960"
+                            "value": [
+                                1280,
+                                960
+                            ]
                         },
                         {
                             "content": "1920x1080",
-                            "value": "1920x1080"
+                            "value": [
+                                1920,
+                                1080
+                            ]
                         },
                         {
                             "content": "2560x1920",
-                            "value": "2560x1920"
+                            "value": [
+                                2560,
+                                1920
+                            ]
                         },
                         {
                             "content": "Full Resolution",
-                            "value": "4608x2592"
+                            "value": [
+                                4608,
+                                2592
+                            ]
                         }
                     ]
                 },
@@ -190,7 +217,8 @@
                     ],
                     "setEnable": [
                         "exposure mode",
-                        "metering mode"
+                        "metering mode",
+                        "flicker"
                     ]
                 },
                 {
@@ -250,6 +278,13 @@
                     "enable": true
                 },
                 {
+                    "id": "flicker",
+                    "content": "Flicker",
+                    "type": "menu",
+                    "value": "flicker menu",
+                    "enable": true
+                },
+                {
                     "id": "manual expose",
                     "content": "Manual Expose",
                     "type": "bool",
@@ -304,6 +339,52 @@
                         10
                     ],
                     "enable": false
+                }
+            ]
+        },
+        "flicker menu": {
+            "title": "Flicker",
+            "options": [
+                {
+                    "id": "flicker mode",
+                    "content": "Flicker Mode",
+                    "type": "option",
+                    "value": {
+                        "content": "Off",
+                        "value": 0
+                    },
+                    "options": [
+                        {
+                            "content": "Off",
+                            "value": 0
+                        },
+                        {
+                            "content": "Manual",
+                            "value": 1
+                        },
+                        {
+                            "content": "Auto",
+                            "value": 2
+                        }
+                    ]
+                },
+                {
+                    "id": "flicker period",
+                    "content": "Flicker Period",
+                    "type": "numeral",
+                    "value": 10000,
+                    "min": 100,
+                    "max": 1000000,
+                    "step": 1,
+                    "stepOptions": [
+                        1,
+                        20,
+                        100,
+                        200,
+                        1000,
+                        10000,
+                        100000
+                    ]
                 }
             ]
         },

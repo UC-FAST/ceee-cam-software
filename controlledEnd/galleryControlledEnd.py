@@ -107,7 +107,11 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__refreshFrame()
 
     def crossPressAction(self):
-        pass
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
+        self._irq('CameraControlledEnd')
 
     def crossLongPressAction(self):
         if self.__empty:
