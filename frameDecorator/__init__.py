@@ -8,3 +8,4 @@ from .simpleText import SimpleText
 from .toast import Toast
 from .warning import Warining
 from .waterMark import WaterMark
+from .main import main

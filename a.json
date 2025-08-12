@@ -1,0 +1,442 @@
+{
+    "CameraControlledEnd": {
+        "0": {
+            "title": "Settings",
+            "options": [
+                {
+                    "id": "camera settings",
+                    "content": "Camera Settings",
+                    "type": "menu",
+                    "value": "Camera Settings"
+                },
+                {
+                    "id": "gallery",
+                    "content": "Gallery",
+                    "type": "irq",
+                    "value": "GalleryControlledEnd"
+                },
+                {
+                    "id": "settings",
+                    "content": "Settings",
+                    "type": "menu",
+                    "value": "settings",
+                    "enable": true
+                }
+            ]
+        },
+        "Camera Settings": {
+            "title": "Camera Settings",
+            "options": [
+                {
+                    "id": "exposure",
+                    "content": "Exposure",
+                    "type": "menu",
+                    "value": "exposure"
+                },
+                {
+                    "id": "focus",
+                    "content": "Focus",
+                    "type": "menu",
+                    "value": "Focus"
+                },
+                {
+                    "content": "White Balance",
+                    "type": "menu",
+                    "value": "white balance"
+                },
+                {
+                    "id": "hdr",
+                    "content": "HDR",
+                    "type": "option",
+                    "value": {
+                        "content": "Off",
+                        "value": 0
+                    },
+                    "options": [
+                        {
+                            "content": "Off",
+                            "value": 0
+                        },
+                        {
+                            "content": "MultiExposureUnmerged",
+                            "value": 1
+                        },
+                        {
+                            "content": "MultiExposure",
+                            "value": 2
+                        },
+                        {
+                            "content": "SingleExposure",
+                            "value": 3
+                        },
+                        {
+                            "content": "Night",
+                            "value": 4
+                        }
+                    ]
+                },
+                {
+                    "id": "delay",
+                    "content": "Delay",
+                    "type": "numeral",
+                    "value": 0,
+                    "min": 0,
+                    "max": 30,
+                    "step": 1
+                },
+                {
+                    "id": "resolution",
+                    "content": "Resolution",
+                    "type": "option",
+                    "value": {
+                        "content": "Full Resolution",
+                        "value": "4608x2592"
+                    },
+                    "options": [
+                        {
+                            "content": "640x480",
+                            "value": "640x480"
+                        },
+                        {
+                            "content": "800x600",
+                            "value": "800x600"
+                        },
+                        {
+                            "content": "1024x768",
+                            "value": "1024x768"
+                        },
+                        {
+                            "content": "1280x720",
+                            "value": "1280x720"
+                        },
+                        {
+                            "content": "1280x960",
+                            "value": "1280x960"
+                        },
+                        {
+                            "content": "1920x1080",
+                            "value": "1920x1080"
+                        },
+                        {
+                            "content": "2560x1920",
+                            "value": "2560x1920"
+                        },
+                        {
+                            "content": "Full Resolution",
+                            "value": "4608x2592"
+                        }
+                    ]
+                },
+                {
+                    "id": "pict format",
+                    "content": "Pict Format",
+                    "type": "option",
+                    "value": {
+                        "content": "PNG",
+                        "value": "png"
+                    },
+                    "options": [
+                        {
+                            "content": "PNG",
+                            "value": "png"
+                        },
+                        {
+                            "content": "BMP",
+                            "value": "bmp"
+                        },
+                        {
+                            "content": "TIFF",
+                            "value": "tiff"
+                        },
+                        {
+                            "content": "JPEG",
+                            "value": "jpeg"
+                        }
+                    ]
+                },
+                {
+                    "id": "save metadata",
+                    "content": "Save Metadata",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "id": "dng enable",
+                    "content": "DNG Enable",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "id": "watermark",
+                    "content": "Watermark",
+                    "type": "bool",
+                    "value": false
+                }
+            ]
+        },
+        "exposure": {
+            "title": "Exposure",
+            "options": [
+                {
+                    "id": "auto expose",
+                    "content": "Auto Expose",
+                    "type": "bool",
+                    "value": true,
+                    "setDisable": [
+                        "manual expose",
+                        "manual analog",
+                        "exposure time",
+                        "analogue gain"
+                    ],
+                    "setEnable": [
+                        "exposure mode",
+                        "metering mode"
+                    ]
+                },
+                {
+                    "id": "exposure mode",
+                    "content": "Auto Exposure Mode",
+                    "type": "option",
+                    "value": {
+                        "content": "Normal",
+                        "value": 0
+                    },
+                    "options": [
+                        {
+                            "content": "Normal",
+                            "value": 0
+                        },
+                        {
+                            "content": "Short",
+                            "value": 1
+                        },
+                        {
+                            "content": "Long",
+                            "value": 2
+                        },
+                        {
+                            "content": "Custom",
+                            "value": 3
+                        }
+                    ],
+                    "enable": true
+                },
+                {
+                    "id": "metering mode",
+                    "content": "Metering Mode",
+                    "type": "option",
+                    "value": {
+                        "content": "Centre Weighted",
+                        "value": 0
+                    },
+                    "options": [
+                        {
+                            "content": "Centre Weighted",
+                            "value": 0
+                        },
+                        {
+                            "content": "Spot",
+                            "value": 1
+                        },
+                        {
+                            "content": "Matrix",
+                            "value": 2
+                        },
+                        {
+                            "content": "Customer",
+                            "value": 3
+                        }
+                    ],
+                    "enable": true
+                },
+                {
+                    "id": "manual expose",
+                    "content": "Manual Expose",
+                    "type": "bool",
+                    "value": false,
+                    "enable": false,
+                    "setEnable": [
+                        "exposure time"
+                    ],
+                    "enableWith": [
+                        "exposure time"
+                    ]
+                },
+                {
+                    "id": "exposure time",
+                    "content": "Exposure Time",
+                    "type": "numeral",
+                    "value": 31500,
+                    "min": 303,
+                    "max": 1000000,
+                    "step": 10000,
+                    "stepOptions": [
+                        100,
+                        1000,
+                        10000
+                    ],
+                    "enable": false
+                },
+                {
+                    "id": "manual analog",
+                    "content": "Manual Analog",
+                    "type": "bool",
+                    "value": true,
+                    "enable": false,
+                    "setEnable": [
+                        "analogue gain"
+                    ],
+                    "enableWith": [
+                        "analogue gain"
+                    ]
+                },
+                {
+                    "id": "analogue gain",
+                    "content": "Analogue Gain",
+                    "type": "numeral",
+                    "value": 11,
+                    "min": 0,
+                    "max": 23,
+                    "step": 1,
+                    "stepOptions": [
+                        0.1,
+                        1,
+                        10
+                    ],
+                    "enable": false
+                }
+            ]
+        },
+        "white balance": {
+            "title": "White Balance",
+            "options": [
+                {
+                    "id": "awb",
+                    "content": "AWB",
+                    "type": "bool",
+                    "value": false,
+                    "setEnable": [
+                        "awb mode"
+                    ],
+                    "setDisable": [
+                        "color gains"
+                    ]
+                },
+                {
+                    "id": "awb mode",
+                    "content": "AWB Mode",
+                    "type": "option",
+                    "value": {
+                        "content": "Auto",
+                        "value": 0
+                    },
+                    "options": [
+                        {
+                            "content": "Auto",
+                            "value": 0
+                        },
+                        {
+                            "content": "Incandescent",
+                            "value": 1
+                        },
+                        {
+                            "content": "Tungsten",
+                            "value": 2
+                        },
+                        {
+                            "content": "Fluorescent",
+                            "value": 3
+                        },
+                        {
+                            "content": "Indoor",
+                            "value": 4
+                        },
+                        {
+                            "content": "Daylight",
+                            "value": 5
+                        },
+                        {
+                            "content": "Cloudy",
+                            "value": 6
+                        },
+                        {
+                            "content": "Custom",
+                            "value": 7
+                        }
+                    ],
+                    "enable": false
+                },
+                {
+                    "id": "color gains",
+                    "content": "Color Gains",
+                    "type": "menu",
+                    "value": "color gains",
+                    "enable": true
+                }
+            ]
+        },
+        "color gains": {
+            "title": "Color Gains",
+            "options": [
+                {
+                    "id": "red gain",
+                    "content": "Red Gain",
+                    "type": "numeral",
+                    "value": 4,
+                    "min": 0.1,
+                    "max": 10,
+                    "step": 1,
+                    "stepOptions": [
+                        0.1,
+                        1
+                    ]
+                },
+                {
+                    "id": "blue gain",
+                    "content": "Blue Gain",
+                    "type": "numeral",
+                    "value": 7,
+                    "min": 0.1,
+                    "max": 10,
+                    "step": 1,
+                    "stepOptions": [
+                        0.1,
+                        1
+                    ]
+                }
+            ]
+        },
+        "settings": {
+            "title": "Settings",
+            "options": [
+                {
+                    "id": "restart",
+                    "content": "Restart",
+                    "type": "msg",
+                    "value": "restart",
+                    "receiver": "UniversalControl"
+                }
+            ]
+        }
+    },
+    "GalleryControlledEnd": {
+        "0": {
+            "title": "Gallery",
+            "options": [
+                {
+                    "id": "delete",
+                    "content": "Delete",
+                    "type": "msg",
+                    "receiver": "GalleryControlledEnd",
+                    "value": "delete"
+                },
+                {
+                    "id": "show hist",
+                    "content": "Show Hist",
+                    "type": "bool",
+                    "value": false
+                }
+            ]
+        }
+    }
+}

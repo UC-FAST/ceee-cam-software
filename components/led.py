@@ -1,40 +1,36 @@
-import wiringpi
+import time
+from components import configLoader
+import gpiozero
 
-from . import configLoader
+config = configLoader.ConfigLoader('config.json')
 
-config = configLoader.ConfigLoader('./config.json')
-green, blue = config['led']['led_green'], config['led']['led_blue']
+
+
+green = gpiozero.DigitalOutputDevice(pin=config['led']['led_green'], active_high=False, initial_value=False)
+blue = gpiozero.DigitalOutputDevice(pin=config['led']['led_blue'], active_high=False, initial_value=False)
+
 state = {
-    green: 1,
-    blue: 1
+    green:False,
+    blue:False
 }
 
-wiringpi.wiringPiSetup()
-wiringpi.pinMode(green, 1)
-wiringpi.pinMode(blue, 1)
-wiringpi.digitalWrite(green, state[green])
-wiringpi.digitalWrite(blue, state[blue])
-
-
-def toggleState(led):
+def toggleState(led: gpiozero.output_devices.DigitalOutputDevice):
     state[led] = not state[led]
-    wiringpi.digitalWrite(led, state[led])
+    led.toggle()
 
 
-def on(led):
-    state[led] = 0
-    wiringpi.digitalWrite(led, state[led])
+def on(led: gpiozero.output_devices.DigitalOutputDevice):
+    state[led] = True
+    led.on()
 
 
-def off(led):
-    state[led] = 1
-    wiringpi.digitalWrite(led, state[led])
+def off(led: gpiozero.output_devices.DigitalOutputDevice):
+    state[led] = False
+    led.off()
 
 
-if __name__ == '__main__':
-    pass
-    '''on(blue)
-    off(green)
-    time.sleep(1)
-    on(green)
-    off(blue)'''
+if __name__=='__main__':
+    on(blue)
+    #on(ledGreen)
+    print(state)
+    time.sleep(10)

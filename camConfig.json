@@ -207,27 +207,27 @@
                 "id": "exposure mode",
                 "content": "Exposure Mode",
                 "type": "option",
-                "value": [
-                    "Normal",
-                    0
-                ],
+                "value": {
+                    "content": "Normal",
+                    "value": "0"
+                },
                 "options": [
-                    [
-                        "Normal",
-                        0
-                    ],
-                    [
-                        "Short",
-                        1
-                    ],
-                    [
-                        "Long",
-                        2
-                    ],
-                    [
-                        "Custom",
-                        3
-                    ]
+                    {
+                        "content": "Normal",
+                        "value": "0"
+                    },
+                    {
+                        "content": "Short",
+                        "value": "1"
+                    },
+                    {
+                        "content": "Long",
+                        "value": "2"
+                    },
+                    {
+                        "content": "Custom",
+                        "value": "3"
+                    }
                 ],
                 "enable": true
             },
@@ -235,23 +235,23 @@
                 "id": "metering mode",
                 "content": "Metering Mode",
                 "type": "option",
-                "value": [
-                    "Centre Weighted",
-                    0
-                ],
+                "value": {
+                    "content": "Centre Weighted",
+                    "value": "0"
+                },
                 "options": [
-                    [
-                        "Centre Weighted",
-                        0
-                    ],
-                    [
-                        "Spot",
-                        1
-                    ],
-                    [
-                        "Matrix",
-                        2
-                    ]
+                    {
+                        "content": "Centre Weighted",
+                        "value": "0"
+                    },
+                    {
+                        "content": "Spot",
+                        "value": "1"
+                    },
+                    {
+                        "content": "Matrix",
+                        "value": "2"
+                    }
                 ],
                 "enable": true
             },
@@ -261,8 +261,12 @@
                 "type": "bool",
                 "value": true,
                 "enable": false,
-                "setEnable": ["exposure time"],
-                "enableWith": ["exposure time"]
+                "setEnable": [
+                    "exposure time"
+                ],
+                "enableWith": [
+                    "exposure time"
+                ]
             },
             {
                 "id": "exposure time",

@@ -142,6 +142,14 @@ class Colors(Enum):
     yellow = (0, 255, 255)
     yellowgreen = (50, 205, 154)
 
+    industrialBlue=(16,26,171)[::-1]
+    industrialGreen=(86,161,72)[::-1]
+    industrialOrange=(195,85,76)[::-1]
+    industrialYellow=(206,219,95)[::-1]
+    industrialRed=(178,53,50)[::-1]
+
+
+
 
 def toBgr(color: str) -> typing.Tuple[int, int, int]:
     h = color.lstrip('#')

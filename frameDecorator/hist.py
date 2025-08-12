@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Hist:
-    def __init__(self, width=128, height=128, padding=(0, 0, 0, 0), thickness=1, fill=False):
+    def __init__(self, width=320, height=240, padding=(0, 0, 0, 0), thickness=1, fill=False):
         self.__width = width
         self.__padding = padding
         horizontal = width - self.__padding[0] - self.__padding[2]

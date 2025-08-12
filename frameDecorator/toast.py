@@ -5,8 +5,8 @@ import numpy as np
 class Toast:
     def __init__(
             self,
-            width=128,
-            height=128,
+            width=320,
+            height=240,
             fontHeight=12,
     ):
         self.__width = width

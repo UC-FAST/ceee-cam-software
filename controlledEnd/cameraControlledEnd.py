@@ -8,7 +8,6 @@ import typing
 
 import cv2
 import psutil
-import wiringpi
 
 import frameDecorator
 from components import max17048, picam2, led, configLoader
@@ -24,7 +23,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 tuning = json.load(f)
         else:
             tuning = None
-        picam2.Cam.__init__(self, verbose_console=verbose_console, tuning=tuning)
+        picam2.Cam.__init__(
+            self, verbose_console=verbose_console, tuning=tuning)
         self.__zoom = 1
         self.__brightness = 0
         self.__config = configLoader.ConfigLoader('./config.json')
@@ -35,6 +35,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             alpha=0.7
         )
         self.__toast = frameDecorator.Toast()
+        self.__main = frameDecorator.main()
         self.__decorator = frameDecorator.SimpleText(
             [self.__worker2, self.__worker1, self.__worker3],
             height=self.__config['screen']['height'],
@@ -59,10 +60,12 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__frameList = queue.Queue(maxsize=5)
 
     def __worker3(self):
-        result = subprocess.run(["ifconfig"], capture_output=True).stdout.decode()
+        result = subprocess.run(
+            ["ifconfig"], capture_output=True).stdout.decode()
         pattern = 'wlan0:.*inet (.*)  netmask'
         try:
-            target = re.findall(pattern=pattern, string=result, flags=re.DOTALL)[0]
+            target = re.findall(
+                pattern=pattern, string=result, flags=re.DOTALL)[0]
         except IndexError:
             target = 'NULL'
         return {
@@ -165,7 +168,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def rightReleaseAction(self):
         self.__zoomHold = False
 
-    def circlePressAction(self):
+    def shutterPressAction(self):
         if self.__recordTimestamp is not None:
             self.stopRecording()
             led.off(led.blue)
@@ -173,25 +176,28 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         else:
             if self.__findOptionByID('hdr enable'):
                 try:
-                    width, height = tuple(self.__findOptionByID('resolution').split('x'))
+                    width, height = tuple(
+                        self.__findOptionByID('resolution').split('x'))
                 except ValueError:
                     width, height = 0, 0
                 self.__isBusy = True
                 self.__isHdrProcessing = True
-                led.on(led.green)
+                led.on(led.blue)
                 lower, upper, stackNum = self.__findOptionByID('lower'), self.__findOptionByID(
                     'upper'), self.__findOptionByID('stack num')
                 step = (upper - lower) // (stackNum - 1)
                 exposureTimeList, frameList = list(), list()
                 for index, i in enumerate(range(lower, upper + step, step), start=1):
                     self.__toast.setText("{}/{}".format(index, stackNum))
-                    exposeTime, frame = self.exposureCapture(i, int(width), int(height))
+                    exposeTime, frame = self.exposureCapture(
+                        i, int(width), int(height))
                     exposureTimeList.append(exposeTime / 1e6)
                     frameList.append(frame)
 
                 self.__toast.setText("Processing")
                 algorithm = self.__findOptionByID('algorithm')
-                hdr = Hdr(exposureTimeList, frameList, self.__findOptionByID('correction'))
+                hdr = Hdr(exposureTimeList, frameList,
+                          self.__findOptionByID('correction'))
                 if algorithm == 'Drago':
                     hdrFrame = hdr.tonemapDrago()
                 elif algorithm == 'Reinhard':
@@ -203,7 +209,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 else:
                     raise LookupError(algorithm)
                 if self.__findOptionByID('watermark'):
-                    frameDecorator.WaterMark(int(width), int(height)).decorate(hdrFrame)
+                    frameDecorator.WaterMark(
+                        int(width), int(height)).decorate(hdrFrame)
                 cv2.imwrite(
                     os.path.join(
                         self.__config['camera']['path'],
@@ -222,7 +229,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 self.__exposeSetting()
             else:
                 try:
-                    width, height = tuple(self.__findOptionByID('resolution').split('x'))
+                    width, height = tuple(
+                        self.__findOptionByID('resolution').split('x'))
                 except ValueError:
                     width, height = 0, 0
 
@@ -239,7 +247,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 self.__isBusy = True
                 led.on(led.green)
                 self.__toast.setText("Processing")
-                path = os.path.join(self.__config['camera']['path'], "{}".format(int(time.time())))
+                path = os.path.join(
+                    self.__config['camera']['path'], "{}".format(int(time.time())))
                 fmat = self.__findOptionByID('pict format')
                 self.saveFrame(
                     filePath=path,
@@ -252,18 +261,20 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 )
                 if self.__findOptionByID('watermark'):
                     frame = cv2.imread('{}.{}'.format(path, fmat))
-                    frameDecorator.WaterMark(int(width), int(height)).decorate(frame)
+                    frameDecorator.WaterMark(
+                        int(width), int(height)).decorate(frame)
                     cv2.imwrite('{}.{}'.format(path, fmat), frame)
 
                 led.off(led.green)
                 self.__isBusy = False
 
-    def circleLongPressAction(self):
+    def shutterLongPressAction(self):
         if self.__isBusy or self.__isHdrProcessing:
             return
         if self.__recordTimestamp is None:
             try:
-                width, height = tuple(self.__findOptionByID('resolution').split('x'))
+                width, height = tuple(
+                    self.__findOptionByID('resolution').split('x'))
             except ValueError:
                 width, height = 0, 0
             self.startRecording(
@@ -282,19 +293,24 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             led.off(led.blue)
             self.__recordTimestamp = None
 
-    def trianglePressAction(self):
+    def squarePressAction(self):
         if self.__decorateEnable:
             self.__decorateEnable = False
         elif not self.__decorateEnable and self.__recordTimestamp is None and not self.__isBusy:
             self._irq('MenuControlledEnd')
 
-    def triangleLongPressAction(self):
+    def circlePressAction(self):
         self.__decorateEnable = not self.__decorateEnable
+
+    def crossPressAction(self):
+        pass
 
     def __exposeSetting(self):
         if self.__findOptionByID('auto expose'):
-            self.setAeExposureMode(self.__findOptionByID('exposure mode')[1])
-            self.setAeMeteringMode(self.__findOptionByID('metering mode')[1])
+            self.setAeExposureMode(
+                self.__findOptionByID('exposure mode')['value'])
+            self.setAeMeteringMode(
+                self.__findOptionByID('metering mode')['value'])
         else:
             if self.__findOptionByID('manual expose'):
                 exposure = self.__findOptionByID('exposure time')
@@ -308,7 +324,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
 
     def __colourGainsSetting(self):
         if not self.__findOptionByID('awb'):
-            red, blue = self.__findOptionByID('red gain'), self.__findOptionByID('blue gain')
+            red, blue = self.__findOptionByID(
+                'red gain'), self.__findOptionByID('blue gain')
             self.setColourGains(red, blue)
 
     def msgReceiver(self, sender, msg):
@@ -317,22 +334,19 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__exposeSetting()
             self.__colourGainsSetting()
             if self.__findOptionByID('awb'):
-                self.setAwbMode(self.__findOptionByID('awb mode')[1])
+                self.setAwbMode(self.__findOptionByID('awb mode')['value'])
 
     def centerPressAction(self):
-        t = 0
-        while wiringpi.digitalRead(self.__config['pin']['center']) and t < 1:
-            t += 0.01
-            time.sleep(0.01)
-        if t < 0.09:
-            return
-        self.__zoom = 1
-        self.__brightness = 0
-        self.zoom(self.__zoom)
-        self.brightness(self.__brightness)
+        pass
 
-    def direction(self, direction):
-        self.__rotate = direction
+    def rotaryEncoderClockwise(self):
+        pass
+
+    def rotaryEncoderCounterClockwise(self):
+        pass
+
+    def rotaryEncoderSelect(self):
+        self.__main.nextCursor()
 
     def onEnter(self, lastID):
         if not os.path.exists(self.__config['camera']['path']) or not os.path.isdir(self.__config['camera']['path']):
@@ -360,7 +374,11 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 seconds, milliseconds = divmod(int(millis), 1000)
                 minutes, seconds = divmod(int(seconds), 60)
                 hours, minutes = divmod(int(minutes), 60)
-                self.__toast.setText('{}:{}:{}:{}'.format(hours, minutes, seconds, milliseconds))
+                self.__toast.setText(
+                    '{}:{}:{}:{}'.format(
+                        hours, minutes, seconds, milliseconds
+                    )
+                )
             if self.__zoomHold:
                 self.__toast.decorate(frame, self.__rotate)
             if self.__brightHold:
@@ -370,4 +388,5 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             if self.__isHdrProcessing:
                 self.__toast.decorate(frame, self.__rotate)
 
+            self.__main.decorate(frame)
             yield frame

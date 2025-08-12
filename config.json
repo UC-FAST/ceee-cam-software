@@ -1,40 +1,37 @@
 {
     "pin": {
-        "d1": 21,
-        "d2": 22,
-        "d3": 23,
-        "d4": 26,
-        "center": 28,
-        "rst": 5,
-        "dc": 2,
-        "bl": 6,
-        "cross": 29,
+        "right": 6,
+        "up": 0,
+        "left": 22,
+        "down"   :1,
+        "center" :5,
+
+        "rotaryEncoder1A":17,
+        "rotaryEncoder1B":24,
+        "rotaryEncoder1S":27,
+
+        "shutter":16,
+
+        "cross": 23,
         "square": 25,
-        "triangle": 24,
-        "circle": 27
+        "circle": 20,
+
+        "rst": 19,
+        "dc": 26,
+        "bl": 21
     },
     "camera": {
         "path": "./pict",
         "video_path": "./pict/video",
         "video_bitrate": 1000000
     },
-    "gallery": {
-        "url": "https://microfish.club/api",
-        "params": {
-            "mode": "pictUpdate"
-        }
-    },
     "screen": {
-        "width": 128,
-        "height": 128
+        "width": 320,
+        "height": 240
     },
     "led": {
-        "led_green": 0,
-        "led_blue": 7
-    },
-    "max17048": {
-        "alert_threshold": 3.1,
-        "alert_pin": 28
+        "led_green": 12,
+        "led_blue": 13
     },
     "debug_level": 1,
     "screenshot_path": "./pict/screenshot/"

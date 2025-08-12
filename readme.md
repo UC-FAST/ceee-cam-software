@@ -139,3 +139,26 @@ controlledEndList：由controlledEnd.ControlledEnd的子类构成的列表
 UniversalControl.mainLoop(self)
 ```
 主循环，将ControlledEnd.mainloop返回的图像序列送入显示队列
+
+
+
+camConfig.json编写指南
+
+{
+    "ControlledEnd1":{
+        "0":{
+            "title":"Enter menu title here",
+            "Options":[  #List your Options
+                {
+                    "id":
+                    "content"
+                    "type": menu, irq, msg, option, bool, num,numeral
+                },
+                ...
+            ]
+        }
+    },
+    "ControlledEnd2":{
+
+    }
+}

@@ -10,7 +10,7 @@ from components import galleryBrowser
 
 
 class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBrowser):
-    def __init__(self, _id='GalleryControlledEnd', width=128, height=128, pictPath='./pict/'):
+    def __init__(self, _id='GalleryControlledEnd', width=320, height=240, pictPath='./pict/'):
         controlledEnd.ControlledEnd.__init__(self, _id)
         pictPath = pictPath if pictPath.endswith('/') else pictPath + '/'
         galleryBrowser.GalleryBrowser.__init__(self, pictPath, width, height)
@@ -106,20 +106,35 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__simpleTextEnable = not self.__simpleTextEnable
         self.__refreshFrame()
 
-    def trianglePressAction(self):
-        if self.__empty:
-            self.__empty = False
-            self._irq(self.__from)
-            return
-        self._irq('MenuControlledEnd')
+    def crossPressAction(self):
+        pass
 
-    def triangleLongPressAction(self):
+    def crossLongPressAction(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
             return
         self._irq('CameraControlledEnd')
 
+    def squarePressAction(self):
+        if self.__empty:
+            self.__empty = False
+            self._irq(self.__from)
+            return
+        self._irq('MenuControlledEnd')
+
+    def shutterPressAction(self):
+        pass
+    
+    def rotaryEncoderClockwise(self):
+        pass
+
+    def rotaryEncoderCounterClockwise(self):
+        pass
+
+    def rotaryEncoderSelect(self):
+        pass
+    
     def msgReceiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
             self.__option = msg[1]
@@ -154,9 +169,6 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
                 self.__decorator.decorate(pict)
             yield np.rot90(pict, -self.__rotate // 90)
 
-    def direction(self, direction):
-        self.__rotate = direction
-        self.__frameList.put(self.__currentFrame)
 
     def onExit(self):
         self.__frameList.put(frameDecorator.Warining().decorate("Empty"))

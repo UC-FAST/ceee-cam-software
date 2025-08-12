@@ -1,4 +1,5 @@
-from collections import Iterable
+
+from collections.abc import Iterable
 from math import ceil
 
 import cv2
@@ -10,7 +11,7 @@ class SimpleText:
                  func: list,
                  height: int,
                  padding: tuple = (0, 0, 0, 0),
-                 fontHeight: int = 12,
+                 fontHeight: int = 24,
                  color: tuple = (255, 255, 255),
                  thickness: float = 1
                  ):

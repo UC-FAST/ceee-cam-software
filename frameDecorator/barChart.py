@@ -5,7 +5,7 @@ import numpy as np
 
 
 class BarChart:
-    def __init__(self, width=128, height=128, maxSize=128, scale=0, color=(0, 0, 255), thickness=1, fill=False,
+    def __init__(self, width=320, height=240, maxSize=128, scale=0, color=(0, 0, 255), thickness=1, fill=False,
                  alpha: float = 1):
         self.__step = ceil(width / maxSize)
         self.__maxSize = maxSize

@@ -2,31 +2,24 @@
 import os
 import time
 
-import wiringpi
 
 import universalControl
-from components import screen, configLoader
+from components import lcd20, configLoader
 from controlledEnd import MenuControlledEnd, GalleryControlledEnd, CameraControlledEnd
 
-tuning = './tuning/ov5647.json'
-t = 0
-config = configLoader.ConfigLoader('./config.json')
-while wiringpi.digitalRead(config['pin']['square']) and t < 1:
-    t += 0.01
-    time.sleep(0.01)
-if t >= 1:
-    if os.path.exists('./tuning.json'):
-        tuning = './tuning.json'
+tuning = './pisp/imx477.json'
+
 
 config = configLoader.ConfigLoader('./config.json')
 u = universalControl.UniversalControl(
-    screen.Lcd(),
+    lcd20.Lcd(),
     [
         CameraControlledEnd(
             verbose_console=config['debug_level'],
             tuningFilePath=tuning
         ),
         MenuControlledEnd(
+            path='a.json',
             showPreview=True,
             rowCount=4,
             showIndex=True,

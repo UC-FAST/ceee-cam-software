@@ -9,6 +9,7 @@ import picamera2
 from picamera2 import YUV420_to_RGB
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
+from libcamera import controls
 
 from . import configLoader
 
@@ -16,6 +17,7 @@ from . import configLoader
 class Cam:
     def __init__(self, verbose_console=None, tuning=None):
         self.__cam = picamera2.Picamera2(verbose_console=verbose_console, tuning=tuning)
+        #self.__cam = picamera2.Picamera2()
         self.__config = configLoader.ConfigLoader('./config.json')
         self.__pictConfig = self.__cam.create_preview_configuration(
             main={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
@@ -67,6 +69,7 @@ class Cam:
         return self.__framePerSecond
 
     def setAeExposureMode(self, code):
+        print(dir(controls.AeMeteringModeEnum))
         control = {
             "AeEnable": True,
             "AeExposureMode": code
@@ -109,6 +112,12 @@ class Cam:
         self.__controls.update(control)
 
     def setAeMeteringMode(self, code):
+        """
+        Spot:1
+        
+        """
+        
+        
         control = {
             'AeEnable': True,
             'AeMeteringMode': code

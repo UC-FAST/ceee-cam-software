@@ -2,7 +2,7 @@ import cv2
 
 
 class Busy:
-    def __init__(self, width=128, height=128, color=(0, 0, 255)):
+    def __init__(self, width=320, height=240, color=(0, 0, 255)):
         self.__width = width
         self.__height = height
         self.__color = color

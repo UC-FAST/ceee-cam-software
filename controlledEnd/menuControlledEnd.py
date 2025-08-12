@@ -6,7 +6,7 @@ import typing
 
 import cv2
 import numpy as np
-import wiringpi
+
 
 from components import configLoader
 from frameDecorator.colors import Colors
@@ -17,26 +17,30 @@ class MenuControlledEnd(ControlledEnd):
     def __init__(
             self,
             _id='MenuControlledEnd',
-            path='./menu.json',
-            width: int = 128,
-            height: int = 128,
+            path=None,
+            width: int = 320,
+            height: int = 240,
             padding: tuple = (10, 10, 10, 10),
             rowCount: int = 4,
             showIndex: bool = False,
             showPreview: bool = True,
-            fontHeight: int = 12,
+            fontHeight: int = 24,
             thickness: int = 1
     ):
+
         ControlledEnd.__init__(self, _id)
         self.__options = None
         self.__optionList = None
         self.__path, self.__width, self.__height, self.__rowCount = path, width, height, rowCount
-        with open(self.__path) as f:
-            self.__menuOptions = json.load(f)
+        if self.__path:
+            with open(self.__path) as f:
+                self.__menuOptions = json.load(f)
 
         self.__fontHeight = fontHeight
-        self.__fontScale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, self.__fontHeight)
-        self.__highLightFontScale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, int(self.__fontHeight * 1.5))
+        self.__fontScale = cv2.getFontScaleFromHeight(
+            cv2.FONT_ITALIC, self.__fontHeight)
+        self.__highLightFontScale = cv2.getFontScaleFromHeight(
+            cv2.FONT_ITALIC, int(self.__fontHeight * 1.5))
         self.__padding = padding
         self.__showIndex, self.__showPreview, self.__thickness = showIndex, showPreview, thickness
         self.__spaceHeight = 0
@@ -45,12 +49,25 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentPage = 0
         self.__currentIndex = 0
         self.__currentMenuID = None
-        self.__selectIndex = None
+        self.__selectIndex = None #Index selected 
         self.__title = None
         self.__from = None
         self.__valueTemp = None
         self.__routeList: typing.List[tuple] = list()
         self.__theme = {
+            'background': Colors.industrialBlue.value,
+            'cursor': Colors.industrialGreen.value,
+            'text': Colors.white.value,
+            'boolTrue': Colors.industrialYellow.value,
+            'boolFalse': Colors.darkred.value,
+            'numeral': Colors.darkgoldenrod.value,
+            'msg': Colors.gray.value,
+            'option': Colors.palevioletred.value,
+            'irq': Colors.darkorchid.value,
+            'cursorDisable': Colors.darkgray.value,
+            'textDisable': Colors.gray.value
+        }
+        {
             'background': Colors.black.value,
             'cursor': Colors.steelblue.value,
             'text': Colors.white.value,
@@ -86,7 +103,8 @@ class MenuControlledEnd(ControlledEnd):
         self.__optionList = self.__menuOptions[key]
         self.__currentMenuID = "0"
         self.__routeList = list()
-        self.__title = self.__title = self.__optionList[self.__currentMenuID].get('title', None)
+        self.__title = self.__title = self.__optionList[self.__currentMenuID].get(
+            'title', None)
         self.__options = self.__optionList[self.__currentMenuID]['options']
         self.__pageCountCalc()
         self.__spaceCalc()
@@ -120,15 +138,21 @@ class MenuControlledEnd(ControlledEnd):
             topSolid = False
 
         backgroundCoordinate = (
-            (self.__width - self.__padding[2] - refLength // 21, self.__padding[1]),
+            (self.__width - self.__padding[2] -
+             refLength // 21, self.__padding[1]),
             (self.__width, self.__height - self.__padding[3])
         )
-        cv2.rectangle(frame, backgroundCoordinate[0], backgroundCoordinate[1], self.__theme['background'], -1)
+        cv2.rectangle(
+            frame, backgroundCoordinate[0], backgroundCoordinate[1], self.__theme['background'], -1)
         topCoordinate = (
-            (self.__width - self.__padding[2], self.__padding[1] + refLength // 21),
-            (self.__width - self.__padding[2] - refLength // 21, self.__padding[1] + refLength // 21),
-            (self.__width - self.__padding[2] - refLength // 42, self.__padding[1]),
-            (self.__width - self.__padding[2], self.__padding[1] + refLength // 21),
+            (self.__width - self.__padding[2],
+             self.__padding[1] + refLength // 21),
+            (self.__width - self.__padding[2] - refLength //
+             21, self.__padding[1] + refLength // 21),
+            (self.__width - self.__padding[2] -
+             refLength // 42, self.__padding[1]),
+            (self.__width - self.__padding[2],
+             self.__padding[1] + refLength // 21),
         )
 
         if topSolid:
@@ -141,10 +165,14 @@ class MenuControlledEnd(ControlledEnd):
                 last = i
 
         bottomCoordinate = (
-            (self.__width - self.__padding[2], self.__height - self.__padding[1] - refLength // 21),
-            (self.__width - self.__padding[2] - refLength // 21, self.__height - self.__padding[3] - refLength // 21),
-            (self.__width - self.__padding[2] - refLength // 42, self.__height - self.__padding[3]),
-            (self.__width - self.__padding[2], self.__height - self.__padding[1] - refLength // 21),
+            (self.__width - self.__padding[2], self.__height -
+             self.__padding[1] - refLength // 21),
+            (self.__width - self.__padding[2] - refLength // 21,
+             self.__height - self.__padding[3] - refLength // 21),
+            (self.__width - self.__padding[2] - refLength //
+             42, self.__height - self.__padding[3]),
+            (self.__width - self.__padding[2], self.__height -
+             self.__padding[1] - refLength // 21),
         )
 
         if bottomSolid:
@@ -175,7 +203,8 @@ class MenuControlledEnd(ControlledEnd):
             (self.__currentPage + 1) * slideBarHeight + slideBarOffset[1]
         )
 
-        cv2.rectangle(frame, beginCoordinate, endCoordinate, self.__theme['cursor'], -1)
+        cv2.rectangle(frame, beginCoordinate, endCoordinate,
+                      self.__theme['cursor'], -1)
 
     def __genItemStartCoordinate(self, itemCount=None, ignoreTitle=False):
         if not itemCount:
@@ -255,7 +284,8 @@ class MenuControlledEnd(ControlledEnd):
                 )
             )
             self.__pageCountCalc()
-            receiver = self.__currentOptions[self.__currentIndex].get('receiver', None)
+            receiver = self.__currentOptions[self.__currentIndex].get(
+                'receiver', None)
             if receiver:
                 self._msgSender(
                     receiver,
@@ -280,11 +310,17 @@ class MenuControlledEnd(ControlledEnd):
                 )
             )
             self._irq(self.__from)
-        else:
+        elif t == 'option':
+            print('wqerewqe',self.__currentOptions[self.__currentIndex])
             self.__valueTemp = self.__currentOptions[self.__currentIndex]['value']
             self.__selectIndex = self.__currentIndex
+        else:
+            raise RuntimeError()
 
     def unselect(self):
+        """
+        Dump config when button release
+        """
         self.__currentOptions[self.__selectIndex]['value'] = self.__valueTemp
         self.__valueTemp = None
         self._msgSender(
@@ -295,7 +331,8 @@ class MenuControlledEnd(ControlledEnd):
                 self.__menuOptions[self.__from]
             )
         )
-        receiver = self.__currentOptions[self.__selectIndex].get('receiver', None)
+        receiver = self.__currentOptions[self.__selectIndex].get(
+            'receiver', None)
         if receiver and 'value' in self.__currentOptions[self.__selectIndex].keys():
             self._msgSender(
                 None,
@@ -333,8 +370,8 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentPage -= 1
         self.__currentIndex = self.__rowCount - 1
         self.__currentOptions = self.__options[
-                                self.__currentPage * self.__rowCount:(self.__currentPage + 1) * self.__rowCount
-                                ]
+            self.__currentPage * self.__rowCount:(self.__currentPage + 1) * self.__rowCount
+        ]
 
     def downAction(self):
         times = 1
@@ -364,17 +401,19 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentPage += 1
         self.__currentIndex = 0
         self.__currentOptions = self.__options[
-                                self.__currentPage * self.__rowCount:(self.__currentPage + 1) * self.__rowCount
-                                ]
+            self.__currentPage * self.__rowCount:(self.__currentPage + 1) * self.__rowCount
+        ]
 
     def __jumpByIndex(self, index):
         self.__jumpByID(self.__currentOptions[index]['value'])
 
     def __jumpByID(self, target, record=True):
         if record:
-            self.__routeList.append((self.__currentMenuID, self.__currentIndex))
+            self.__routeList.append(
+                (self.__currentMenuID, self.__currentIndex))
         self.__currentMenuID = target
-        self.__title = self.__optionList[self.__currentMenuID].get('title', None)
+        self.__title = self.__optionList[self.__currentMenuID].get(
+            'title', None)
         self.__options = self.__optionList[self.__currentMenuID]['options']
 
         self.__pageCountCalc()
@@ -385,6 +424,7 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentOptions = self.__options[0:self.__rowCount]
 
     def __drawContent(self, frame):
+        """"""
         if not self.__showIndex:
             return
         for index, i in zip(
@@ -397,7 +437,8 @@ class MenuControlledEnd(ControlledEnd):
             if self.__showIndex:
                 cv2.putText(
                     frame,
-                    "{} {}".format(index + 1, self.__currentOptions[index]['content']),
+                    "{} {}".format(
+                        index + 1, self.__currentOptions[index]['content']),
                     (i[0], i[1] + self.__fontHeight),
                     cv2.FONT_ITALIC,
                     self.__fontScale,
@@ -415,7 +456,9 @@ class MenuControlledEnd(ControlledEnd):
             cv2.rectangle(
                 frame,
                 (
-                    self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                    self.__width -
+                    self.__padding[2] - self.__width // 21 -
+                    self.__width // 21,
                     i[1] - self.__spaceHeight,
                 ),
                 (
@@ -447,11 +490,8 @@ class MenuControlledEnd(ControlledEnd):
             text = str(self.__currentOptions[self.__currentIndex]['value'])
         elif t == 'option':
             backgroundColor = self.__theme[t]
-            value = self.__currentOptions[self.__currentIndex]['value']
-            if isinstance(value, list):
-                text = str(value[0])
-            else:
-                text = str(value)
+            value = self.__currentOptions[self.__currentIndex]['value']['content']
+            text = str(value)
         elif t == 'numeral':
             value = self.__currentOptions[self.__currentIndex]['value']
             if isinstance(value, float):
@@ -469,11 +509,14 @@ class MenuControlledEnd(ControlledEnd):
         coordinate = (
             (
                 self.__padding[0],
-                line * (self.__fontHeight + self.__spaceHeight) + self.__spaceHeight + self.__padding[1]
+                line * (self.__fontHeight + self.__spaceHeight) +
+                self.__spaceHeight + self.__padding[1]
             ),
             (
-                self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
-                (line + 1) * (self.__fontHeight + self.__spaceHeight) + self.__padding[1]
+                self.__width - self.__padding[2] -
+                self.__width // 21 - self.__width // 21,
+                (line + 1) * (self.__fontHeight +
+                              self.__spaceHeight) + self.__padding[1]
             )
         )
 
@@ -493,7 +536,8 @@ class MenuControlledEnd(ControlledEnd):
         cv2.rectangle(
             frame,
             (coordinate[1][0], coordinate[0][1]),
-            (self.__width - self.__padding[2] - self.__width // 21, coordinate[1][1]),
+            (self.__width - self.__padding[2] -
+             self.__width // 21, coordinate[1][1]),
             self.__theme['background'],
             -1
         )
@@ -511,20 +555,24 @@ class MenuControlledEnd(ControlledEnd):
                 cv2.rectangle(
                     frame,
                     (
-                        self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                        self.__width -
+                        self.__padding[2] -
+                        self.__width // 21 - self.__width // 21,
                         i[1] - self.__spaceHeight
                     ),
                     (
-                        self.__width - self.__padding[2] - self.__width // 42 - 1,
+                        self.__width -
+                        self.__padding[2] - self.__width // 42 - 1,
                         i[1] + self.__fontHeight + self.__spaceHeight
                     ),
                     self.__theme['background'],
                     - 1
                 )
                 self.__drawUnderLinePreview(frame)
-                continue
+                # continue
             fontColor = self.__theme['text']
             t = self.__currentOptions[index]['type'].lower()
+            #Show little hint value
             if t == 'bool':
                 if self.__currentOptions[index]['value']:
                     value = 'Y'
@@ -542,9 +590,7 @@ class MenuControlledEnd(ControlledEnd):
                 backgroundColor = self.__theme[t]
 
             elif t == 'option':
-                value = self.__currentOptions[index]['value']
-                if isinstance(value, list):
-                    value = value[0]
+                value = self.__currentOptions[index]['value']['content'] # When option have extra value, show it's name
                 backgroundColor = self.__theme[t]
             elif t == 'numeral':
                 value = self.__currentOptions[index]['value']
@@ -557,11 +603,15 @@ class MenuControlledEnd(ControlledEnd):
             cv2.rectangle(
                 frame,
                 (
-                    self.__width - self.__padding[2] - 3 * (self.__width // 42) - 3 * self.__fontHeight,
+                    self.__width -
+                    self.__padding[2] - 3 *
+                    (self.__width // 42) - 12 * self.__fontHeight,
                     i[1] - self.__spaceHeight // 3
                 ),
                 (
-                    self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                    self.__width -
+                    self.__padding[2] - self.__width // 21 -
+                    self.__width // 21,
                     i[1] + self.__fontHeight + self.__spaceHeight // 3
                 ),
                 backgroundColor,
@@ -572,7 +622,7 @@ class MenuControlledEnd(ControlledEnd):
                 "{}".format(value),
                 (
                     self.__width - self.__padding[
-                        2] - self.__width // 42 - self.__width // 21 - 3 * self.__fontHeight,
+                        2] - self.__width // 42 - self.__width // 21 - 12 * self.__fontHeight,
                     i[1] + self.__fontHeight
                 ),
                 cv2.FONT_ITALIC,
@@ -582,7 +632,9 @@ class MenuControlledEnd(ControlledEnd):
             cv2.rectangle(
                 frame,
                 (
-                    self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                    self.__width -
+                    self.__padding[2] - self.__width // 21 -
+                    self.__width // 21,
                     i[1] - self.__spaceHeight
                 ),
                 (
@@ -605,7 +657,9 @@ class MenuControlledEnd(ControlledEnd):
                         i[1] - self.__spaceHeight // 3
                     ),
                     (
-                        self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21,
+                        self.__width -
+                        self.__padding[2] -
+                        self.__width // 21 - self.__width // 21,
                         i[1] + self.__fontHeight + self.__spaceHeight // 3
                     ),
                     color,
@@ -633,7 +687,9 @@ class MenuControlledEnd(ControlledEnd):
         cv2.rectangle(
             background,
             (
-                self.__width - self.__padding[2] - self.__width // 21 - self.__width // 21 + 1,
+                self.__width -
+                self.__padding[2] - self.__width // 21 -
+                self.__width // 21 + 1,
                 self.__padding[1] - self.__spaceHeight
             ),
             (
@@ -662,7 +718,8 @@ class MenuControlledEnd(ControlledEnd):
                 cv2.putText(
                     frame,
                     "max",
-                    (int(self.__width - self.__padding[2] - self.__fontHeight * 3), i[1] + self.__fontHeight),
+                    (int(
+                        self.__width - self.__padding[2] - self.__fontHeight * 3), i[1] + self.__fontHeight),
                     cv2.FONT_ITALIC,
                     self.__fontScale,
                     self.__theme['text'],
@@ -686,10 +743,14 @@ class MenuControlledEnd(ControlledEnd):
                     cv2.fillConvexPoly(frame, polygon, self.__theme['cursor'])
 
                 leftCoordinate = (
-                    (self.__width - self.__padding[2] - self.__fontHeight, i[1]),
-                    (self.__width - self.__padding[2] - self.__fontHeight, i[1] + self.__fontHeight),
-                    (self.__width - self.__padding[2], i[1] + self.__fontHeight // 2),
-                    (self.__width - self.__padding[2] - self.__fontHeight, i[1]),
+                    (self.__width -
+                     self.__padding[2] - self.__fontHeight, i[1]),
+                    (self.__width -
+                     self.__padding[2] - self.__fontHeight, i[1] + self.__fontHeight),
+                    (self.__width - self.__padding[2],
+                     i[1] + self.__fontHeight // 2),
+                    (self.__width -
+                     self.__padding[2] - self.__fontHeight, i[1]),
                 )
 
                 if value >= ma:
@@ -702,11 +763,12 @@ class MenuControlledEnd(ControlledEnd):
                     cv2.fillConvexPoly(frame, polygon, self.__theme['cursor'])
 
                 slideBarTotalWidth = self.__width - self.__padding[0] - self.__padding[2] - (
-                        self.__fontHeight + self.__width // 42) * 2
+                    self.__fontHeight + self.__width // 42) * 2
                 slideBarWidth = int(slideBarTotalWidth * value / (ma - mi))
                 slideBarCoordinate = (
                     (i[0] + self.__fontHeight + self.__width // 42, i[1]),
-                    (i[0] + self.__fontHeight + self.__width // 42 + slideBarWidth, i[1] + self.__fontHeight),
+                    (i[0] + self.__fontHeight + self.__width //
+                     42 + slideBarWidth, i[1] + self.__fontHeight),
                 )
                 cv2.rectangle(
                     frame,
@@ -722,7 +784,8 @@ class MenuControlledEnd(ControlledEnd):
                 cv2.putText(
                     frame,
                     str(value),
-                    (int((self.__width - self.__fontHeight * len(str(value))) // 2), i[1] + self.__fontHeight),
+                    (int((self.__width - self.__fontHeight *
+                     len(str(value))) // 2), i[1] + self.__fontHeight),
                     cv2.FONT_ITALIC,
                     self.__fontScale,
                     self.__theme['text'],
@@ -740,7 +803,8 @@ class MenuControlledEnd(ControlledEnd):
             elif index == 4:
                 cv2.putText(
                     frame,
-                    "Step {}".format(self.__currentOptions[self.__currentIndex]['step']),
+                    "Step {}".format(
+                        self.__currentOptions[self.__currentIndex]['step']),
                     (i[0], i[1] + self.__fontHeight),
                     cv2.FONT_ITALIC,
                     self.__fontScale,
@@ -749,15 +813,15 @@ class MenuControlledEnd(ControlledEnd):
                 return
 
     def __optionMenu(self, frame):
-        value = self.__valueTemp if self.__valueTemp is not None else self.__currentOptions[self.__currentIndex][
-            'value']
-        options: list = self.__currentOptions[self.__currentIndex]['options']
-        selectIndex = options.index(value)
-        if isinstance(value, list):
-            value = value[0]
+        value = self.__valueTemp if self.__valueTemp is not None else self.__currentOptions[self.__currentIndex]['value']#Gt Current Value
+        options: list = self.__currentOptions[self.__currentIndex]['options'] #Get Current Options
+        selectIndex = options.index(value) #Get Current Index of Selected Option
+        value=value['content']
         for _, (index, i) in zip(
-                range(len(self.__currentOptions[self.__currentIndex]['options']) + 1),
-                enumerate(self.__genItemStartCoordinate(itemCount=self.__rowCount + 1, ignoreTitle=True))
+                range(
+                    len(self.__currentOptions[self.__currentIndex]['options']) + 1),
+                enumerate(self.__genItemStartCoordinate(
+                    itemCount=self.__rowCount + 1, ignoreTitle=True))
         ):
             if index == 0:
                 cv2.putText(
@@ -781,31 +845,31 @@ class MenuControlledEnd(ControlledEnd):
                 cv2.putText(
                     frame,
                     str(value),
-                    (i[0] + self.__fontHeight + self.__width // 42, i[1] + self.__fontHeight),
+                    (i[0] + self.__fontHeight + self.__width //
+                     42, i[1] + self.__fontHeight),
                     cv2.FONT_ITALIC,
                     self.__fontScale,
                     self.__theme['text']
                 )
-            else:
+            else: #Render the rest of the options
                 try:
                     option = options[(selectIndex + index - 2) % len(options)]
-                    if isinstance(option, list):
-                        text = str(option[0])
-                    else:
-                        text = str(option)
+                    text= option['content']
                 except IndexError:
                     break
                 cv2.putText(
                     frame,
                     text,
-                    (i[0] + self.__fontHeight + self.__width // 42, i[1] + self.__fontHeight),
+                    (i[0] + self.__fontHeight + self.__width //
+                     42, i[1] + self.__fontHeight),
                     cv2.FONT_ITALIC,
                     self.__fontScale,
                     self.__theme['text']
                 )
 
     def decorate(self):
-        sketch = np.full((self.__height, self.__width, 3), self.__theme['background'], np.uint8)
+        sketch = np.full((self.__height, self.__width, 3),
+                         self.__theme['background'], np.uint8)
         if self.__selectIndex is None:
             if self.__title is not None:
                 self.__drawTitle(sketch)
@@ -823,11 +887,6 @@ class MenuControlledEnd(ControlledEnd):
         if self.__direction:
             sketch = np.rot90(sketch, -self.__direction // 90)
         self.__frameList.put(sketch)
-
-    def direction(self, direction):
-        self.__direction = direction
-        if self.__frameList is not None:
-            self.decorate()
 
     def __nextStep(self):
         item: dict = self.__currentOptions[self.__currentIndex]
@@ -968,7 +1027,7 @@ class MenuControlledEnd(ControlledEnd):
             self.select()
         self.decorate()
 
-    def trianglePressAction(self):
+    def crossPressAction(self):
         if self.__selectIndex is not None:
             self.__selectIndex = None
             self.decorate()
@@ -979,8 +1038,51 @@ class MenuControlledEnd(ControlledEnd):
             except IndexError:
                 self._irq(self.__from)
 
-    def triangleLongPressAction(self):
+    def crossLongPressAction(self):
         self._irq(self.__from)
+
+    def rotaryEncoderCounterClockwise(self):
+        if self.__selectIndex is None:
+            self.downAction()
+            self.decorate()
+            time.sleep(0.05)
+        else:
+            if self.__currentOptions[self.__selectIndex]['type'] == 'numeral':
+                self.__valuePlus()
+                self.decorate()
+                time.sleep(0.1)
+            else:
+                self.__optionDown()
+                self.decorate()
+                time.sleep(0.2)
+
+    def rotaryEncoderClockwise(self):
+        if self.__selectIndex is None:
+            self.upAction()
+            self.decorate()
+            time.sleep(0.05)
+        else:
+            if self.__currentOptions[self.__selectIndex]['type'] == 'numeral':
+                self.__valueMinus()
+                self.decorate()
+                time.sleep(0.1)
+            else:
+                self.__optionUp()
+                self.decorate()
+                time.sleep(0.2)
+
+    def rotaryEncoderSelect(self):
+        if self.__selectIndex is not None:
+            self.unselect()
+        else:
+            self.select()
+        self.decorate()
+
+    def shutterPressAction(self):
+        pass
+
+    def squarePressAction(self):
+        pass
 
     def msgReceiver(self, sender, msg):
         self.setOption(msg)
@@ -1000,7 +1102,8 @@ class MenuControlledEnd(ControlledEnd):
 
     def onExit(self):
         self.__frameList.put(
-            np.full((self.__height, self.__width, 3), self.__theme['background'], np.uint8),
+            np.full((self.__height, self.__width, 3),
+                    self.__theme['background'], np.uint8),
             block=True
         )
 

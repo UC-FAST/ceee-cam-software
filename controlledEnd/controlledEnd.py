@@ -7,71 +7,90 @@ class ControlledEnd(abc.ABC):
         self._irq = None
         self._msgSender = None
 
+    """---Multi Direction Button Start---"""
+
     @abc.abstractmethod
     def centerPressAction(self):
+        pass
+
+    def centerReleaseAction(self):
         pass
 
     @abc.abstractmethod
     def upPressAction(self):
         pass
 
+    def upReleaseAction(self):
+        pass
+
     @abc.abstractmethod
     def downPressAction(self):
+        pass
+
+    def downReleaseAction(self):
         pass
 
     @abc.abstractmethod
     def leftPressAction(self):
         pass
 
+    def leftReleaseAction(self):
+        pass
+
     @abc.abstractmethod
     def rightPressAction(self):
-        pass
-
-    @abc.abstractmethod
-    def circlePressAction(self):
-        pass
-
-    def circleLongPressAction(self):
-        pass
-
-    @abc.abstractmethod
-    def trianglePressAction(self):
-        pass
-
-    def triangleLongPressAction(self):
-        pass
-
-    @abc.abstractmethod
-    def direction(self, direction):
-        pass
-
-    def centerReleaseAction(self):
-        pass
-
-    def upReleaseAction(self):
-        pass
-
-    def downReleaseAction(self):
-        pass
-
-    def leftReleaseAction(self):
         pass
 
     def rightReleaseAction(self):
         pass
 
-    def circleReleaseAction(self):
+    """---Multi Direction Button End---"""
+
+    """---Multi Function Button Start---"""
+
+    @abc.abstractmethod
+    def circlePressAction(self):
         pass
 
-    def triangleReleaseAction(self):
+    @abc.abstractmethod
+    def squarePressAction(self):
         pass
 
+    @abc.abstractmethod
+    def crossPressAction(self):
+        pass
+
+    @abc.abstractmethod
+    def shutterPressAction(self):
+        pass
+
+    """---Multi Function Button End---"""
+
+    """---Rotary Encoder Start---"""
+
+    @abc.abstractmethod
+    def rotaryEncoderClockwise(self):
+        pass
+
+    @abc.abstractmethod
+    def rotaryEncoderCounterClockwise(self):
+        pass
+
+    @abc.abstractmethod
+    def rotaryEncoderSelect(self):
+        pass
+
+    """---Rotary Encoder End---"""
+
+    """---Communication Function Start---"""
     @abc.abstractmethod
     def msgReceiver(self, sender, msg):
         pass
 
     def msgSender(self, func):
         self._msgSender = func
+
+    """---Communication Function End---"""
 
     def irq(self, func):
         self._irq = func
