@@ -21,7 +21,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__busy = frameDecorator.Busy()
         self.__rotate = 0
         self.__currentFrame = np.zeros((self.__width, self.__height, 3), np.uint8)
-        self.__hist = frameDecorator.Hist(fill=True)
+        self.__hist = frameDecorator.Hist2()
         self.__rawFrame = None
         self.__from = None
         self.__delete = False

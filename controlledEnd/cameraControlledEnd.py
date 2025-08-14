@@ -7,6 +7,7 @@ import time
 import typing
 
 import cv2
+import numpy
 import psutil
 
 import frameDecorator
@@ -46,8 +47,11 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__config['screen']['width'],
             self.__config['screen']['height']
         )
+        self.__hist = frameDecorator.Hist2()
 
+        self.__showHist = False
         self.__isBusy = False
+        self.__mfassist = False
         self.__isHdrProcessing = False
         self.__decorateEnable = False
         self.__zoomHold = False
@@ -276,23 +280,36 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 False
             )
 
-            self.setExposure(
+            self.setManualExposure(
                 self.__findOptionByID('exposure time'),
                 self.__findOptionByID('analogue gain')
             )
 
-    def __colourGainsSetting(self):
-        if not self.__findOptionByID('awb'):
+    def __AwbSetting(self):
+        if self.__findOptionByID('awb'):
+            self.setAwbEnable(
+                True
+            )
+            self.setAwbMode(
+                self.__findOptionByID('awb mode')['value']
+            )
+        else:
+            self.setAwbEnable(
+                False
+            )
             red, blue = self.__findOptionByID(
                 'red gain'), self.__findOptionByID('blue gain')
             self.setColourGains(red, blue)
 
     def msgReceiver(self, sender, msg):
         self.__option = msg[1]
+        self.loadSettings()
+
+    def loadSettings(self):
         self.__exposeSetting()
-        self.__colourGainsSetting()
-        if self.__findOptionByID('awb'):
-            self.setAwbMode(self.__findOptionByID('awb mode')['value'])
+        self.__AwbSetting()
+        self.__mfassist = self.__findOptionByID('mf assist')
+        self.__showHist = self.__findOptionByID('show hist')
 
     def centerPressAction(self):
         pass
@@ -311,6 +328,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if not os.path.exists(self.__config['camera']['path']) or not os.path.isdir(self.__config['camera']['path']):
             os.mkdir(self.__config['camera']['path'])
         self._msgSender(self._id, 'MenuControlledEnd', self._id)
+        self.loadSettings()
 
     def active(self):
         self.start()
@@ -322,6 +340,25 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         for index, frame in enumerate(self.preview()):
             self.__filter.addData(self.frameQuality)
             self.__barChart.addData(int(self.__filter.calc()))
+
+            if self.__mfassist:
+                gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+                blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+                edges = cv2.Canny(
+                    blurred,
+                    threshold1=70,
+                    threshold2=400
+                )
+                colorfulEdges = numpy.zeros(
+                    (edges.shape[0], edges.shape[1], 3), dtype=numpy.uint8)
+
+                if index % 3 == 0:
+                    colorfulEdges[edges != 0] = (0, 0, 255)
+                elif index % 3 == 1:
+                    colorfulEdges[edges != 0] = (255, 0, 0)
+                else:
+                    colorfulEdges[edges != 0] = (0, 255, 0)
+
             if self.__decorateEnable and not self.__zoomHold and self.__recordTimestamp is None:
                 self.__barChart.decorate(frame, rotate=self.__rotate)
                 self.__decorator.decorate(frame, rotate=self.__rotate)
@@ -346,5 +383,9 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 self.__toast.decorate(frame, self.__rotate)
             if self.__isHdrProcessing:
                 self.__toast.decorate(frame, self.__rotate)
+            if self.__showHist:
+                self.__hist.decorate(frame)
+            if self.__mfassist:
+                frame = cv2.addWeighted(frame, 0.8, colorfulEdges, 1.0, 0)
 
             yield frame

@@ -72,13 +72,7 @@ class Cam:
     def framePerSecond(self):
         return self.__framePerSecond
 
-    def setAwbMode(self, code):
-        control = {
-            "AwbEnable": True,
-            "AwbMode": code
-        }
-        self.__controls.update(control)
-        self.__cam.set_controls(control)
+
 
     def brightness(self, brt):
         if brt <= -1:
@@ -139,7 +133,7 @@ class Cam:
         self.__controls.update(control)
 
 
-    def setExposure(self, exposureTime, analogueGain):
+    def setManualExposure(self, exposureTime, analogueGain):
         if exposureTime or analogueGain:
             control = {
                 'AeEnable': False,
@@ -155,18 +149,25 @@ class Cam:
         self.__cam.set_controls(control)
         self.__controls.update(control)
 
-    def setColourGains(self, red, blue):
-        return
-        if red or blue:
-            control = {
-                "AwbEnable": False,
-                "ColourGains": (red, blue)
-            }
+    def setAwbEnable(self, enable):
+        control = {
+            "AwbEnable": enable
+        }
+        self.__controls.update(control)
+        self.__cam.set_controls(control)
 
-        else:
-            control = {
-                "AwbEnable": True,
-            }
+    def setAwbMode(self, code):
+        control = {
+            "AwbMode": code
+        }
+        self.__controls.update(control)
+        self.__cam.set_controls(control)
+
+    def setColourGains(self, red, blue):
+        control = {
+            "AwbEnable": False,
+            "ColourGains": (red, blue)
+        }
         self.__cam.set_controls(control)
         self.__controls.update(control)
 
@@ -296,7 +297,7 @@ class Cam:
             coordinate = self.__cam.capture_metadata()['ScalerCrop']
             self.__cam.set_controls(self.__controls)
             self.__zoom(coordinate)
-            self.setExposure(exposeTime, 1)
+            self.setManualExposure(exposeTime, 1)
             time.sleep(1)
             request = self.__cam.capture_request()
             frame = request.make_array("main")

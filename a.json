@@ -34,6 +34,11 @@
                     "value": "exposure"
                 },
                 {
+                    "content": "Focus",
+                    "type": "Menu",
+                    "value": "focus"
+                },
+                {
                     "content": "White Balance",
                     "type": "menu",
                     "value": "white balance"
@@ -202,7 +207,7 @@
                     "id": "auto expose",
                     "content": "Auto Expose",
                     "type": "bool",
-                    "value": false,
+                    "value": true,
                     "setDisable": [
                         "exposure time",
                         "analogue gain"
@@ -240,7 +245,7 @@
                             "value": 3
                         }
                     ],
-                    "enable": false
+                    "enable": true
                 },
                 {
                     "id": "constraint mode",
@@ -268,7 +273,7 @@
                             "value": 3
                         }
                     ],
-                    "enable": false
+                    "enable": true
                 },
                 {
                     "id": "metering mode",
@@ -296,14 +301,20 @@
                             "value": 3
                         }
                     ],
-                    "enable": false
+                    "enable": true
+                },
+                {
+                    "id": "show hist",
+                    "content": "Show Histogram",
+                    "type": "bool",
+                    "value": true
                 },
                 {
                     "id": "flicker",
                     "content": "Flicker",
                     "type": "menu",
                     "value": "flicker menu",
-                    "enable": false
+                    "enable": true
                 },
                 {
                     "id": "exposure time",
@@ -318,7 +329,7 @@
                         1000,
                         10000
                     ],
-                    "enable": true
+                    "enable": false
                 },
                 {
                     "id": "analogue gain",
@@ -329,11 +340,10 @@
                     "max": 16,
                     "step": 1,
                     "stepOptions": [
-                        0.1,
                         1,
                         10
                     ],
-                    "enable": true
+                    "enable": false
                 }
             ]
         },
@@ -384,12 +394,23 @@
                 }
             ]
         },
+        "focus": {
+            "title": "Focus",
+            "options": [
+                {
+                    "id": "mf assist",
+                    "content": "MF Assist",
+                    "type": "bool",
+                    "value": false
+                }
+            ]
+        },
         "white balance": {
             "title": "White Balance",
             "options": [
                 {
                     "id": "awb",
-                    "content": "AWB",
+                    "content": "Auto White Balance",
                     "type": "bool",
                     "value": true,
                     "setEnable": [
@@ -401,7 +422,7 @@
                 },
                 {
                     "id": "awb mode",
-                    "content": "AWB Mode",
+                    "content": "Auto White Balance Mode",
                     "type": "option",
                     "value": {
                         "content": "Auto",
@@ -459,9 +480,9 @@
                     "id": "red gain",
                     "content": "Red Gain",
                     "type": "numeral",
-                    "value": 4,
-                    "min": 0.1,
-                    "max": 10,
+                    "value": 23,
+                    "min": 0,
+                    "max": 32,
                     "step": 1,
                     "stepOptions": [
                         0.1,
@@ -472,9 +493,9 @@
                     "id": "blue gain",
                     "content": "Blue Gain",
                     "type": "numeral",
-                    "value": 7,
-                    "min": 0.1,
-                    "max": 10,
+                    "value": 3,
+                    "min": 0,
+                    "max": 32,
                     "step": 1,
                     "stepOptions": [
                         0.1,

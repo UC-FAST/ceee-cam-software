@@ -9,3 +9,4 @@ from .toast import Toast
 from .warning import Warining
 from .waterMark import WaterMark
 from .main import main
+from .hist2 import Hist2
