@@ -21,9 +21,9 @@ u = universalControl.UniversalControl(
         MenuControlledEnd(
             path='a.json',
             showPreview=True,
-            rowCount=4,
+            rowCount=5,
             showIndex=True,
-            fontHeight=10,
+            fontHeight=14,
             padding=(5, 5, 5, 5)
         ),
         GalleryControlledEnd(pictPath=config['camera']['path'])

@@ -401,7 +401,7 @@
                     "id": "mf assist",
                     "content": "MF Assist",
                     "type": "bool",
-                    "value": true
+                    "value": false
                 }
             ]
         },
@@ -532,7 +532,7 @@
                     "id": "show hist",
                     "content": "Show Hist",
                     "type": "bool",
-                    "value": false
+                    "value": true
                 }
             ]
         }

@@ -213,7 +213,7 @@ class MenuControlledEnd(ControlledEnd):
         if self.__title is not None and not ignoreTitle:
             firstStartCoordinate = (
                 self.__padding[0],
-                self.__padding[1] + self.__spaceHeight * 2 + self.__fontHeight,
+                self.__padding[1] + int(self.__spaceHeight * 1.5) + self.__fontHeight,
             )
         else:
             firstStartCoordinate = (
@@ -606,7 +606,7 @@ class MenuControlledEnd(ControlledEnd):
                 (
                     self.__width -
                     self.__padding[2] - 3 *
-                    (self.__width // 42) - 12 * self.__fontHeight,
+                    (self.__width // 42) - 8 * self.__fontHeight,
                     i[1] - self.__spaceHeight // 3
                 ),
                 (
@@ -623,11 +623,11 @@ class MenuControlledEnd(ControlledEnd):
                 "{}".format(value),
                 (
                     self.__width - self.__padding[
-                        2] - self.__width // 42 - self.__width // 21 - 12 * self.__fontHeight,
+                        2] - self.__width // 42 - self.__width // 21 - 8 * self.__fontHeight,
                     i[1] + self.__fontHeight
                 ),
                 cv2.FONT_ITALIC,
-                self.__fontScale / 1.2,
+                self.__fontScale ,
                 fontColor
             )
             cv2.rectangle(

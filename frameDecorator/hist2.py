@@ -17,20 +17,20 @@ class Hist2:
             []), np.array([])]
 
     def __frameCalc(self, frame):
-        hist_channels = [
+        histChannels = [
             cv2.calcHist([frame], [i], None, [256], [0, 255]).flatten()
             for i in range(3)
         ]
 
-        if len(hist_channels[0]) > self.__maxSize:
-            step = len(hist_channels[0]) // self.__maxSize
+        if len(histChannels[0]) > self.__maxSize:
+            step = len(histChannels[0]) // self.__maxSize
             new_len = self.__maxSize * step
             self.__dataList = [
                 ch[:new_len].reshape(self.__maxSize, step).mean(axis=1)
-                for ch in hist_channels
+                for ch in histChannels
             ]
         else:
-            self.__dataList = [ch[:self.__maxSize] for ch in hist_channels]
+            self.__dataList = [ch[:self.__maxSize] for ch in histChannels]
 
         all_data = np.concatenate(self.__dataList)
         self.__min = np.min(all_data)
@@ -40,49 +40,49 @@ class Hist2:
         self.__frameCalc(frame)
         sketch = np.zeros((self.__height, self.__width, 3), dtype=np.uint8)
 
-        pad_left, pad_top, pad_right, pad_bottom = self.__padding
-        plot_height = self.__height - pad_top - pad_bottom
-        base_y = self.__height - pad_bottom
+        padLeft, padTop, padRight, padBottom = self.__padding
+        plot_height = self.__height - padTop - padBottom
+        baseY = self.__height - padBottom
 
         if self.__max <= self.__min:
             pass
         else:
 
-            norm_range = 100.0 if plot_height > 0 else 0
-            norm_data = [
-                (ch - self.__min) / (self.__max - self.__min) * norm_range
+            normRange = 100.0 if plot_height > 0 else 0
+            normData = [
+                (ch - self.__min) / (self.__max - self.__min) * normRange
                 for ch in self.__dataList
             ]
 
-            bar_heights = [
+            barHeights = [
                 (ch * plot_height /
-                 100).astype(int) if norm_range > 0 else np.zeros_like(ch)
-                for ch in norm_data
+                 100).astype(int) if normRange > 0 else np.zeros_like(ch)
+                for ch in normData
             ]
 
             for i in range(len(self.__dataList[0])):
-                x_start = pad_left + i * self.__step
-                x_end = x_start + self.__step
+                xStart = padLeft + i * self.__step
+                xEnd = xStart + self.__step
 
-                for ch_idx, height in enumerate([h[i] for h in bar_heights]):
+                for chIdx, height in enumerate([h[i] for h in barHeights]):
                     if height <= 0:
                         continue
 
-                    y_start = base_y - height
+                    yStart = baseY - height
                     color = [0, 0, 0]
-                    color[ch_idx] = 255
+                    color[chIdx] = 255
                    
                     cv2.rectangle(
                         sketch,
-                        (x_start, y_start),
-                        (x_end, base_y),
+                        (xStart, yStart),
+                        (xEnd, baseY),
                         color,
                         -1
                     )
 
         if rotate != 0:
-            rotate_times = rotate // 90 % 4  # 标准化旋转角度
-            if rotate_times != 0:
-                sketch = np.rot90(sketch, rotate_times)
+            rotateTimes = rotate // 90 % 4  # 标准化旋转角度
+            if rotateTimes != 0:
+                sketch = np.rot90(sketch, rotateTimes)
 
         cv2.add(sketch, frame, frame)
