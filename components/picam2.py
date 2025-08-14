@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import threading
 import time
@@ -16,16 +17,18 @@ from . import configLoader
 
 class Cam:
     def __init__(self, verbose_console=None, tuning=None):
-        self.__cam = picamera2.Picamera2(verbose_console=verbose_console, tuning=tuning)
-        #self.__cam = picamera2.Picamera2()
+        self.__cam = picamera2.Picamera2(tuning=tuning)
+        # self.__cam = picamera2.Picamera2()
         self.__config = configLoader.ConfigLoader('./config.json')
         self.__pictConfig = self.__cam.create_preview_configuration(
-            main={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
-            lores={"size": (self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
+            main={"size": (
+                self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
+            lores={"size": (
+                self.__config['screen']['width'] * 2, self.__config['screen']['height'] * 2)},
         )
         self.__cam.configure(self.__pictConfig)
         self.__encoder = H264Encoder(self.__config['camera']['video_bitrate'])
-        
+
         self.__lock = threading.Lock()
         self.__framePerSecond = 0
         self.__width = self.__config['screen']['width']
@@ -35,11 +38,12 @@ class Cam:
         self.__controls = dict()
         self.__metadata = None
         self.__frame = np.zeros((self.__height, self.__width, 3), np.uint8)
-        self.__cam.start_preview()
+        self.__cam.start_preview(picamera2.Preview.NULL)
         self.__cam.start()
 
         with self.__lock:
-            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = self.__cam.capture_metadata()['ScalerCrop']
+            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = self.__cam.capture_metadata()[
+                'ScalerCrop']
 
     def zoom(self, zoom):
         if zoom < 1:
@@ -68,15 +72,6 @@ class Cam:
     def framePerSecond(self):
         return self.__framePerSecond
 
-    def setAeExposureMode(self, code):
-        print(dir(controls.AeMeteringModeEnum))
-        control = {
-            "AeEnable": True,
-            "AeExposureMode": code
-        }
-        self.__controls.update(control)
-        self.__cam.set_controls(control)
-
     def setAwbMode(self, code):
         control = {
             "AwbEnable": True,
@@ -95,6 +90,55 @@ class Cam:
         self.__cam.set_controls(control)
         self.__controls.update(control)
 
+    
+
+    def setAeEnable(self, enable):
+        control = {
+            "AeEnable": enable
+        }
+        self.__controls.update(control)
+        self.__cam.set_controls(control)
+
+    def setAeExposureMode(self, code):
+        control = {
+            #"AeEnable": True,
+            "AeExposureMode": code
+        }
+        self.__controls.update(control)
+        self.__cam.set_controls(control)
+
+    def setAeConstraintMode(self, code):
+        control = {
+            #'AeEnable': True,
+            'AeConstraintMode': code
+        }
+        self.__controls.update(control)
+        self.__cam.set_controls(control)
+
+    def setAeMeteringMode(self, code):
+        control = {
+            #'AeEnable': True,
+            'AeMeteringMode': code
+        }
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
+
+    def setAeFlickerMode(self, code):
+        control = {
+            #'AeEnable': True,
+            'AeFlickerMode': code
+        }
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
+
+    def setAeFlickerPeriod(self, code):
+        control = {
+            'AeFlickerPeriod': code
+        }
+        self.__cam.set_controls(control)
+        self.__controls.update(control)
+
+
     def setExposure(self, exposureTime, analogueGain):
         if exposureTime or analogueGain:
             control = {
@@ -108,20 +152,6 @@ class Cam:
                 "ExposureTime": exposureTime,
                 'AnalogueGain': analogueGain,
             }
-        self.__cam.set_controls(control)
-        self.__controls.update(control)
-
-    def setAeMeteringMode(self, code):
-        """
-        Spot:1
-        
-        """
-        
-        
-        control = {
-            'AeEnable': True,
-            'AeMeteringMode': code
-        }
         self.__cam.set_controls(control)
         self.__controls.update(control)
 
@@ -184,17 +214,21 @@ class Cam:
 
         videoConfig = self.__cam.create_video_configuration(
             main={"size": (int(width), int(height))},
-            lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
+            lores={"size": (int(
+                self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
         )
 
         tempConfig = self.__cam.create_preview_configuration(
             main={"size": (int(width), int(height))},
-            lores={"size": (int(self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
+            lores={"size": (int(
+                self.__config['screen']['width'] * 2), int(self.__config['screen']['height'] * 2))}
         )
 
         with self.__lock:
-            request = self.__cam.switch_mode_capture_request_and_stop(tempConfig)
-            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = request.get_metadata()['ScalerCrop']
+            request = self.__cam.switch_mode_capture_request_and_stop(
+                tempConfig)
+            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = request.get_metadata()[
+                'ScalerCrop']
             self.__cam.configure(videoConfig)
             self.__cam.set_controls(self.__controls)
             self.__zoom()
@@ -206,7 +240,8 @@ class Cam:
             self.__cam.stop_recording()
             self.__cam.configure(self.__pictConfig)
             self.__cam.start()
-            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = self.__cam.capture_metadata()['ScalerCrop']
+            self.__wOffset, self.__hOffset, self.__fWidth, self.__fHeight = self.__cam.capture_metadata()[
+                'ScalerCrop']
             self.__zoom()
             self.__cam.set_controls(self.__controls)
 

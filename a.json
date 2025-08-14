@@ -34,12 +34,6 @@
                     "value": "exposure"
                 },
                 {
-                    "id": "focus",
-                    "content": "Focus",
-                    "type": "menu",
-                    "value": "Focus"
-                },
-                {
                     "content": "White Balance",
                     "type": "menu",
                     "value": "white balance"
@@ -208,17 +202,16 @@
                     "id": "auto expose",
                     "content": "Auto Expose",
                     "type": "bool",
-                    "value": true,
+                    "value": false,
                     "setDisable": [
-                        "manual expose",
-                        "manual analog",
                         "exposure time",
                         "analogue gain"
                     ],
                     "setEnable": [
                         "exposure mode",
                         "metering mode",
-                        "flicker"
+                        "flicker",
+                        "constraint mode"
                     ]
                 },
                 {
@@ -226,8 +219,8 @@
                     "content": "Auto Exposure Mode",
                     "type": "option",
                     "value": {
-                        "content": "Normal",
-                        "value": 0
+                        "content": "Long",
+                        "value": 2
                     },
                     "options": [
                         {
@@ -247,7 +240,35 @@
                             "value": 3
                         }
                     ],
-                    "enable": true
+                    "enable": false
+                },
+                {
+                    "id": "constraint mode",
+                    "content": "Constraint Mode",
+                    "type": "option",
+                    "value": {
+                        "content": "Normal",
+                        "value": 0
+                    },
+                    "options": [
+                        {
+                            "content": "Normal",
+                            "value": 0
+                        },
+                        {
+                            "content": "Highlight",
+                            "value": 1
+                        },
+                        {
+                            "content": "Shadows",
+                            "value": 2
+                        },
+                        {
+                            "content": "Custom",
+                            "value": 3
+                        }
+                    ],
+                    "enable": false
                 },
                 {
                     "id": "metering mode",
@@ -275,70 +296,44 @@
                             "value": 3
                         }
                     ],
-                    "enable": true
+                    "enable": false
                 },
                 {
                     "id": "flicker",
                     "content": "Flicker",
                     "type": "menu",
                     "value": "flicker menu",
-                    "enable": true
-                },
-                {
-                    "id": "manual expose",
-                    "content": "Manual Expose",
-                    "type": "bool",
-                    "value": false,
-                    "enable": false,
-                    "setEnable": [
-                        "exposure time"
-                    ],
-                    "enableWith": [
-                        "exposure time"
-                    ]
+                    "enable": false
                 },
                 {
                     "id": "exposure time",
                     "content": "Exposure Time",
                     "type": "numeral",
                     "value": 31500,
-                    "min": 303,
-                    "max": 1000000,
+                    "min": 1,
+                    "max": 66666,
                     "step": 10000,
                     "stepOptions": [
                         100,
                         1000,
                         10000
                     ],
-                    "enable": false
-                },
-                {
-                    "id": "manual analog",
-                    "content": "Manual Analog",
-                    "type": "bool",
-                    "value": true,
-                    "enable": false,
-                    "setEnable": [
-                        "analogue gain"
-                    ],
-                    "enableWith": [
-                        "analogue gain"
-                    ]
+                    "enable": true
                 },
                 {
                     "id": "analogue gain",
                     "content": "Analogue Gain",
                     "type": "numeral",
                     "value": 11,
-                    "min": 0,
-                    "max": 23,
+                    "min": 1,
+                    "max": 16,
                     "step": 1,
                     "stepOptions": [
                         0.1,
                         1,
                         10
                     ],
-                    "enable": false
+                    "enable": true
                 }
             ]
         },
@@ -350,8 +345,8 @@
                     "content": "Flicker Mode",
                     "type": "option",
                     "value": {
-                        "content": "Off",
-                        "value": 0
+                        "content": "Manual",
+                        "value": 1
                     },
                     "options": [
                         {
@@ -371,19 +366,20 @@
                 {
                     "id": "flicker period",
                     "content": "Flicker Period",
-                    "type": "numeral",
-                    "value": 10000,
-                    "min": 100,
-                    "max": 1000000,
-                    "step": 1,
-                    "stepOptions": [
-                        1,
-                        20,
-                        100,
-                        200,
-                        1000,
-                        10000,
-                        100000
+                    "type": "option",
+                    "value": {
+                        "content": "50Hz",
+                        "value": 10000
+                    },
+                    "options": [
+                        {
+                            "content": "50Hz",
+                            "value": 10000
+                        },
+                        {
+                            "content": "60Hz",
+                            "value": 8333
+                        }
                     ]
                 }
             ]
@@ -395,7 +391,7 @@
                     "id": "awb",
                     "content": "AWB",
                     "type": "bool",
-                    "value": false,
+                    "value": true,
                     "setEnable": [
                         "awb mode"
                     ],
@@ -445,14 +441,14 @@
                             "value": 7
                         }
                     ],
-                    "enable": false
+                    "enable": true
                 },
                 {
                     "id": "color gains",
                     "content": "Color Gains",
                     "type": "menu",
                     "value": "color gains",
-                    "enable": true
+                    "enable": false
                 }
             ]
         },

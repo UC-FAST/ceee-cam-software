@@ -55,19 +55,6 @@ class MenuControlledEnd(ControlledEnd):
         self.__valueTemp = None
         self.__routeList: typing.List[tuple] = list()
         self.__theme = {
-            'background': Colors.industrialBlue.value,
-            'cursor': Colors.industrialGreen.value,
-            'text': Colors.white.value,
-            'boolTrue': Colors.industrialYellow.value,
-            'boolFalse': Colors.darkred.value,
-            'numeral': Colors.darkgoldenrod.value,
-            'msg': Colors.gray.value,
-            'option': Colors.palevioletred.value,
-            'irq': Colors.darkorchid.value,
-            'cursorDisable': Colors.darkgray.value,
-            'textDisable': Colors.gray.value
-        }
-        {
             'background': Colors.black.value,
             'cursor': Colors.steelblue.value,
             'text': Colors.white.value,
@@ -80,6 +67,20 @@ class MenuControlledEnd(ControlledEnd):
             'cursorDisable': Colors.darkgray.value,
             'textDisable': Colors.gray.value
         }
+        {
+            'background': Colors.industrialBlue.value,
+            'cursor': Colors.industrialGreen.value,
+            'text': Colors.white.value,
+            'boolTrue': Colors.industrialYellow.value,
+            'boolFalse': Colors.darkred.value,
+            'numeral': Colors.darkgoldenrod.value,
+            'msg': Colors.gray.value,
+            'option': Colors.palevioletred.value,
+            'irq': Colors.darkorchid.value,
+            'cursorDisable': Colors.darkgray.value,
+            'textDisable': Colors.gray.value
+        }
+        
 
         self.__frameList = None
         self.__direction = 0
@@ -318,7 +319,7 @@ class MenuControlledEnd(ControlledEnd):
 
     def unselect(self):
         """
-        Dump config when button release
+        Dump and send config when exit option
         """
         self.__currentOptions[self.__selectIndex]['value'] = self.__valueTemp
         self.__valueTemp = None
@@ -330,6 +331,7 @@ class MenuControlledEnd(ControlledEnd):
                 self.__menuOptions[self.__from]
             )
         )
+        #If have reveiver in option, send value to it
         receiver = self.__currentOptions[self.__selectIndex].get(
             'receiver', None)
         if receiver and 'value' in self.__currentOptions[self.__selectIndex].keys():
@@ -947,12 +949,6 @@ class MenuControlledEnd(ControlledEnd):
             self.__valueTemp = optionList[0]
 
     def centerPressAction(self):
-        '''t = 0
-        while wiringpi.digitalRead(self.__config['pin']['center']) and t < 1:
-            t += 0.01
-            time.sleep(0.01)
-        if t < 0.09:
-            return'''
         if self.__selectIndex is not None:
             self.unselect()
         else:

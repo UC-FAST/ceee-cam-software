@@ -35,7 +35,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             alpha=0.7
         )
         self.__toast = frameDecorator.Toast()
-        self.__main = frameDecorator.main()
         self.__decorator = frameDecorator.SimpleText(
             [self.__worker2, self.__worker1, self.__worker3],
             height=self.__config['screen']['height'],
@@ -47,6 +46,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__config['screen']['width'],
             self.__config['screen']['height']
         )
+
         self.__isBusy = False
         self.__isHdrProcessing = False
         self.__decorateEnable = False
@@ -148,7 +148,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if self.__zoom - 0.05 < 1:
             self.__zoom = 1
         else:
-            self.__zoom -= 0.05
+            self.__zoom -= 0.2
         self.__toast.setText("X {}".format(round(self.__zoom, 1)))
         self.zoom(self.__zoom)
         time.sleep(0.05)
@@ -160,7 +160,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         if self.__isHdrProcessing:
             return
         self.__zoomHold = True
-        self.__zoom += 0.05
+        self.__zoom += 0.2
         self.__toast.setText("X {}".format(round(self.__zoom, 1)))
         self.zoom(self.__zoom)
         time.sleep(0.05)
@@ -253,20 +253,33 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
 
     def __exposeSetting(self):
         if self.__findOptionByID('auto expose'):
+            self.setAeEnable(
+                True
+            )
+            self.setAeConstraintMode(
+                self.__findOptionByID('constraint mode')['value']
+            )
             self.setAeExposureMode(
-                self.__findOptionByID('exposure mode')['value'])
+                self.__findOptionByID('exposure mode')['value']
+            )
             self.setAeMeteringMode(
-                self.__findOptionByID('metering mode')['value'])
+                self.__findOptionByID('metering mode')['value']
+            )
+            self.setAeFlickerMode(
+                self.__findOptionByID('flicker mode')['value']
+            )
+            self.setAeFlickerPeriod(
+                self.__findOptionByID('flicker period')['value']
+            )
         else:
-            if self.__findOptionByID('manual expose'):
-                exposure = self.__findOptionByID('exposure time')
-            else:
-                exposure = 0
-            if self.__findOptionByID('manual analog'):
-                analog = self.__findOptionByID('analogue gain')
-            else:
-                analog = 0
-            self.setExposure(exposure, analog)
+            self.setAeEnable(
+                False
+            )
+
+            self.setExposure(
+                self.__findOptionByID('exposure time'),
+                self.__findOptionByID('analogue gain')
+            )
 
     def __colourGainsSetting(self):
         if not self.__findOptionByID('awb'):
@@ -275,12 +288,11 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.setColourGains(red, blue)
 
     def msgReceiver(self, sender, msg):
-        if sender == 'MenuControlledEnd':
-            self.__option = msg[1]
-            self.__exposeSetting()
-            self.__colourGainsSetting()
-            if self.__findOptionByID('awb'):
-                self.setAwbMode(self.__findOptionByID('awb mode')['value'])
+        self.__option = msg[1]
+        self.__exposeSetting()
+        self.__colourGainsSetting()
+        if self.__findOptionByID('awb'):
+            self.setAwbMode(self.__findOptionByID('awb mode')['value'])
 
     def centerPressAction(self):
         pass
@@ -292,7 +304,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         pass
 
     def rotaryEncoderSelect(self):
-        self.__main.nextCursor()
+        pass
+        # self.__main.nextCursor()
 
     def onEnter(self, lastID):
         if not os.path.exists(self.__config['camera']['path']) or not os.path.isdir(self.__config['camera']['path']):
@@ -334,5 +347,4 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             if self.__isHdrProcessing:
                 self.__toast.decorate(frame, self.__rotate)
 
-            self.__main.decorate(frame)
             yield frame
