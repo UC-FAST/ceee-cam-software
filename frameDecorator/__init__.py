@@ -4,9 +4,9 @@ from .colors import Colors
 from .dialogBox import DialogBox
 from .directionIndicator import DirectionIndicator
 from .hist import Hist
+from .hist2 import Hist2
 from .simpleText import SimpleText
 from .toast import Toast
 from .warning import Warining
 from .waterMark import WaterMark
 from .main import main
-from .hist2 import Hist2

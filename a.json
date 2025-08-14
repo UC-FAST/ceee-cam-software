@@ -307,7 +307,7 @@
                     "id": "show hist",
                     "content": "Show Histogram",
                     "type": "bool",
-                    "value": true
+                    "value": false
                 },
                 {
                     "id": "flicker",
@@ -401,7 +401,7 @@
                     "id": "mf assist",
                     "content": "MF Assist",
                     "type": "bool",
-                    "value": false
+                    "value": true
                 }
             ]
         },

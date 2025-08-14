@@ -19,4 +19,9 @@
 /tuning.json
 /screenshot/
 /limit
+*__pycache__*/
+exceptions.log
+*.pyc
+*.pyo
+*.pyd
 

@@ -349,15 +349,16 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     threshold1=70,
                     threshold2=400
                 )
-                colorfulEdges = numpy.zeros(
-                    (edges.shape[0], edges.shape[1], 3), dtype=numpy.uint8)
+                if edges.any():
+                    colorfulEdges = numpy.zeros(
+                        (edges.shape[0], edges.shape[1], 3), dtype=numpy.uint8)
 
-                if index % 3 == 0:
-                    colorfulEdges[edges != 0] = (0, 0, 255)
-                elif index % 3 == 1:
-                    colorfulEdges[edges != 0] = (255, 0, 0)
-                else:
-                    colorfulEdges[edges != 0] = (0, 255, 0)
+                    if index % 3 == 0:
+                        colorfulEdges[edges != 0] = (0, 0, 255)
+                    elif index % 3 == 1:
+                        colorfulEdges[edges != 0] = (255, 0, 0)
+                    else:
+                        colorfulEdges[edges != 0] = (0, 255, 0)
 
             if self.__decorateEnable and not self.__zoomHold and self.__recordTimestamp is None:
                 self.__barChart.decorate(frame, rotate=self.__rotate)
@@ -385,7 +386,8 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 self.__toast.decorate(frame, self.__rotate)
             if self.__showHist:
                 self.__hist.decorate(frame)
-            if self.__mfassist:
+
+            if self.__mfassist and edges.any():
                 frame = cv2.addWeighted(frame, 0.8, colorfulEdges, 1.0, 0)
 
             yield frame
