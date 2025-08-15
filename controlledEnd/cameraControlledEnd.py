@@ -17,6 +17,62 @@ from . import controlledEnd
 
 
 class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
+    """
+    CameraControlledEnd is a camera control class that extends ControlledEnd and picam2.Cam to provide advanced camera operations, UI interactions, and hardware integration for a controlled camera system.
+    Attributes:
+        __zoom (float): Current zoom level.
+        __brightness (float): Current brightness adjustment.
+        __config (ConfigLoader): Configuration loader for system settings.
+        __barChart (BarChart): Frame decorator for displaying bar charts.
+        __toast (Toast): Frame decorator for displaying toast messages.
+        __decorator (SimpleText): Frame decorator for displaying text overlays.
+        __busy (Busy): Frame decorator for busy/processing indication.
+        __hist (Hist2): Frame decorator for histogram display.
+        __showHist (bool): Flag to show/hide histogram.
+        __isBusy (bool): Indicates if the camera is busy processing.
+        __mfassist (bool): Manual focus assist flag.
+        __isHdrProcessing (bool): HDR processing flag.
+        __decorateEnable (bool): Enables/disables UI decorations.
+        __zoomHold (bool): Indicates if zoom is being adjusted.
+        __brightHold (bool): Indicates if brightness is being adjusted.
+        __rotate (int): Frame rotation angle.
+        __recordTimestamp (float or None): Timestamp for video recording.
+        __option (dict): Camera options/settings.
+        __m (Max17048): Battery monitor instance.
+        __filter (SlidingWindowFilter): Filter for smoothing frame quality.
+        __frameList (queue.Queue): Queue for frame buffering.
+    Methods:
+        __init__(_id, verbose_console, tuningFilePath): Initializes the camera control end.
+        __worker2(): Returns a dictionary of current camera status metrics.
+        __findOptionByID(target): Finds and returns the value of a camera option by its ID.
+        upPressAction(): Handles the action when the up button is pressed.
+        upReleaseAction(): Handles the action when the up button is released.
+        downPressAction(): Handles the action when the down button is pressed.
+        downReleaseAction(): Handles the action when the down button is released.
+        leftPressAction(): Handles the action when the left button is pressed (zoom out).
+        leftReleaseAction(): Handles the action when the left button is released.
+        rightPressAction(): Handles the action when the right button is pressed (zoom in).
+        rightReleaseAction(): Handles the action when the right button is released.
+        shutterPressAction(): Handles the action when the shutter button is pressed (capture photo).
+        shutterLongPressAction(): Handles the action when the shutter button is long-pressed (start/stop video recording).
+        squarePressAction(): Handles the action when the square button is pressed (menu).
+        circlePressAction(): Toggles UI decorations.
+        crossPressAction(): Placeholder for cross button action.
+        __exposeSetting(): Applies exposure settings based on current options.
+        __AwbSetting(): Applies auto white balance settings based on current options.
+        msgReceiver(sender, msg): Receives and processes messages for updating options.
+        loadSettings(): Loads and applies camera settings from options.
+        centerPressAction(): Placeholder for center button action.
+        rotaryEncoderClockwise(): Placeholder for rotary encoder clockwise action.
+        rotaryEncoderCounterClockwise(): Placeholder for rotary encoder counter-clockwise action.
+        rotaryEncoderSelect(): Placeholder for rotary encoder select action.
+        onEnter(lastID): Handles actions when entering this control end.
+        active(): Activates the camera preview.
+        inactive(): Deactivates the camera preview.
+        mainLoop(): Main loop for processing and yielding camera frames with decorations and overlays.
+    Usage:
+        This class is intended to be used as part of a camera control system, providing both hardware and UI interaction logic for camera operation, including photo capture, video recording, and real-time frame processing.
+    """
     def __init__(self, _id='CameraControlledEnd', verbose_console=None, tuningFilePath=None):
         controlledEnd.ControlledEnd.__init__(self, _id)
         if tuningFilePath:

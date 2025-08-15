@@ -6,18 +6,18 @@ import numpy as np
 
 import controlledEnd
 import frameDecorator
-from components import galleryBrowser
+from components import mediaBrowser
 
 
-class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBrowser):
+class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowser):
     def __init__(self, _id='GalleryControlledEnd', width=320, height=240, pictPath='./pict/'):
         controlledEnd.ControlledEnd.__init__(self, _id)
         pictPath = pictPath if pictPath.endswith('/') else pictPath + '/'
-        galleryBrowser.GalleryBrowser.__init__(self, pictPath, width, height)
+        mediaBrowser.MediaBrowser.__init__(self, pictPath, width, height)
         self.__width, self.__height = width, height
         self.__direction = 0
         self.__option: typing.Dict[typing.Dict] = None
-        self.__frameList = queue.SimpleQueue()
+        self.__frameList = queue.Queue()
         self.__busy = frameDecorator.Busy()
         self.__rotate = 0
         self.__currentFrame = np.zeros((self.__width, self.__height, 3), np.uint8)
@@ -26,6 +26,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         self.__from = None
         self.__delete = False
         self.__empty = False
+    
 
         self.__decorator = frameDecorator.SimpleText(
             [self.__worker1],
@@ -38,7 +39,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
 
     def __worker1(self):
         return {
-            "{}": self.getPictName(),
+            "{}": self.getCurrentFileName(),
         }
 
     def __findOptionByID(self, target):
@@ -50,11 +51,14 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
                             return j['value']
         raise LookupError('target')
 
+
     def centerPressAction(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
             return
+        if self.isPlaying():
+            self.togglePlayPause()
 
     def upPressAction(self):
         if self.__empty:
@@ -144,7 +148,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
             self.__option = msg[1]
             if msg[0] == 'delete':
                 self.__delete = True
-                self.delete()
+                self.deleteCurrent()
                 self.__refreshFrame()
             elif msg[0] == 'update':
                 self.update()
@@ -157,8 +161,8 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
             self.__busy.decorate(self.__currentFrame)
             self.__frameList.put(self.__currentFrame)
         try:
-            self.__rawFrame = self.getPict()
-        except FileNotFoundError:
+            self.__rawFrame = self.getCurrentFrame()
+        except FileExistsError:
             self.__empty = True
             self._irq("CameraControlledEnd")
             return
@@ -181,10 +185,10 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, galleryBrowser.GalleryBr
         try:
             if not self.__delete:
                 self.__from = lastID
-                self.refreshPictList()
+                self.refreshMediaList()
             self.__delete = False
             self._msgSender(self._id, "MenuControlledEnd", self._id)
             self.__refreshFrame()
-        except FileNotFoundError:
+        except FileExistsError:
             self.__empty = True
             self.__frameList.put(frameDecorator.Warining().decorate("Empty"))
