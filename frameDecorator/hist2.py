@@ -80,6 +80,7 @@ class Hist2:
                         -1
                     )
 
+        
         if rotate != 0:
             rotateTimes = rotate // 90 % 4  # 标准化旋转角度
             if rotateTimes != 0:

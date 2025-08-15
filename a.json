@@ -46,8 +46,8 @@
                     "content": "HDR",
                     "type": "option",
                     "value": {
-                        "content": "MultiExposure",
-                        "value": 2
+                        "content": "Off",
+                        "value": 0
                     },
                     "options": [
                         {
@@ -156,8 +156,8 @@
                     "content": "Pict Format",
                     "type": "option",
                     "value": {
-                        "content": "PNG",
-                        "value": "png"
+                        "content": "JPEG",
+                        "value": "jpeg"
                     },
                     "options": [
                         {
@@ -305,7 +305,7 @@
                     "id": "show hist",
                     "content": "Show Histogram",
                     "type": "bool",
-                    "value": false
+                    "value": true
                 },
                 {
                     "id": "flicker",
@@ -514,7 +514,7 @@
                     "id": "show hist",
                     "content": "Show Hist",
                     "type": "bool",
-                    "value": false
+                    "value": true
                 }
             ]
         }
