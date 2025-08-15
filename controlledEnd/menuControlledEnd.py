@@ -14,6 +14,76 @@ from .controlledEnd import ControlledEnd
 
 
 class MenuControlledEnd(ControlledEnd):
+    """
+    MenuControlledEnd is a menu controller class for a graphical user interface, inheriting from ControlledEnd.
+    It manages a menu system with multiple options, supporting navigation, selection, and configuration of menu items.
+    The class is designed for use with OpenCV for rendering and supports various input actions (button presses, rotary encoder, etc.).
+    Attributes:
+        __options (list): List of current menu options.
+        __optionList (dict): Dictionary of all menu options loaded from a JSON file.
+        __path (str): Path to the menu configuration JSON file.
+        __width (int): Width of the menu display.
+        __height (int): Height of the menu display.
+        __rowCount (int): Number of rows (menu items) per page.
+        __fontHeight (int): Height of the font used for menu text.
+        __fontScale (float): Font scale for normal text.
+        __highLightFontScale (float): Font scale for highlighted text.
+        __padding (tuple): Padding for the menu display (left, top, right, bottom).
+        __showIndex (bool): Whether to show index numbers for menu items.
+        __showPreview (bool): Whether to show a preview of the selected item.
+        __thickness (int): Thickness of the text.
+        __spaceHeight (int): Vertical space between menu items.
+        __currentOptions (list): List of currently visible menu options.
+        __pageCount (int): Total number of pages in the menu.
+        __currentPage (int): Index of the current page.
+        __currentIndex (int): Index of the currently selected item on the current page.
+        __currentMenuID (str): ID of the current menu.
+        __selectIndex (int): Index of the currently selected option for editing.
+        __title (str): Title of the current menu.
+        __from (str): Sender ID for message passing.
+        __valueTemp: Temporary value for editing options.
+        __routeList (list): Stack for tracking menu navigation history.
+        __theme (dict): Color theme for the menu display.
+        __frameList (queue): Queue for storing rendered frames.
+        __direction (int): Display rotation direction.
+        __config (ConfigLoader): Configuration loader instance.
+    Methods:
+        __init__(...): Initialize the menu controller with display and menu parameters.
+        __pageCountCalc(): Calculate the number of pages based on enabled options.
+        options: Property to get the current option list.
+        setOption(key): Set the current menu options by key.
+        dumpConfig(): Save the current menu configuration to file.
+        __spaceCalc(): Calculate vertical spacing for menu items.
+        __drawSlideBar(frame): Draw the slide bar for page navigation.
+        __genItemStartCoordinate(...): Generate coordinates for menu item rendering.
+        __jumpToPrevious(): Navigate to the previous menu in the route stack.
+        __setEnableState(option): Enable or disable options based on dependencies.
+        select(): Handle selection of the current menu item.
+        unselect(): Finalize editing of an option and send updates.
+        upAction(), upOneStep(), __pageUp(): Navigate up in the menu.
+        downAction(), downOneStep(), __pageDown(): Navigate down in the menu.
+        __jumpByIndex(index), __jumpByID(target, record): Jump to a submenu by index or ID.
+        __drawContent(frame): Draw menu item text.
+        __drawUnderLinePreview(frame): Draw preview of the selected item.
+        __drawData(frame): Draw data values for menu items.
+        __drawCursor(frame): Draw the selection cursor.
+        __drawTitle(background): Draw the menu title.
+        __numericalSlideBar(frame): Draw a slider for numerical options.
+        __optionMenu(frame): Draw the option selection menu.
+        decorate(): Render the current menu state to a frame.
+        __nextStep(), __previousStep(): Change the step size for numerical options.
+        __valuePlus(), __valueMinus(): Increment or decrement a numerical value.
+        __optionUp(), __optionDown(): Navigate through option values.
+        centerPressAction(), upPressAction(), downPressAction(), leftPressAction(), rightPressAction(): Handle button press actions.
+        circlePressAction(), crossPressAction(), crossLongPressAction(): Handle special button actions.
+        rotaryEncoderCounterClockwise(), rotaryEncoderClockwise(), rotaryEncoderSelect(): Handle rotary encoder actions.
+        shutterPressAction(), squarePressAction(): Placeholder for additional actions.
+        msgReceiver(sender, msg): Receive and process external messages.
+        onEnter(lastID): Initialize the menu when entering.
+        onExit(): Clean up when exiting the menu.
+        mainLoop(): Generator yielding rendered frames for display.
+        """
+
     def __init__(
             self,
             _id='MenuControlledEnd',
@@ -27,6 +97,26 @@ class MenuControlledEnd(ControlledEnd):
             fontHeight: int = 24,
             thickness: int = 1
     ):
+        """
+            Initializes a MenuControlledEnd instance with customizable menu display options.
+            Parameters:
+                _id (str): Identifier for the menu instance. Defaults to 'MenuControlledEnd'.
+                path (str, optional): Path to a JSON file containing menu options. If provided, menu options are loaded from this file.
+                width (int): Width of the menu display in pixels. Defaults to 320.
+                height (int): Height of the menu display in pixels. Defaults to 240.
+                padding (tuple): Padding around the menu content, specified as (left, top, right, bottom). Defaults to (10, 10, 10, 10).
+                rowCount (int): Number of rows to display in the menu. Defaults to 4.
+                showIndex (bool): Whether to display the index of each menu option. Defaults to False.
+                showPreview (bool): Whether to show a preview for menu options. Defaults to True.
+                fontHeight (int): Height of the font used for menu text. Defaults to 24.
+                thickness (int): Thickness of the font and menu borders. Defaults to 1.
+            Attributes initialized:
+                - Loads menu options from file if path is provided.
+                - Sets up font scaling for normal and highlighted text.
+                - Initializes menu state variables (current options, page, index, etc.).
+                - Sets up color themes for menu display.
+                - Loads configuration from './config.json'.
+            """
 
         ControlledEnd.__init__(self, _id)
         self.__options = None
@@ -49,7 +139,7 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentPage = 0
         self.__currentIndex = 0
         self.__currentMenuID = None
-        self.__selectIndex = None #Index selected 
+        self.__selectIndex = None  # Index selected
         self.__title = None
         self.__from = None
         self.__valueTemp = None
@@ -80,13 +170,21 @@ class MenuControlledEnd(ControlledEnd):
             'cursorDisable': Colors.darkgray.value,
             'textDisable': Colors.gray.value
         }
-        
 
         self.__frameList = None
         self.__direction = 0
         self.__config = configLoader.ConfigLoader('./config.json')
 
     def __pageCountCalc(self):
+        """
+        Calculates the total number of pages required to display enabled options.
+        Iterates through the list of options, counting only those that are enabled.
+        Determines the highest index of enabled options and calculates the number of pages
+        needed based on the row count per page. Ensures that there is at least one page.
+        Updates:
+            self.__pageCount (int): The calculated number of pages.
+        """
+
         enableOptionRange = 0
         for index, option in enumerate(self.__options, start=1):
             enable = option.get('enable', True)
@@ -98,9 +196,28 @@ class MenuControlledEnd(ControlledEnd):
 
     @property
     def options(self):
+        """
+        Returns the list of available options.
+        Returns:
+            list: The list of options stored in the __optionList attribute.
+        """
+
         return self.__optionList
 
     def setOption(self, key):
+        """
+        Sets the current menu option based on the provided key.
+        This method updates the internal state of the menu, including the list of options,
+        current menu ID, navigation route, title, available options, and pagination details.
+        It resets the selection index, current page, and current option index, and prepares
+        the options to be displayed on the first page.
+        Args:
+            key (str): The key identifying the menu options to display.
+        Side Effects:
+            Updates several internal attributes related to menu state and navigation.
+        """
+
+
         self.__optionList = self.__menuOptions[key]
         self.__currentMenuID = "0"
         self.__routeList = list()
@@ -115,6 +232,15 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentOptions = self.__options[0:self.__rowCount]
 
     def dumpConfig(self):
+        """
+        Saves the current menu options to a JSON file.
+        Writes the contents of self.__menuOptions to the file specified by self.__path
+        in JSON format with indentation for readability.
+        Raises:
+            IOError: If the file cannot be opened or written to.
+            TypeError: If self.__menuOptions contains non-serializable objects.
+        """
+
         with open(self.__path, 'w') as f:
             json.dump(self.__menuOptions, f, indent=4)
 
@@ -130,6 +256,30 @@ class MenuControlledEnd(ControlledEnd):
         self.__spaceHeight = totalSpace // spaceCount
 
     def __drawSlideBar(self, frame):
+        """
+        Draws a vertical slide bar (pagination indicator) on the given frame.
+
+        The slide bar visually represents the current page among multiple pages, with up and down arrows indicating navigation availability. The bar and arrows are styled according to the current theme and padding settings.
+
+        Args:
+            frame (numpy.ndarray): The image/frame on which to draw the slide bar.
+
+        Side Effects:
+            Modifies the input frame in place by drawing the slide bar, navigation arrows, and the current page indicator.
+
+        Visual Elements:
+            - Background rectangle for the slide bar.
+            - Top and bottom navigation arrows (solid or outlined depending on page position).
+            - Highlighted rectangle indicating the current page.
+
+        Depends on:
+            - self.__width (int): Width of the frame.
+            - self.__height (int): Height of the frame.
+            - self.__padding (tuple): Padding values for the frame (left, top, right, bottom).
+            - self.__currentPage (int): Index of the current page.
+            - self.__pageCount (int): Total number of pages.
+            - self.__theme (dict): Color theme for drawing.
+        """
         refLength = min(self.__width, self.__height)
 
         topSolid, bottomSolid = True, True
@@ -208,12 +358,23 @@ class MenuControlledEnd(ControlledEnd):
                       self.__theme['cursor'], -1)
 
     def __genItemStartCoordinate(self, itemCount=None, ignoreTitle=False):
+        """
+        Generates the starting (x, y) coordinates for menu items, accounting for padding, spacing, font height, and optional title.
+
+        Args:
+            itemCount (int, optional): The number of items to generate coordinates for. If None, uses self.__rowCount.
+            ignoreTitle (bool, optional): If True, ignores the title when calculating the starting coordinate. Defaults to False.
+
+        Yields:
+            list: The [x, y] coordinate for each menu item.
+        """
         if not itemCount:
             itemCount = self.__rowCount
         if self.__title is not None and not ignoreTitle:
             firstStartCoordinate = (
                 self.__padding[0],
-                self.__padding[1] + int(self.__spaceHeight * 1.5) + self.__fontHeight,
+                self.__padding[1] +
+                int(self.__spaceHeight * 1.5) + self.__fontHeight,
             )
         else:
             firstStartCoordinate = (
@@ -233,6 +394,20 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentIndex = last[1]
 
     def __setEnableState(self, option):
+        """
+        Updates the 'enable' state of options based on the provided configuration.
+
+        Args:
+            option (dict): A dictionary containing the following optional keys:
+                - 'setDisable' (list): List of option IDs to be disabled or enabled based on 'value'.
+                - 'setEnable' (list): List of option IDs to be enabled or disabled based on 'value'.
+                - 'enableWith' (list): List of option IDs to be enabled or disabled together with the current option.
+                - 'value' (bool): Determines whether to enable or disable options in 'setDisable' and 'setEnable'.
+                - 'enable' (bool, optional): If True (default), enables options in 'enableWith'; if False, disables them.
+
+        Side Effects:
+            Modifies the 'enable' state of options in self.__options in place.
+        """
         setDisable: list = option.get('setDisable', [])
         setEnable: list = option.get('setEnable', [])
         enableWith: list = option.get('enableWith', [])
@@ -311,7 +486,7 @@ class MenuControlledEnd(ControlledEnd):
                 )
             )
             self._irq(self.__from)
-        elif t == 'option' or t=='numeral':
+        elif t == 'option' or t == 'numeral':
             self.__valueTemp = self.__currentOptions[self.__currentIndex]['value']
             self.__selectIndex = self.__currentIndex
         else:
@@ -319,7 +494,15 @@ class MenuControlledEnd(ControlledEnd):
 
     def unselect(self):
         """
-        Dump and send config when exit option
+        Handles the unselection of the current menu option.
+
+        This method performs the following actions:
+        - Updates the current option's value with the temporary value.
+        - Resets the temporary value.
+        - Sends a message with the current menu state to the originating sender.
+        - If the current option has a receiver and a value, sends the updated option to the receiver.
+        - Resets the selection index.
+        - Dumps (saves) the current configuration.
         """
         self.__currentOptions[self.__selectIndex]['value'] = self.__valueTemp
         self.__valueTemp = None
@@ -331,7 +514,7 @@ class MenuControlledEnd(ControlledEnd):
                 self.__menuOptions[self.__from]
             )
         )
-        #If have reveiver in option, send value to it
+        # If have reveiver in option, send value to it
         receiver = self.__currentOptions[self.__selectIndex].get(
             'receiver', None)
         if receiver and 'value' in self.__currentOptions[self.__selectIndex].keys():
@@ -425,7 +608,17 @@ class MenuControlledEnd(ControlledEnd):
         self.__currentOptions = self.__options[0:self.__rowCount]
 
     def __drawContent(self, frame):
-        """"""
+        """
+        Draws the menu options onto the provided frame.
+        This method iterates through the current menu options and renders each option's text and a background rectangle
+        on the given frame using OpenCV. The text color depends on whether the option is enabled or disabled. If
+        `self.__showIndex` is True, the index of each option is displayed before its content.
+        Args:
+            frame (numpy.ndarray): The image/frame on which the menu content will be drawn.
+        Returns:
+            None
+        """
+        
         if not self.__showIndex:
             return
         for index, i in zip(
@@ -544,6 +737,20 @@ class MenuControlledEnd(ControlledEnd):
         )
 
     def __drawData(self, frame):
+        """
+        Draws the data options onto the provided frame if preview is enabled.
+
+        This method iterates through the current menu options and renders their visual representation
+        on the given frame using OpenCV drawing functions. It highlights the currently selected option,
+        displays option values with appropriate background colors based on their type, and handles
+        different option types such as boolean, message, menu, IRQ, option, and numeral.
+
+        Args:
+            frame: The image/frame (as a NumPy array) on which the menu options will be drawn.
+
+        Raises:
+            TypeError: If an unknown option type is encountered in the current options.
+        """
         if not self.__showPreview:
             return
         for index, i in zip(
@@ -573,7 +780,7 @@ class MenuControlledEnd(ControlledEnd):
                 # continue
             fontColor = self.__theme['text']
             t = self.__currentOptions[index]['type'].lower()
-            #Show little hint value
+            # Show little hint value
             if t == 'bool':
                 if self.__currentOptions[index]['value']:
                     value = 'Y'
@@ -591,7 +798,8 @@ class MenuControlledEnd(ControlledEnd):
                 backgroundColor = self.__theme[t]
 
             elif t == 'option':
-                value = self.__currentOptions[index]['value']['content'] # When option have extra value, show it's name
+                # When option have extra value, show it's name
+                value = self.__currentOptions[index]['value']['content']
                 backgroundColor = self.__theme[t]
             elif t == 'numeral':
                 value = self.__currentOptions[index]['value']
@@ -627,7 +835,7 @@ class MenuControlledEnd(ControlledEnd):
                     i[1] + self.__fontHeight
                 ),
                 cv2.FONT_ITALIC,
-                self.__fontScale ,
+                self.__fontScale,
                 fontColor
             )
             cv2.rectangle(
@@ -702,6 +910,33 @@ class MenuControlledEnd(ControlledEnd):
         )
 
     def __numericalSlideBar(self, frame):
+        """
+        Draws a numerical slide bar UI component on the given frame.
+
+        This method visualizes a slider for adjusting a numerical value within a specified range.
+        It displays the minimum and maximum labels, arrow indicators for increment/decrement,
+        the current value, the range, and the step size. The slider bar is filled according to
+        the current value, and the UI is rendered using OpenCV drawing functions.
+
+        Args:
+            frame (numpy.ndarray): The image/frame on which the slider UI will be drawn.
+
+        Visual Elements:
+            - "min" and "max" labels at the ends of the slider.
+            - Left and right arrow indicators, filled or outlined depending on value limits.
+            - A filled rectangle representing the current value's position on the slider.
+            - The current value, centered below the slider.
+            - The range (min <--> max) and step size displayed below the slider.
+
+        Uses:
+            - self.__currentOptions: List of option dictionaries containing 'min', 'max', 'value', and 'step'.
+            - self.__currentIndex: Index of the currently selected option.
+            - self.__valueTemp: Temporary value for the slider, if set.
+            - self.__theme: Dictionary containing color settings for text and cursor.
+            - self.__fontHeight, self.__fontScale: Font size settings.
+            - self.__width, self.__padding: UI layout settings.
+            - self.__genItemStartCoordinate: Helper method to generate coordinates for UI elements.
+        """
         value = self.__valueTemp if self.__valueTemp is not None else self.__currentOptions[self.__currentIndex][
             'value']
         mi = self.__currentOptions[self.__currentIndex]['min']
@@ -734,7 +969,7 @@ class MenuControlledEnd(ControlledEnd):
                     (i[0] + self.__fontHeight, i[1]),
                 )
 
-                if value <= mi:
+                if value <= mi:# No fill
                     last = rightCoordinate[0]
                     for _ in rightCoordinate[1:]:
                         cv2.line(frame, last, _, self.__theme['cursor'])
@@ -765,7 +1000,7 @@ class MenuControlledEnd(ControlledEnd):
 
                 slideBarTotalWidth = self.__width - self.__padding[0] - self.__padding[2] - (
                     self.__fontHeight + self.__width // 42) * 2
-                slideBarWidth = int(slideBarTotalWidth * value / (ma - mi))
+                slideBarWidth = int(slideBarTotalWidth * (value-1) / (ma - mi))
                 slideBarCoordinate = (
                     (i[0] + self.__fontHeight + self.__width // 42, i[1]),
                     (i[0] + self.__fontHeight + self.__width //
@@ -814,10 +1049,14 @@ class MenuControlledEnd(ControlledEnd):
                 return
 
     def __optionMenu(self, frame):
-        value = self.__valueTemp if self.__valueTemp is not None else self.__currentOptions[self.__currentIndex]['value']#Gt Current Value
-        options: list = self.__currentOptions[self.__currentIndex]['options'] #Get Current Options
-        selectIndex = options.index(value) #Get Current Index of Selected Option
-        value=value['content']
+        # Gt Current Value
+        value = self.__valueTemp if self.__valueTemp is not None else self.__currentOptions[
+            self.__currentIndex]['value']
+        # Get Current Options
+        options: list = self.__currentOptions[self.__currentIndex]['options']
+        # Get Current Index of Selected Option
+        selectIndex = options.index(value)
+        value = value['content']
         for _, (index, i) in zip(
                 range(
                     len(self.__currentOptions[self.__currentIndex]['options']) + 1),
@@ -852,10 +1091,10 @@ class MenuControlledEnd(ControlledEnd):
                     self.__fontScale,
                     self.__theme['text']
                 )
-            else: #Render the rest of the options
+            else:  # Render the rest of the options
                 try:
                     option = options[(selectIndex + index - 2) % len(options)]
-                    text= option['content']
+                    text = option['content']
                 except IndexError:
                     break
                 cv2.putText(

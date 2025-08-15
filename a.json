@@ -16,11 +16,9 @@
                     "value": "GalleryControlledEnd"
                 },
                 {
-                    "id": "settings",
-                    "content": "Settings",
-                    "type": "menu",
-                    "value": "settings",
-                    "enable": true
+                    "content": "System Monitor",
+                    "type": "irq",
+                    "value": "SystemMonitor"
                 }
             ]
         },
@@ -48,8 +46,8 @@
                     "content": "HDR",
                     "type": "option",
                     "value": {
-                        "content": "Off",
-                        "value": 0
+                        "content": "MultiExposure",
+                        "value": 2
                     },
                     "options": [
                         {
@@ -224,8 +222,8 @@
                     "content": "Auto Exposure Mode",
                     "type": "option",
                     "value": {
-                        "content": "Long",
-                        "value": 2
+                        "content": "Normal",
+                        "value": 0
                     },
                     "options": [
                         {
@@ -320,7 +318,7 @@
                     "id": "exposure time",
                     "content": "Exposure Time",
                     "type": "numeral",
-                    "value": 31500,
+                    "value": 1,
                     "min": 1,
                     "max": 66666,
                     "step": 10000,
@@ -335,7 +333,7 @@
                     "id": "analogue gain",
                     "content": "Analogue Gain",
                     "type": "numeral",
-                    "value": 11,
+                    "value": 16,
                     "min": 1,
                     "max": 16,
                     "step": 1,
@@ -355,8 +353,8 @@
                     "content": "Flicker Mode",
                     "type": "option",
                     "value": {
-                        "content": "Manual",
-                        "value": 1
+                        "content": "Off",
+                        "value": 0
                     },
                     "options": [
                         {
@@ -366,10 +364,6 @@
                         {
                             "content": "Manual",
                             "value": 1
-                        },
-                        {
-                            "content": "Auto",
-                            "value": 2
                         }
                     ]
                 },
@@ -503,18 +497,6 @@
                     ]
                 }
             ]
-        },
-        "settings": {
-            "title": "Settings",
-            "options": [
-                {
-                    "id": "restart",
-                    "content": "Restart",
-                    "type": "msg",
-                    "value": "restart",
-                    "receiver": "UniversalControl"
-                }
-            ]
         }
     },
     "GalleryControlledEnd": {
@@ -532,7 +514,7 @@
                     "id": "show hist",
                     "content": "Show Hist",
                     "type": "bool",
-                    "value": true
+                    "value": false
                 }
             ]
         }

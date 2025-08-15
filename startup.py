@@ -5,7 +5,8 @@ import time
 
 import universalControl
 from components import lcd20, configLoader
-from controlledEnd import MenuControlledEnd, GalleryControlledEnd, CameraControlledEnd
+from controlledEnd import MenuControlledEnd, GalleryControlledEnd, CameraControlledEnd, SystemMonitor
+from utils.exceptionRecorder import exceptionRecorder
 
 tuning = './pisp/imx477.json'
 
@@ -14,6 +15,7 @@ config = configLoader.ConfigLoader('./config.json')
 u = universalControl.UniversalControl(
     lcd20.Lcd(),
     [
+        
         CameraControlledEnd(
             verbose_console=config['debug_level'],
             #tuningFilePath=tuning
@@ -26,8 +28,10 @@ u = universalControl.UniversalControl(
             fontHeight=14,
             padding=(5, 5, 5, 5)
         ),
-        GalleryControlledEnd(pictPath=config['camera']['path'])
+        GalleryControlledEnd(pictPath=config['camera']['path']),
+        SystemMonitor(),
     ]
 )
+
 
 u.mainLoop()

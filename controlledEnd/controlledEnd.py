@@ -1,4 +1,5 @@
 import abc
+import cv2
 
 
 class ControlledEnd(abc.ABC):

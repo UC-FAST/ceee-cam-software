@@ -37,7 +37,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         )
         self.__toast = frameDecorator.Toast()
         self.__decorator = frameDecorator.SimpleText(
-            [self.__worker2, self.__worker1, self.__worker3],
+            [self.__worker2, ],
             height=self.__config['screen']['height'],
             padding=(10, 20, 0, 0),
             fontHeight=10,
@@ -63,18 +63,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__filter = SlidingWindowFilter(10)
         self.__frameList = queue.Queue(maxsize=5)
 
-    def __worker3(self):
-        result = subprocess.run(
-            ["ifconfig"], capture_output=True).stdout.decode()
-        pattern = 'wlan0:.*inet (.*)  netmask'
-        try:
-            target = re.findall(
-                pattern=pattern, string=result, flags=re.DOTALL)[0]
-        except IndexError:
-            target = 'NULL'
-        return {
-            'IP {}': target,
-        }
+        
 
     def __worker2(self):
         return {
@@ -85,16 +74,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             'DigGain {}': round(self.metadata['DigitalGain'], 2),
             'Lux {}': round(self.metadata['Lux'], 2),
             'ClrTemp {}': self.metadata['ColourTemperature'],
-        }
-
-    def __worker1(self):
-        return {
-            # "BAT {}v": round(self.__m.getBat(), 2),
-            "BAT {}v {}%":( round(self.__m.getBat(), 2),self.__m.getBatteryPercent(self.__m.getBat())),
             "FPS {}": round(self.framePerSecond, 1),
-            "MEM {}%": round((psutil.virtual_memory().used / psutil.virtual_memory().total) * 100, 2),
-            "TEMP {}": psutil.sensors_temperatures()['cpu_thermal'][0].current,
-            "DISK {}%": psutil.disk_usage('/').percent,
             "FocusFoM {}": int(self.__filter.calc())
         }
 
@@ -244,9 +224,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             self.__recordTimestamp = None
 
     def squarePressAction(self):
-        if self.__decorateEnable:
-            self.__decorateEnable = False
-        elif not self.__decorateEnable and self.__recordTimestamp is None and not self.__isBusy:
+        if self.__recordTimestamp is None and not self.__isBusy:
             self._irq('MenuControlledEnd')
 
     def circlePressAction(self):
@@ -388,6 +366,6 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 self.__hist.decorate(frame)
 
             if self.__mfassist and edges.any():
-                frame = cv2.addWeighted(frame, 0.8, colorfulEdges, 1.0, 0)
+                frame = cv2.addWeighted(frame, 1, colorfulEdges, 1.0, 0)
 
             yield frame
