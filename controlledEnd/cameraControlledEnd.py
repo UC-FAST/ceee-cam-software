@@ -90,7 +90,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def __worker1(self):
         return {
             # "BAT {}v": round(self.__m.getBat(), 2),
-            "BAT {}v": round(self.__m.getBat(), 2),
+            "BAT {}v {}%":( round(self.__m.getBat(), 2),self.__m.getBatteryPercent(self.__m.getBat())),
             "FPS {}": round(self.framePerSecond, 1),
             "MEM {}%": round((psutil.virtual_memory().used / psutil.virtual_memory().total) * 100, 2),
             "TEMP {}": psutil.sensors_temperatures()['cpu_thermal'][0].current,

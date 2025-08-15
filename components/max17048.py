@@ -171,5 +171,5 @@ if __name__ == '__main__':
     m = Max17048()
     print(Max17048().getBat())
     while True:
-        print(m.getBat())
+        print(m.getBatteryPercent(m.getBat()))
         time.sleep(1)
