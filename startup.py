@@ -15,7 +15,7 @@ config = configLoader.ConfigLoader('./config.json')
 u = universalControl.UniversalControl(
     lcd20.Lcd(),
     [
-        
+        SystemMonitor(),
         CameraControlledEnd(
             verbose_console=config['debug_level'],
             #tuningFilePath=tuning
@@ -29,7 +29,7 @@ u = universalControl.UniversalControl(
             padding=(5, 5, 5, 5)
         ),
         GalleryControlledEnd(pictPath=config['camera']['path']),
-        SystemMonitor(),
+        
     ]
 )
 

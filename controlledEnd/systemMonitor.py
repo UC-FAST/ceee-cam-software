@@ -1,117 +1,141 @@
 import abc
+from datetime import datetime
 import re
 import subprocess
+import time
 
 import numpy
 import psutil
 
-from components import max17048
+from components import MAX17048, INA230, BQ32002
 import frameDecorator
 from utils.slidingWindowFilter import SlidingWindowFilter
+from . import ControlledEnd
 
 
-class SystemMonitor(abc.ABC):
+class SystemMonitor(ControlledEnd):
     def __init__(self, _id='SystemMonitor'):
+        ControlledEnd.__init__(self, _id)
         self._id = _id
         self._irq = None
         self._msgSender = None
         self.__decorator = frameDecorator.SimpleText(
             [
-                self.__page1
-                ],
+                self.__hardwareReport,
+                self.__powerReport,
+                self.__iwconfig
+            ],
             height=240,
             padding=(10, 20, 0, 0),
             fontHeight=10,
             color=frameDecorator.Colors.gold.value
         )
-        self.__m = max17048.Max17048()
+        self.__m = MAX17048.MAX17048()
+        self.__i = INA230.INA230()
+        self.__b = BQ32002.BQ32002()
+        self.__b.setTime(datetime.now())
 
-
-
-    """---Multi Direction Button Start---"""
-
-
-    def __page1(self):
-        """
-        Gathers and returns system monitoring information including CPU usage, memory usage, disk usage, battery status, CPU temperature, and the IP address of the 'wlan0' network interface.
-
-        Returns:
-            dict: A dictionary containing the following keys and their corresponding values:
-                - "CPU {}%": Current CPU usage percentage.
-                - "MEM {}%": Current memory usage percentage.
-                - "DISK {}%": Current disk usage percentage for the root filesystem.
-                - "BAT {}v {}%": Tuple containing current battery voltage and battery percentage.
-                - "TEMP {} C": Current CPU temperature in Celsius.
-                - "IP {}": IP address of the 'wlan0' interface, or 'NULL' if not found.
-        """
-        result = subprocess.run(
-            ["ifconfig"], capture_output=True).stdout.decode()
-        pattern = 'wlan0:.*inet (.*)  netmask'
+    def __hardwareReport(self):
         try:
-            target = re.findall(
-                pattern=pattern, string=result, flags=re.DOTALL)[0]
-        except IndexError:
-            target = 'NULL'
-
-
+            rtc = self.__b.getTime()
+        except ValueError:
+            rtc = None
         return {
             "CPU {}%": round(psutil.cpu_percent(interval=0.3), 2),
             "MEM {}%": round((psutil.virtual_memory().used / psutil.virtual_memory().total) * 100, 2),
             "DISK {}%": psutil.disk_usage('/').percent,
-            "BAT {}v {}%":( round(self.__m.getBat(), 2),self.__m.getBatteryPercent(self.__m.getBat())),
             "TEMP {} C": psutil.sensors_temperatures()['cpu_thermal'][0].current,
-            'IP {}': target,
+            'System Time {}': datetime.now(),
+            'RTC Time {}': rtc,
         }
 
-    def centerPressAction(self):
-        pass
+    def __powerReport(self):
+        try:
+            bat = round(self.__m.getBat(), 2)
+            percent = self.__m.getBatteryPercent(bat)
+        except IOError:
+            bat = None
+            percent = None
 
-    def centerReleaseAction(self):
-        pass
+        try:
+            busVoltage = round(self.__i.readVoltage(), 2)
+        except IOError:
+            busVoltage = None
 
-    def upPressAction(self):
-        self.__decorator.previousPage()
+        try:
+            shuntVoltage = round(self.__i.readShuntVoltage()*1000, 3)
+        except IOError:
+            shuntVoltage = None
+
+        try:
+            current = round(self.__i.readCurrent(), 2)*1000
+        except IOError:
+            current = None
+
+        try:
+            power = round(self.__i.readPower(), 2)
+        except IOError:
+            power = None
+        time.sleep(0.3)
+
+        return {
+            "BAT {}v {}%": (bat, percent),
+            "Bus Voltage {}V": busVoltage,
+            "Shunt Voltage {}mV": shuntVoltage,
+            "Current {}mA": current,
+            "Power {}W": power
+        }
+
+    def __iwconfig(self):
+        result = subprocess.run(
+            ["ifconfig"], capture_output=True
+        ).stdout.decode()
+        pattern = 'wlan0:.*inet (.*)  netmask'
+        try:
+            ip = re.findall(
+                pattern=pattern, string=result, flags=re.DOTALL)[0]
+        except IndexError:
+            ip = None
+
+        result = subprocess.run(
+            ["iwconfig"], capture_output=True
+        ).stdout.decode()
+
+        pattern = '''
+                (\w+)\s+           
+                IEEE\s.*?\s+      
+                ESSID:"([^"]+)"     
+                .*?                
+                Frequency:([\d.]+\sGHz) 
+                .*?                
+                Link\sQuality=([\d/]+)   
+                .*?                
+                Signal\slevel=([-\d]+\sdBm)  
+            '''
+        matches = re.findall(pattern, result, re.VERBOSE | re.DOTALL)
+        if matches:
+            interface, essid, freq, quality, level = matches[0]
+        else:
+            interface, essid, freq, quality, level = None, None, None, None, None
+
+        return {
+            'Interface {}': interface,
+            'ESSID {}': essid,
+            'IP {}':ip,
+            'Frequency {}': freq,
+            'Link Quality {}': quality,
+            'Signal Level {}': level
+        }
+    
 
     def upReleaseAction(self):
-        pass
+        self.__decorator.previousPage()
 
     def downPressAction(self):
         self.__decorator.nextPage()
 
-    def downReleaseAction(self):
-        pass
-
-    def leftPressAction(self):
-        self.__decorator.previousPage()
-
-    def leftReleaseAction(self):
-        pass
-
-    def rightPressAction(self):
-        self.__decorator.nextPage()
-
-    def rightReleaseAction(self):
-        pass
-
-    """---Multi Direction Button End---"""
-
-    """---Multi Function Button Start---"""
-
-    def circlePressAction(self):
-        pass
-
-    def squarePressAction(self):
-        pass
-
     def crossPressAction(self):
         self._irq("CameraControlledEnd")
-
-    def shutterPressAction(self):
-        pass
-
-    """---Multi Function Button End---"""
-
-    """---Rotary Encoder Start---"""
 
     def rotaryEncoderClockwise(self):
         self.__decorator.previousPage()
@@ -122,37 +146,16 @@ class SystemMonitor(abc.ABC):
     def rotaryEncoderSelect(self):
         pass
 
-    """---Rotary Encoder End---"""
-
-    """---Communication Function Start---"""
-
-    def msgReceiver(self, sender, msg):
-        pass
-
     def msgSender(self, func):
         self._msgSender = func
-
-    """---Communication Function End---"""
 
     def irq(self, func):
         self._irq = func
 
     def mainLoop(self):
-        frame=numpy.zeros((240, 320, 3), dtype=numpy.uint8)
+        frame = numpy.zeros((240, 320, 3), dtype=numpy.uint8)
         self.__decorator.decorate(frame)
         yield frame
-
-    def onExit(self):
-        pass
-
-    def onEnter(self, lastID):
-        pass
-
-    def active(self):
-        pass
-
-    def inactive(self):
-        pass
 
     @property
     def id(self):

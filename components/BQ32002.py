@@ -2,14 +2,17 @@ import smbus2
 import time
 from datetime import datetime
 
-class BQ32002Driver:
+from . import configLoader
+
+
+class BQ32002:
     """
     BQ32002 RTC driver for Raspberry Pi using SMBus.
     Handles communication with BQ32002 real-time clock module.
     """
-    
+
     # Register addresses dictionary (keys in uppercase without prefix)
-    REGISTERS = {
+    __reg = {
         'SECONDS': 0x00,
         'MINUTES': 0x01,
         'HOURS': 0x02,
@@ -21,9 +24,9 @@ class BQ32002Driver:
         'CONTROL': 0x0E,
         'STATUS': 0x0F
     }
-    
+
     # Configuration flags dictionary
-    FLAGS = {
+    __flags = {
         'STOP_BIT': 0x80,         # Clock stop bit in seconds register
         'HOUR_12_24_MODE': 0x40,   # 12/24 hour mode bit in hours register
         'CAL_SIGN': 0x80,         # Calibration sign bit in calibration register
@@ -35,144 +38,147 @@ class BQ32002Driver:
         'HOUR_12_24_FLAG': 0x02,  # 12/24 hour flag in status register
         'STOP_FLAG': 0x01         # Stop flag in status register
     }
-    
-    def __init__(self, busNumber=1, deviceAddress=0x68):
+
+    def __init__(
+        self,
+            busNumber=configLoader.ConfigLoader()['sensor']['BQ32002']['bus'],
+            addr=0x68
+    ):
         """
         Initialize I2C connection to BQ32002.
-        
+
         Args:
             busNumber: I2C bus number (default: 1 for Raspberry Pi 3/4)
             deviceAddress: BQ32002 device address (default: 0x68)
         """
-        self.bus = smbus2.SMBus(busNumber)
-        self.deviceAddress = deviceAddress
+        self.__bus = smbus2.SMBus(busNumber)
+        self.__addr = addr
         self.configureDevice()
 
     def configureDevice(self):
         """Configure BQ32002 to 24-hour mode and enable oscillator."""
         # Ensure clock is running (clear STOP bit)
-        seconds = self._readByte(self.REGISTERS['SECONDS'])
-        if seconds & self.FLAGS['STOP_BIT']:
-            self._writeByte(self.REGISTERS['SECONDS'], seconds & ~self.FLAGS['STOP_BIT'])
-        
-        # Set 24-hour mode in status register
-        status = self._readByte(self.REGISTERS['STATUS'])
-        if status & self.FLAGS['HOUR_12_24_FLAG']:
-            self._writeByte(self.REGISTERS['STATUS'], status & ~self.FLAGS['HOUR_12_24_FLAG'])
-        
-        # Enable oscillator if disabled
-        control = self._readByte(self.REGISTERS['CONTROL'])
-        if control & self.FLAGS['OSC_DISABLE']:
-            self._writeByte(self.REGISTERS['CONTROL'], control & ~self.FLAGS['OSC_DISABLE'])
+        seconds = self.__bus.read_byte_data(self.__addr, self.__reg['SECONDS'])
+        if seconds & self.__flags['STOP_BIT']:
+            self.__writeByte(self.__reg['SECONDS'],
+                             seconds & ~self.__flags['STOP_BIT'])
 
-    def readTime(self):
+        # Set 24-hour mode in status register
+        status = self.__bus.read_byte_data(self.__addr, self.__reg['STATUS'])
+        if status & self.__flags['HOUR_12_24_FLAG']:
+            self.__writeByte(
+                self.__reg['STATUS'], status & ~self.__flags['HOUR_12_24_FLAG'])
+
+        # Enable oscillator if disabled
+        control = self.__bus.read_byte_data(self.__addr, self.__reg['CONTROL'])
+        if control & self.__flags['OSC_DISABLE']:
+            self.__writeByte(self.__reg['CONTROL'],
+                             control & ~self.__flags['OSC_DISABLE'])
+
+    def getTime(self):
         """
         Read current date and time from RTC.
-        
+
         Returns:
             datetime object containing current RTC time
         """
-        data = self.bus.read_i2c_block_data(self.deviceAddress, self.REGISTERS['SECONDS'], 7)
-        
+        data = self.__bus.read_i2c_block_data(
+            self.__addr, self.__reg['SECONDS'], 7)
+
         # Extract time components (convert BCD to decimal)
-        seconds = self._bcdToDec(data[0] & 0x7F)  # Mask STOP bit
-        minutes = self._bcdToDec(data[1])
-        hours = self._bcdToDec(data[2] & 0x3F)    # Mask 12/24 mode bit
-        day = self._bcdToDec(data[3])
-        date = self._bcdToDec(data[4])
-        month = self._bcdToDec(data[5] & 0x1F)     # Mask century bit
-        year = self._bcdToDec(data[6]) + 2000      # Assume 21st century
-        
+        seconds = self.__bcdToDec(data[0] & 0x7F)  # Mask STOP bit
+        minutes = self.__bcdToDec(data[1])
+        hours = self.__bcdToDec(data[2] & 0x3F)    # Mask 12/24 mode bit
+        day = self.__bcdToDec(data[3])
+        date = self.__bcdToDec(data[4])
+        month = self.__bcdToDec(data[5] & 0x1F)     # Mask century bit
+        year = self.__bcdToDec(data[6]) + 2000      # Assume 21st century
+
         return datetime(year, month, date, hours, minutes, seconds)
 
-    def setTime(self, dt):
+    def setTime(self, dt: datetime):
         """
         Set RTC date and time.
-        
+
         Args:
             dt: datetime object containing desired time
         """
         # Convert values to BCD format
         data = [
-            self._decToBcd(dt.second) & 0x7F,   # Ensure STOP bit is clear
-            self._decToBcd(dt.minute),
-            self._decToBcd(dt.hour) & 0x3F,      # Set 24-hour mode
-            self._decToBcd(dt.isoweekday()),      # ISO weekday (1=Monday)
-            self._decToBcd(dt.day),
-            self._decToBcd(dt.month),
-            self._decToBcd(dt.year % 100)        # Last two digits of year
+            self.__decToBcd(dt.second) & 0x7F,   # Ensure STOP bit is clear
+            self.__decToBcd(dt.minute),
+            self.__decToBcd(dt.hour) & 0x3F,      # Set 24-hour mode
+            self.__decToBcd(dt.isoweekday()),      # ISO weekday (1=Monday)
+            self.__decToBcd(dt.day),
+            self.__decToBcd(dt.month),
+            self.__decToBcd(dt.year % 100)        # Last two digits of year
         ]
-        
-        # Write time block to registers
-        self.bus.write_i2c_block_data(self.deviceAddress, self.REGISTERS['SECONDS'], data)
 
-    def readCalibration(self):
+        # Write time block to registers
+        self.__bus.write_i2c_block_data(
+            self.__addr, self.__reg['SECONDS'], data)
+
+    @property
+    def calibration(self):
         """
         Read calibration value from RTC.
-        
+
         Returns:
             Tuple of (calibration_value, is_negative)
         """
-        cal = self._readByte(self.REGISTERS['CALIBRATION'])
-        sign = cal & self.FLAGS['CAL_SIGN']
+        cal = self.__bus.read_byte_data(self.__addr, self.__reg['CALIBRATION'])
+        sign = cal & self.__flags['CAL_SIGN']
         value = cal & 0x1F  # Mask calibration value bits
-        
+
         # Handle two's complement for negative values
         if sign:
             return (value - 32, True)
         return (value, False)
 
-    def setCalibration(self, value):
+    @calibration.setter
+    def calibration(self, value):
         """
         Set calibration value.
-        
+
         Args:
             value: Calibration value between -16 and +15
         """
         if not -16 <= value <= 15:
             raise ValueError("Calibration value must be between -16 and +15")
-        
+
         # Handle negative values using two's complement
         if value < 0:
-            calValue = (abs(value) | self.FLAGS['CAL_SIGN']) ^ 0x20
+            calValue = (abs(value) | self.__flags['CAL_SIGN']) ^ 0x20
         else:
             calValue = value
-        
-        self._writeByte(self.REGISTERS['CALIBRATION'], calValue)
 
-    def _readByte(self, register):
-        """Read single byte from specified register."""
-        return self.bus.read_byte_data(self.deviceAddress, register)
+        self.__bus.write_byte_data(
+            self.__addr, self.__reg['CALIBRATION'], calValue)
 
-    def _writeByte(self, register, value):
-        """Write single byte to specified register."""
-        self.bus.write_byte_data(self.deviceAddress, register, value)
-
-    def _bcdToDec(self, bcd):
+    def __bcdToDec(self, bcd):
         """Convert BCD byte to decimal."""
         return (bcd // 16) * 10 + (bcd & 0x0F)
 
-    def _decToBcd(self, dec):
+    def __decToBcd(self, dec):
         """Convert decimal to BCD byte."""
         return (dec // 10) << 4 | (dec % 10)
 
+
 # Example usage
 if __name__ == "__main__":
-    rtc = BQ32002Driver()
-    
+    rtc = BQ32002()
+
     # Set RTC time to current system time
     currentTime = datetime.now()
     print(f"Setting RTC time to: {currentTime}")
     rtc.setTime(currentTime)
-    
+
     # Read back RTC time
-    time.sleep(10)  # Wait for potential second change
-    rtcTime = rtc.readTime()
+    time.sleep(3)  # Wait for potential second change
+    rtcTime = rtc.getTime()
     print(f"RTC reports time: {rtcTime}")
-    
+
     # Read and display calibration value
-    calValue, isNegative = rtc.readCalibration()
-    print(f"Calibration value: {'-' if isNegative else '+'}{abs(calValue)} ppm")
-    
-    # Set calibration example (uncomment to use)
-    # rtc.setCalibration(-5)  # Set to -5 ppm
+    calValue, isNegative = rtc.calibration
+    print(
+        f"Calibration value: {'-' if isNegative else '+'}{abs(calValue)} ppm")

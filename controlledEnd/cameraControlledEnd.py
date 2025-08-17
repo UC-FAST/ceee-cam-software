@@ -11,7 +11,7 @@ import numpy
 import psutil
 
 import frameDecorator
-from components import max17048, picam2, led, configLoader
+from components import MAX17048, picam2, led, configLoader
 from utils import SlidingWindowFilter, Hdr
 from . import controlledEnd
 
@@ -115,7 +115,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__rotate = 0
         self.__recordTimestamp = None
         self.__option: typing.Dict[typing.Dict] = None
-        self.__m = max17048.Max17048()
+        self.__m = MAX17048.MAX17048()
         self.__filter = SlidingWindowFilter(10)
         self.__frameList = queue.Queue(maxsize=5)
 

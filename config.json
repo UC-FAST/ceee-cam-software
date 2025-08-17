@@ -3,19 +3,15 @@
         "right": 6,
         "up": 0,
         "left": 22,
-        "down"   :1,
-        "center" :5,
-
-        "rotaryEncoder1A":17,
-        "rotaryEncoder1B":24,
-        "rotaryEncoder1S":27,
-
-        "shutter":16,
-
+        "down": 1,
+        "center": 5,
+        "rotaryEncoder1A": 17,
+        "rotaryEncoder1B": 24,
+        "rotaryEncoder1S": 27,
+        "shutter": 16,
         "cross": 23,
         "square": 25,
         "circle": 20,
-
         "rst": 19,
         "dc": 26,
         "bl": 21
@@ -32,6 +28,19 @@
     "led": {
         "led_green": 12,
         "led_blue": 13
+    },
+    "sensor": {
+        "BQ32002": {
+            "bus": 1
+        },
+        "INA230": {
+            "bus": 1,
+            "shunt resistance": 0.002,
+            "maximum expected current": 3.2
+        },
+        "MAX17048":{
+            "bus":1
+        }
     },
     "debug_level": 1,
     "screenshot_path": "./pict/screenshot/"

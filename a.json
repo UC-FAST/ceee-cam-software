@@ -305,7 +305,7 @@
                     "id": "show hist",
                     "content": "Show Histogram",
                     "type": "bool",
-                    "value": true
+                    "value": false
                 },
                 {
                     "id": "flicker",
@@ -514,7 +514,7 @@
                     "id": "show hist",
                     "content": "Show Hist",
                     "type": "bool",
-                    "value": true
+                    "value": false
                 }
             ]
         }

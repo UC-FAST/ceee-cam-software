@@ -207,6 +207,7 @@ class UniversalControl:
         self.__logger.debug("Center release action")
         if not self.__enable:
             return
+
         self.__controlledEndList[self.__rights].centerReleaseAction()
 
     def __circlePressAction(self):
@@ -220,6 +221,7 @@ class UniversalControl:
         self.__logger.debug("Square action")
         if not self.__enable:
             return
+
         self.__controlledEndList[self.__rights].squarePressAction()
 
     @exceptionRecorder()
@@ -227,12 +229,14 @@ class UniversalControl:
         self.__logger.debug("Cross action")
         if not self.__enable:
             return
+
         self.__controlledEndList[self.__rights].crossPressAction()
 
     def __shutterPressAction(self):
         self.__logger.debug("Shutter press action")
         if not self.__enable:
             return
+
         self.__controlledEndList[self.__rights].shutterPressAction()
 
     def __upPressAction(self):
@@ -241,14 +245,17 @@ class UniversalControl:
 
     def __downPressAction(self):
         self.__logger.debug('Down press action')
+
         self.__controlledEndList[self.__rights].downPressAction()
 
     def __rightPressAction(self):
         self.__logger.debug('Right press action')
+
         self.__controlledEndList[self.__rights].rightPressAction()
 
     def __leftPressAction(self):
         self.__logger.debug('Left press action')
+
         self.__controlledEndList[self.__rights].leftPressAction()
 
     def __upReleaseAction(self):
@@ -291,8 +298,11 @@ class UniversalControl:
         self.__logger.info("Enter mainloop")
         try:
             while True:
+
                 self.__controlledEndList[self.__rights].onEnter(
-                    self.__lastWidget)
+                    self.__lastWidget
+                )
+
                 for self.__frame in self.__controlledEndList[self.__rights].mainLoop():
                     if self.__signal:
                         self.__signal = False

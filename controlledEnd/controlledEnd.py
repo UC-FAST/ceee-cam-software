@@ -53,35 +53,30 @@ class ControlledEnd(abc.ABC):
 
     """---Multi Direction Button Start---"""
 
-    @abc.abstractmethod
     def centerPressAction(self):
         pass
 
     def centerReleaseAction(self):
         pass
 
-    @abc.abstractmethod
     def upPressAction(self):
         pass
 
     def upReleaseAction(self):
         pass
 
-    @abc.abstractmethod
     def downPressAction(self):
         pass
 
     def downReleaseAction(self):
         pass
 
-    @abc.abstractmethod
     def leftPressAction(self):
         pass
 
     def leftReleaseAction(self):
         pass
 
-    @abc.abstractmethod
     def rightPressAction(self):
         pass
 
@@ -92,19 +87,15 @@ class ControlledEnd(abc.ABC):
 
     """---Multi Function Button Start---"""
 
-    @abc.abstractmethod
     def circlePressAction(self):
         pass
 
-    @abc.abstractmethod
     def squarePressAction(self):
         pass
 
-    @abc.abstractmethod
     def crossPressAction(self):
         pass
 
-    @abc.abstractmethod
     def shutterPressAction(self):
         pass
 
@@ -112,22 +103,19 @@ class ControlledEnd(abc.ABC):
 
     """---Rotary Encoder Start---"""
 
-    @abc.abstractmethod
     def rotaryEncoderClockwise(self):
         pass
 
-    @abc.abstractmethod
     def rotaryEncoderCounterClockwise(self):
         pass
 
-    @abc.abstractmethod
     def rotaryEncoderSelect(self):
         pass
 
     """---Rotary Encoder End---"""
 
     """---Communication Function Start---"""
-    @abc.abstractmethod
+
     def msgReceiver(self, sender, msg):
         pass
 

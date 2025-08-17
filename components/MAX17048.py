@@ -5,11 +5,17 @@ from typing import OrderedDict
 
 import smbus2
 
+from . import configLoader
 
-class Max17048:
-    def __init__(self):
-        self.__i2c = smbus2.SMBus(1)
-        self.__MAX17048_ADDR = 0x36
+
+class MAX17048:
+    def __init__(
+        self,
+        i2cBus=configLoader.ConfigLoader()['sensor']['MAX17048']['bus'],
+        addr=0x36
+    ):
+        self.__i2c = smbus2.SMBus(i2cBus)
+        self.__addr = addr
         self.__reg = {
             'VCELL': 0X02,
             'SOC': 0x04,
@@ -35,7 +41,7 @@ class Max17048:
 
     def getBat(self):
         msb, lsb = tuple(self.__i2c.read_i2c_block_data(
-            self.__MAX17048_ADDR, self.__reg['VCELL'], 2, force=None))
+            self.__addr, self.__reg['VCELL'], 2, force=None))
         data = (msb << 8 | lsb) * 0.000078125
         if self.__recordEnable:
             if data != self.__lastBat:
@@ -47,25 +53,25 @@ class Max17048:
 
     def version(self):
         msb, lsb = tuple(self.__i2c.read_i2c_block_data(
-            self.__MAX17048_ADDR, self.__reg['VERSION'], 2, force=None))
+            self.__addr, self.__reg['VERSION'], 2, force=None))
         return msb << 8 | lsb
 
     def __powersave(self):
         msb, lsb = tuple(self.__i2c.read_i2c_block_data(
-            self.__MAX17048_ADDR, self.__reg['CONFIG'], 2, force=None))
-        self.__i2c.write_i2c_block_data(self.__MAX17048_ADDR, self.__reg['CONFIG'], [
+            self.__addr, self.__reg['CONFIG'], 2, force=None))
+        self.__i2c.write_i2c_block_data(self.__addr, self.__reg['CONFIG'], [
                                         msb, lsb | 128], force=None)
 
     def setAlart(self, voltage):
         voltage /= 0.02
         lsb = self.__i2c.read_i2c_block_data(
-            self.__MAX17048_ADDR, self.__reg['VALRT'], 2, force=None)[1]
-        self.__i2c.write_i2c_block_data(self.__MAX17048_ADDR, self.__reg['VALRT'], [
+            self.__addr, self.__reg['VALRT'], 2, force=None)[1]
+        self.__i2c.write_i2c_block_data(self.__addr, self.__reg['VALRT'], [
                                         int(voltage), lsb], force=None)
 
     def soc(self):
         msb, lsb = tuple(self.__i2c.read_i2c_block_data(
-            self.__MAX17048_ADDR, self.__reg['SOC'], 2, force=None))
+            self.__addr, self.__reg['SOC'], 2, force=None))
         return (msb << 8 | lsb) * 3.90625e-05
 
     def __record(self, data):
@@ -168,8 +174,8 @@ class Max17048:
 
 
 if __name__ == '__main__':
-    m = Max17048()
-    print(Max17048().getBat())
+    m = MAX17048()
+    print(MAX17048().getBat())
     while True:
         print(m.getBatteryPercent(m.getBat()))
         time.sleep(1)
