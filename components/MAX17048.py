@@ -1,17 +1,19 @@
 import csv
+import inspect
+import os
 import subprocess
 import time
 from typing import OrderedDict
 
 import smbus2
 
-from . import configLoader
+from utils import ConfigLoader,logger,LogMsg,singleton
 
-
+@singleton
 class MAX17048:
     def __init__(
         self,
-        i2cBus=configLoader.ConfigLoader()['sensor']['MAX17048']['bus'],
+        i2cBus=ConfigLoader()['sensor']['MAX17048']['bus'],
         addr=0x36
     ):
         self.__i2c = smbus2.SMBus(i2cBus)
@@ -38,6 +40,15 @@ class MAX17048:
                 c.writeheader()
         self.__lastBat = 0
         self.__alertThreshold = None
+        self.__logger=logger()
+        self.__logger.info(
+            LogMsg(
+                content='MAX17048 init finished',
+                module='MAX17048',
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
     def getBat(self):
         msb, lsb = tuple(self.__i2c.read_i2c_block_data(

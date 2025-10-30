@@ -11,8 +11,8 @@ import numpy
 import psutil
 
 import frameDecorator
-from components import MAX17048, picam2, led, configLoader
-from utils import SlidingWindowFilter, Hdr
+from components import MAX17048, picam2, led
+from utils import SlidingWindowFilter, Hdr, configLoader
 from . import controlledEnd
 
 
@@ -81,8 +81,11 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         else:
             tuning = None
         picam2.Cam.__init__(
-            self, verbose_console=verbose_console, tuning=tuning)
-        self.__zoom = 1
+            self, 
+            verbose_console=verbose_console, 
+            tuning=tuning
+            )
+        self.__zoom:float = 1
         self.__brightness = 0
         self.__config = configLoader.ConfigLoader('./config.json')
         self.__barChart = frameDecorator.BarChart(
@@ -114,7 +117,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         self.__brightHold = False
         self.__rotate = 0
         self.__recordTimestamp = None
-        self.__option: typing.Dict[typing.Dict] = None
+        self.__option: None|typing.Dict[typing.Dict] = None
         self.__m = MAX17048.MAX17048()
         self.__filter = SlidingWindowFilter(10)
         self.__frameList = queue.Queue(maxsize=5)

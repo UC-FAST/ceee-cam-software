@@ -1,11 +1,21 @@
+import inspect
+import os
 import smbus2
 import time
 from datetime import datetime
 
-from . import configLoader
+
+try:
+    from ..utils import ConfigLoader
+    from ..utils import logger, LogMsg, singleton
+except ImportError:
+    from utils import ConfigLoader
+    from utils import logger, LogMsg, singleton
 
 
+@singleton
 class BQ32002:
+    global __filename
     """
     BQ32002 RTC driver for Raspberry Pi using SMBus.
     Handles communication with BQ32002 real-time clock module.
@@ -41,7 +51,7 @@ class BQ32002:
 
     def __init__(
         self,
-            busNumber=configLoader.ConfigLoader()['sensor']['BQ32002']['bus'],
+            busNumber=ConfigLoader()['sensor']['BQ32002']['bus'],
             addr=0x68
     ):
         """
@@ -53,34 +63,52 @@ class BQ32002:
         """
         self.__bus = smbus2.SMBus(busNumber)
         self.__addr = addr
-        self.configureDevice()
+        self.configure_device()
+        self.__logger = logger()
+        self.__logger.info(
+            LogMsg(
+                content='BQ32002 init finished',
+                module='BQ32002',
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
-    def configureDevice(self):
+    def configure_device(self):
         """Configure BQ32002 to 24-hour mode and enable oscillator."""
         # Ensure clock is running (clear STOP bit)
         seconds = self.__bus.read_byte_data(self.__addr, self.__reg['SECONDS'])
         if seconds & self.__flags['STOP_BIT']:
-            self.__writeByte(self.__reg['SECONDS'],
-                             seconds & ~self.__flags['STOP_BIT'])
+            self.__bus.write_byte_data(
+                self.__addr,
+                self.__reg['SECONDS'],
+                seconds & ~self.__flags['STOP_BIT']
+            )
 
         # Set 24-hour mode in status register
         status = self.__bus.read_byte_data(self.__addr, self.__reg['STATUS'])
         if status & self.__flags['HOUR_12_24_FLAG']:
-            self.__writeByte(
-                self.__reg['STATUS'], status & ~self.__flags['HOUR_12_24_FLAG'])
+            self.__bus.write_byte_data(
+                self.__addr,
+                self.__reg['STATUS'],
+                status & ~self.__flags['HOUR_12_24_FLAG']
+            )
 
         # Enable oscillator if disabled
         control = self.__bus.read_byte_data(self.__addr, self.__reg['CONTROL'])
         if control & self.__flags['OSC_DISABLE']:
-            self.__writeByte(self.__reg['CONTROL'],
-                             control & ~self.__flags['OSC_DISABLE'])
+            self.__bus.write_byte_data(
+                self.__addr,
+                self.__reg['CONTROL'],
+                control & ~self.__flags['OSC_DISABLE']
+            )
 
-    def getTime(self):
+    def read_time(self):
         """
         Read current date and time from RTC.
 
         Returns:
-            datetime object containing current RTC time
+            Unix timestamp containing current RTC time
         """
         data = self.__bus.read_i2c_block_data(
             self.__addr, self.__reg['SECONDS'], 7)
@@ -94,15 +122,26 @@ class BQ32002:
         month = self.__bcdToDec(data[5] & 0x1F)     # Mask century bit
         year = self.__bcdToDec(data[6]) + 2000      # Assume 21st century
 
-        return datetime(year, month, date, hours, minutes, seconds)
+        dt = datetime(year, month, date, hours, minutes, seconds).timestamp()
+        self.__logger.info(
+            LogMsg(
+                content=f'BQ32002 read time {str(dt)}',
+                module='BQ32002',
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
-    def setTime(self, dt: datetime):
+        return dt
+
+    def write_time(self, timestamp):
         """
         Set RTC date and time.
 
         Args:
-            dt: datetime object containing desired time
+            timestamp: Unix timestamp containing desired time
         """
+        dt = datetime.fromtimestamp(timestamp)
         # Convert values to BCD format
         data = [
             self.__decToBcd(dt.second) & 0x7F,   # Ensure STOP bit is clear
@@ -117,6 +156,15 @@ class BQ32002:
         # Write time block to registers
         self.__bus.write_i2c_block_data(
             self.__addr, self.__reg['SECONDS'], data)
+
+        self.__logger.info(
+            LogMsg(
+                content=f'BQ32002 write time {str(dt)}',
+                module='BQ32002',
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
     @property
     def calibration(self):
@@ -143,6 +191,15 @@ class BQ32002:
         Args:
             value: Calibration value between -16 and +15
         """
+        self.__logger.info(
+            LogMsg(
+                content=f'BQ32002 set calibration {value}',
+                module='BQ32002',
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
+
         if not -16 <= value <= 15:
             raise ValueError("Calibration value must be between -16 and +15")
 
@@ -171,14 +228,17 @@ if __name__ == "__main__":
     # Set RTC time to current system time
     currentTime = datetime.now()
     print(f"Setting RTC time to: {currentTime}")
-    rtc.setTime(currentTime)
+    # rtc.set_time(currentTime+timedelta(seconds=1))
+    rtc.write_time(time.time())
 
     # Read back RTC time
     time.sleep(3)  # Wait for potential second change
-    rtcTime = rtc.getTime()
+    rtcTime = rtc.read_time()
     print(f"RTC reports time: {rtcTime}")
 
     # Read and display calibration value
+    # rtc.calibration=0
     calValue, isNegative = rtc.calibration
     print(
-        f"Calibration value: {'-' if isNegative else '+'}{abs(calValue)} ppm")
+        f"Calibration value: {'-' if isNegative else '+'}{abs(calValue)} ppm"
+    )

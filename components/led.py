@@ -1,5 +1,5 @@
 import time
-from components import configLoader
+from utils import configLoader
 import gpiozero
 
 config = configLoader.ConfigLoader('config.json')

@@ -1,9 +1,11 @@
+import inspect
+import os
 import smbus2
 
-from . import configLoader
+from utils import ConfigLoader,LogMsg,logger,singleton
 
 
-
+@singleton
 class INA230:
     # Register address dictionary (UPPERCASE)
     __reg = {
@@ -27,11 +29,11 @@ class INA230:
 
     def __init__(
             self,
-            busNumber=configLoader.ConfigLoader()['sensor']['INA230']['bus'],
+            busNumber=ConfigLoader()['sensor']['INA230']['bus'],
             address=0x40,
-            shuntResistance=configLoader.ConfigLoader()[
+            shuntResistance=ConfigLoader()[
                 'sensor']['INA230']['shunt resistance'],
-            maxExpectedCurrent=configLoader.ConfigLoader()[
+            maxExpectedCurrent=ConfigLoader()[
                 'sensor']['INA230']['maximum expected current']
     ):
         """
@@ -53,6 +55,16 @@ class INA230:
         self.__writeWord(self.__reg['CALIB'], self.__calibration)
         # Configure device
         self.__configure()
+
+        self.__logger=logger()
+        self.__logger.info(
+            LogMsg(
+                content='INA230 init finished',
+                module='INA230',
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
     def __configure(self):
         """Write configuration to CONFIG register"""

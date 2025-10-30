@@ -3,6 +3,7 @@ import logging
 import os
 import threading
 import time
+import typing
 
 import cv2
 import numpy as np
@@ -10,14 +11,14 @@ import picamera2
 from picamera2 import YUV420_to_RGB
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
-from libcamera import controls
 
-from . import configLoader
+from utils import configLoader
 
 
 class Cam:
     def __init__(self, verbose_console=None, tuning=None):
         self.__cam = picamera2.Picamera2(tuning=tuning)
+        self.__cam.set_logging(logging.WARN)
         # self.__cam = picamera2.Picamera2()
         self.__config = configLoader.ConfigLoader('./config.json')
         self.__pictConfig = self.__cam.create_preview_configuration(
@@ -36,7 +37,7 @@ class Cam:
         self.__digitalZoom = 1
         self.__brightness = 0
         self.__controls = dict()
-        self.__metadata = None
+        self.__metadata:None|typing.Dict = None
         self.__frame = np.zeros((self.__height, self.__width, 3), np.uint8)
         self.__cam.start_preview(picamera2.Preview.NULL)
         self.__cam.start()
@@ -289,9 +290,10 @@ class Cam:
     def exposureCapture(self, exposeTime, width, height):
         if width == 0 or height == 0 or width > 1920 or height > 1920:
             width, height = 1920, 1080
-        config = self.__cam.still_configuration(
+        config = self.__cam.create_still_configuration(
             main={"size": (width, height)},
         )
+        
         with self.__lock:
             self.__cam.switch_mode(config)
             coordinate = self.__cam.capture_metadata()['ScalerCrop']

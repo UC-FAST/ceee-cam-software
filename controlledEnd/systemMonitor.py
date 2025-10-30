@@ -33,11 +33,10 @@ class SystemMonitor(ControlledEnd):
         self.__m = MAX17048.MAX17048()
         self.__i = INA230.INA230()
         self.__b = BQ32002.BQ32002()
-        self.__b.setTime(datetime.now())
 
     def __hardwareReport(self):
         try:
-            rtc = self.__b.getTime()
+            rtc = datetime.fromtimestamp(self.__b.read_time())
         except ValueError:
             rtc = None
         return {

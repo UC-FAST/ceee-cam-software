@@ -38,10 +38,10 @@
             "shunt resistance": 0.002,
             "maximum expected current": 3.2
         },
-        "MAX17048":{
-            "bus":1
+        "MAX17048": {
+            "bus": 1
         }
     },
     "debug_level": 1,
-    "screenshot_path": "./pict/screenshot/"
+    "internet test": "http://www.msftconnecttest.com/connecttest.txt"
 }

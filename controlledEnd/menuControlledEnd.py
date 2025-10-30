@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 
-from components import configLoader
+from utils import configLoader
 from frameDecorator.colors import Colors
 from .controlledEnd import ControlledEnd
 
@@ -87,7 +87,7 @@ class MenuControlledEnd(ControlledEnd):
     def __init__(
             self,
             _id='MenuControlledEnd',
-            path=None,
+            path:None|str=None,
             width: int = 320,
             height: int = 240,
             padding: tuple = (10, 10, 10, 10),
@@ -119,7 +119,7 @@ class MenuControlledEnd(ControlledEnd):
             """
 
         ControlledEnd.__init__(self, _id)
-        self.__options = None
+        self.__options:None|dict = None
         self.__optionList = None
         self.__path, self.__width, self.__height, self.__rowCount = path, width, height, rowCount
         if self.__path:

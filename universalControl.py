@@ -1,15 +1,20 @@
+import inspect
 import multiprocessing
+import os
 import subprocess
 import threading
 import time
 from typing import List
 
 import gpiozero
+from numpy import insert
 
 import controlledEnd
 import frameDecorator
-from components import lcd20, configLoader
-from utils import exceptionRecorder, initialize_logger
+from components import lcd20
+from utils import configLoader, exceptionRecorder, logger, LogMsg
+
+__filename=os.path.basename(os.path.abspath(__file__))
 
 
 class UniversalControl:
@@ -60,8 +65,11 @@ class UniversalControl:
     def __init__(self, lcd: lcd20.Lcd, controlledEndList: List[controlledEnd.ControlledEnd]):
         self.__controlledEndList = controlledEndList
         self.__config = configLoader.ConfigLoader('./config.json')
-        self.__logger = initialize_logger(
-            console_level=self.__config['debug_level'])
+        self.__logger = logger()
+        self.__module_name = 'UniversalControl'
+        # console_level=
+        # self.__config['debug_level']
+        # )
         self.__enable = True
         self.__rights = 0  # Current controlled end in use
         self.__lastWidget = None  # Last controlled end, used for return operation
@@ -81,7 +89,14 @@ class UniversalControl:
         self.__frameList = multiprocessing.Queue(maxsize=1)
         self.__t = multiprocessing.Process(
             target=self.showImageInAnotherProcess, args=(self.__frameList,))
-        self.__logger.info("UniversalControl initialized")
+        self.__logger.info(
+            LogMsg(
+                content='UniversalControl initialized',
+                module='UniversalControl',
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
     def __gpioInit(self):
         self.__shutter = gpiozero.DigitalInputDevice(
@@ -155,7 +170,14 @@ class UniversalControl:
         """
         Switch the control right of controlledEnd.
         """
-        self.__logger.info("Irq to {}".format(_id))
+        self.__logger.info(
+            LogMsg(
+                content="Irq to {}".format(_id),
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         # Look up controlled end in list
         for index, widget in enumerate(self.__controlledEndList):
             if widget.id == _id:
@@ -173,8 +195,15 @@ class UniversalControl:
         """
 
         """
-        self.__logger.info("Message from {} to {}".format(sender, receiver))
-        self.__logger.debug("Message: {}".format(msg))
+        self.__logger.info(
+            LogMsg(
+                content='Message from {} to {}'.format(sender, receiver),
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+
+        )
         if receiver == 'UniversalControl':
             self.__msgReceiver(msg)
             return
@@ -197,28 +226,56 @@ class UniversalControl:
 
     @exceptionRecorder()
     def __centerPressAction(self):
-        self.__logger.debug("Center press action")
+        self.__logger.debug(
+            LogMsg(
+                content='Center pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
         self.__controlledEndList[self.__rights].centerPressAction()
 
     @exceptionRecorder()
     def __centerReleaseAction(self):
-        self.__logger.debug("Center release action")
+        self.__logger.debug(
+            LogMsg(
+                content='Center relesed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
 
         self.__controlledEndList[self.__rights].centerReleaseAction()
 
     def __circlePressAction(self):
-        self.__logger.debug("Circle action")
+        self.__logger.debug(
+            LogMsg(
+                content='circle pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
         self.__controlledEndList[self.__rights].circlePressAction()
 
     @exceptionRecorder()
     def __squarePressAction(self):
-        self.__logger.debug("Square action")
+        self.__logger.debug(
+            LogMsg(
+                content='Square pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
 
@@ -226,68 +283,159 @@ class UniversalControl:
 
     @exceptionRecorder()
     def __crossPressAction(self):
-        self.__logger.debug("Cross action")
+        self.__logger.debug(
+            LogMsg(
+                content='Cross pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
 
         self.__controlledEndList[self.__rights].crossPressAction()
 
     def __shutterPressAction(self):
-        self.__logger.debug("Shutter press action")
+        self.__logger.debug(
+            LogMsg(
+                content='Shutter pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
 
         self.__controlledEndList[self.__rights].shutterPressAction()
 
     def __upPressAction(self):
-        self.__logger.debug('Up press action')
+        self.__logger.debug(
+            LogMsg(
+                content='Up pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         self.__controlledEndList[self.__rights].upPressAction()
 
     def __downPressAction(self):
-        self.__logger.debug('Down press action')
+        self.__logger.debug(
+            LogMsg(
+                content='Down',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
         self.__controlledEndList[self.__rights].downPressAction()
 
     def __rightPressAction(self):
-        self.__logger.debug('Right press action')
+        self.__logger.debug(
+            LogMsg(
+                content='Right pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
         self.__controlledEndList[self.__rights].rightPressAction()
 
     def __leftPressAction(self):
-        self.__logger.debug('Left press action')
+        self.__logger.debug(
+            LogMsg(
+                content='Left pressed',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
 
         self.__controlledEndList[self.__rights].leftPressAction()
 
     def __upReleaseAction(self):
-        self.__logger.debug('Up release action')
+        self.__logger.debug(
+            LogMsg(
+                content='Up released',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         self.__controlledEndList[self.__rights].upReleaseAction()
 
     def __downReleaseAction(self):
-        self.__logger.debug('Down release action')
+        self.__logger.debug(
+            LogMsg(
+                content='Down released',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         self.__controlledEndList[self.__rights].downReleaseAction()
 
     def __rightReleaseAction(self):
-        self.__logger.debug('Right release action')
+        self.__logger.debug(
+            LogMsg(
+                content='Right released',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         self.__controlledEndList[self.__rights].rightReleaseAction()
 
     def __leftReleaseAction(self):
-        self.__logger.debug('Left release action')
+        self.__logger.debug(
+            LogMsg(
+                content='Left released',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         self.__controlledEndList[self.__rights].leftReleaseAction()
 
     def __rotaryEncoderSelectAction(self):
-        self.__logger.debug('Rotary encoder select action')
+        self.__logger.debug(
+            LogMsg(
+                content='Rotary encoder selected',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
         self.__controlledEndList[self.__rights].rotaryEncoderSelect()
 
     def __rotaryEncoderClockwise(self):
-        self.__logger.debug('Rotary encoder clockwise action')
+        self.__logger.debug(
+            LogMsg(
+                content='Rotary encoder clockwise',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
         self.__controlledEndList[self.__rights].rotaryEncoderClockwise()
 
     def __rotaryEncoderCounterClockwise(self):
-        self.__logger.debug('Rotary encoder counter clockwise action')
+        self.__logger.debug(
+            LogMsg(
+                content='Rotary encoder counter clockwise',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         if not self.__enable:
             return
         self.__controlledEndList[self.__rights].rotaryEncoderCounterClockwise()
@@ -295,7 +443,14 @@ class UniversalControl:
     @exceptionRecorder()
     def mainLoop(self):
         self.__t.start()
-        self.__logger.info("Enter mainloop")
+        self.__logger.info(
+            LogMsg(
+                content='Enter mainloop',
+                module=self.__module_name,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                lineno=inspect.currentframe().f_lineno
+            )
+        )
         try:
             while True:
 
@@ -311,7 +466,14 @@ class UniversalControl:
                         time.sleep(0.1)
                     self.__frameList.put(self.__frame, True)
         except KeyboardInterrupt:
-            self.__logger.info('Stop')
+            self.__logger.info(
+                LogMsg(
+                    content='UniversalControl stopped',
+                    module=self.__module_name,
+                    filename=os.path.basename(os.path.abspath(__file__)),
+                    lineno=inspect.currentframe().f_lineno
+                )
+            )
             self.__t.terminate()
             self.__lcd.backlight(False)
             exit(0)
