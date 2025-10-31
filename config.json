@@ -42,6 +42,6 @@
             "bus": 1
         }
     },
-    "debug_level": 1,
+    "debug_level": 10,
     "internet test": "http://www.msftconnecttest.com/connecttest.txt"
 }

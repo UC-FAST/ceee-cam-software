@@ -1,45 +1,67 @@
+import os
 import socket
 import struct
 from datetime import datetime
 import subprocess
 
-from . import network
+
 from components import BQ32002
-from utils import configLoader, logger
+from utils import configLoader, Logger, LogMsg,Network
 
 
 class SystemTimeManager():
     def __init__(self) -> None:
-        self.__config=configLoader.ConfigLoader('./config.json')
-        self.__logger=logger()#initialize_logger(console_level=self.__config['debug_level'])
+        # initialize_logger(console_level=self.__config['debug_level'])
+        self.__logger = Logger()
 
-    def get_time(self):
-        if network.network().refresh_internet_connection_state()[0]:
+    def get_timestamp(self):
+        if Network().refresh_internet_connection_state()[0]:
             timestamp = self.get_time_from_ntp()
             BQ32002.BQ32002().write_time(timestamp)
         else:
             timestamp = BQ32002.BQ32002().read_time()
-
-        self.set_system_time_with_timestamp(timestamp)
+        return timestamp
 
     def set_system_time_with_timestamp(self, timestamp):
         try:
             # 格式化时间字符串
-            dt = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+            dt = datetime.fromtimestamp(
+                timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
             # 设置系统时间
             cmd = f"date -s '{dt}'"
             result = subprocess.run(
                 cmd, shell=True, check=True, capture_output=True, text=True)
 
-            self.__logger.info(f"System time has been setted to : {dt}")
+            self.__logger.info(
+                LogMsg(
+                    content=f"System time has been setted to : {dt}",
+                    module=self.__module__,
+                    filename=os.path.basename(os.path.abspath(__file__)),
+                    currentframe=inspect.currentframe()  # type: ignore
+                )
+            )
             return True
 
         except subprocess.CalledProcessError as e:
-            self.__logger.error(f"An failure occurred while setting time: {e}")
+            self.__logger.error(
+                LogMsg(
+                    content=f"An failure occurred while setting time: {e}",
+                    module=self.__module__,
+                    filename=os.path.basename(os.path.abspath(__file__)),
+                    currentframe=inspect.currentframe()  # type: ignore
+                )
+            )
             return False
         except Exception as e:
-            self.__logger.error(f"An unexpected error occurred while setting time: {e}")
+            self.__logger.error(
+                LogMsg(
+                    content=f"An failure occurred while setting time: {e}",
+                    module=self.__module__,
+                    filename=os.path.basename(os.path.abspath(__file__)),
+                    currentframe=inspect.currentframe()  # type: ignore
+                )
+            )
             return False
 
     def get_time_from_ntp(
@@ -96,5 +118,3 @@ if __name__ == "__main__":
         print(f"本地时间: {datetime.now(timezone.utc)}")
         print(
             f"时间差: {(datetime.now(timezone.utc) - ntp_time).total_seconds():.3f} 秒")'''
-
- 

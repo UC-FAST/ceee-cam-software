@@ -8,7 +8,7 @@ import numpy
 import gpiozero
 import spidev
 
-from utils import ConfigLoader, singleton, LogMsg, logger
+from utils import ConfigLoader, singleton, LogMsg, Logger
 
 
 @singleton
@@ -39,56 +39,47 @@ class Lcd:
             self.SPI.mode = 0b00
 
     def backlight(self, state: bool):
-        self.__digitalWrite(self.BL_PIN, state)
+        self.__digital_write(self.BL_PIN, state)
 
-    def __digitalWrite(self, pin, value: bool):
+    def __digital_write(self, pin, value: bool):
         if value:
             pin.on()
         else:
             pin.off()
 
-    def moduleExit(self):
+    def module_exit(self):
         logging.debug("spi end")
         if self.SPI != None:
             self.SPI.close()
 
         logging.debug("gpio cleanup...")
-        self.__digitalWrite(self.RST_PIN, 1)
-        self.__digitalWrite(self.DC_PIN, 0)
+        self.__digital_write(self.RST_PIN, True)
+        self.__digital_write(self.DC_PIN, False)
         self.BL_PIN.close()
         time.sleep(0.001)
 
-    def __digitalWrite(self, Pin, value):
-        if value:
-            Pin.on()
-        else:
-            Pin.off()
-
-    def __digitalRead(self, Pin):
-        return Pin.value
-
-    def __SPIWriteByte(self, data):
+    def __SPI_write_byte(self, data):
         if self.SPI != None:
             self.SPI.writebytes(data)
 
     def command(self, cmd):
-        self.__digitalWrite(self.DC_PIN, False)
-        self.__SPIWriteByte([cmd])
+        self.__digital_write(self.DC_PIN, False)
+        self.__SPI_write_byte([cmd])
 
     def data(self, val):
-        self.__digitalWrite(self.DC_PIN, True)
-        self.__SPIWriteByte([val])
+        self.__digital_write(self.DC_PIN, True)
+        self.__SPI_write_byte([val])
 
     def reset(self):
         """Reset the display"""
-        self.__digitalWrite(self.RST_PIN, True)
+        self.__digital_write(self.RST_PIN, True)
         time.sleep(0.01)
-        self.__digitalWrite(self.RST_PIN, False)
+        self.__digital_write(self.RST_PIN, False)
         time.sleep(0.01)
-        self.__digitalWrite(self.RST_PIN, True)
+        self.__digital_write(self.RST_PIN, True)
         time.sleep(0.01)
 
-    def Init(self):
+    def init(self):
         """Initialize dispaly"""
         self.reset()
         self.command(0x36)
@@ -163,7 +154,7 @@ class Lcd:
         self.command(0x11)
         self.command(0x29)
 
-    def __setWindows(self, Xstart, Ystart, Xend, Yend):
+    def __set_windows(self, Xstart, Ystart, Xend, Yend):
         # set the X coordinates
         self.command(0x2A)
         # Set the horizontal starting point to the high octet
@@ -182,7 +173,7 @@ class Lcd:
 
         self.command(0x2C)
 
-    def showImage(self, img):
+    def show_image(self, img):
         if img is None:
             logging.error("Image is None")
             return
@@ -203,27 +194,27 @@ class Lcd:
         pix = pix.flatten().tolist()
         self.command(0x36)
         self.data(0x70)
-        self.__setWindows(0, 0, self.width, self.height)
-        self.__digitalWrite(self.DC_PIN, True)
+        self.__set_windows(0, 0, self.width, self.height)
+        self.__digital_write(self.DC_PIN, True)
         for i in range(0, len(pix), 4096):
-            self.__SPIWriteByte(pix[i:i+4096])
+            self.__SPI_write_byte(pix[i:i+4096])
 
     def clear(self):
         """Clear contents of image buffer"""
         _buffer = [0xff]*(self.width * self.height * 2)
-        self.__setWindows(0, 0, self.height, self.width)
-        self.__digitalWrite(self.DC_PIN, True)
+        self.__set_windows(0, 0, self.height, self.width)
+        self.__digital_write(self.DC_PIN, True)
         for i in range(0, len(_buffer), 4096):
-            self.__SPIWriteByte(_buffer[i:i+4096])
+            self.__SPI_write_byte(_buffer[i:i+4096])
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     lcd = Lcd()
-    lcd.Init()
+    lcd.init()
     img = cv2.imread('1.jpg')
-    lcd.showImage(img)
+    lcd.show_image(img)
     time.sleep(5)
     lcd.clear()
-    lcd.moduleExit()
+    lcd.module_exit()
     exit(0)

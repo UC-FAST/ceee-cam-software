@@ -2,7 +2,7 @@ import inspect
 import os
 import smbus2
 
-from utils import ConfigLoader,LogMsg,logger,singleton
+from utils import ConfigLoader, LogMsg, Logger, singleton
 
 
 @singleton
@@ -29,11 +29,11 @@ class INA230:
 
     def __init__(
             self,
-            busNumber=ConfigLoader()['sensor']['INA230']['bus'],
+            bus_number=ConfigLoader()['sensor']['INA230']['bus'],
             address=0x40,
-            shuntResistance=ConfigLoader()[
+            shunt_resistance=ConfigLoader()[
                 'sensor']['INA230']['shunt resistance'],
-            maxExpectedCurrent=ConfigLoader()[
+            max_expected_current=ConfigLoader()[
                 'sensor']['INA230']['maximum expected current']
     ):
         """
@@ -43,26 +43,27 @@ class INA230:
         :param shuntResistance: Shunt resistance value (Ohms)
         :param maxExpectedCurrent: Maximum expected current (Amperes)
         """
-        self.__bus = smbus2.SMBus(busNumber)
-        self.__address = address
-        self.__shuntResistance = shuntResistance
+
+        self.__bus = smbus2.SMBus(bus_number)
+        self.__addr = address
+        self.__shunt_resistance = shunt_resistance
 
         # Calculate calibration values (camelCase naming)
-        self.__currentLsb = maxExpectedCurrent / 32768.0
+        self.__currentLsb = max_expected_current / 32768.0
         self.__powerLsb = 25.0 * self.__currentLsb
         self.__calibration = int(
-            0.00512 / (self.__currentLsb * shuntResistance))
+            0.00512 / (self.__currentLsb * shunt_resistance))
         self.__writeWord(self.__reg['CALIB'], self.__calibration)
         # Configure device
         self.__configure()
 
-        self.__logger=logger()
+        self.__logger = Logger()
         self.__logger.info(
             LogMsg(
-                content='INA230 init finished',
-                module='INA230',
+                content=f'INA230 init finished I2C_bus={bus_number} addr={hex(self.__addr)} shunt_resistance={self.__shunt_resistance} max_expected_current={max_expected_current}',
+                module=self.__module__,
                 filename=os.path.basename(os.path.abspath(__file__)),
-                lineno=inspect.currentframe().f_lineno
+                currentframe=inspect.currentframe()  # type: ignore
             )
         )
 
@@ -79,38 +80,75 @@ class INA230:
         """Write 16-bit data to register (big-endian format)"""
         msb = (data >> 8) & 0xFF
         lsb = data & 0xFF
-        self.__bus.write_i2c_block_data(self.__address, register, [msb, lsb])
+        self.__bus.write_i2c_block_data(self.__addr, register, [msb, lsb])
 
     def __readWord(self, register):
         """Read 16-bit data from register (big-endian format)"""
-        data = self.__bus.read_i2c_block_data(self.__address, register, 2)
+        data = self.__bus.read_i2c_block_data(self.__addr, register, 2)
         return (data[0] << 8) | data[1]
 
-    def readVoltage(self):
+    def read_voltage(self):
         """Read bus voltage (Volts)"""
         rawVoltage = self.__readWord(self.__reg['BUSVOLT'])
-        return rawVoltage * 0.00125  # LSB = 1.25mV
+        data = rawVoltage * 0.00125  # LSB = 1.25mV
+        self.__logger.debug(
+            LogMsg(
+                content=f'INA230 read voltage={data:.3f}V',
+                module=self.__module__,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                currentframe=inspect.currentframe()  # type: ignore
+            )
+        )
+        return data
 
-    def readCurrent(self):
+    def read_current(self):
         """Read current (Amperes)"""
         rawCurrent = self.__readWord(self.__reg['CURRENT'])
         # Handle signed value (two's complement)
         if rawCurrent > 0x7FFF:
             rawCurrent -= 0x10000
-        return rawCurrent * self.__currentLsb
+        data = rawCurrent * self.__currentLsb
+        self.__logger.debug(
+            LogMsg(
+                content=f'INA230 read current={data:.3f}A',
+                module=self.__module__,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                currentframe=inspect.currentframe()  # type: ignore
+            )
+        )
+        return data
 
-    def readPower(self):
+    def read_power(self):
         """Read power (Watts)"""
         rawPower = self.__readWord(self.__reg['POWER'])
-        return rawPower * self.__powerLsb
+        data = rawPower * self.__powerLsb
+        self.__logger.debug(
+            LogMsg(
+                content=f'INA230 read power={data:.3f}W',
+                module=self.__module__,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                currentframe=inspect.currentframe()  # type: ignore
+            )
+        )
+        return data
 
-    def readShuntVoltage(self):
+    def read_shunt_voltage(self):
         """Read shunt voltage (Volts)"""
         rawShunt = self.__readWord(self.__reg['SHUNTVOLT'])
         # Handle signed value
         if rawShunt > 0x7FFF:
             rawShunt -= 0x10000
-        return rawShunt * 0.0000025  # LSB = 2.5μV
+        data = rawShunt * 0.0000025  # LSB = 2.5μV
+
+        self.__logger.debug(
+            LogMsg(
+                content=f'INA230 read shunt voltage={data*1000:.3f}mV',
+                module=self.__module__,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                currentframe=inspect.currentframe()  # type: ignore
+            )
+        )
+        return data
 
     def close(self):
         """Close I2C connection"""
@@ -128,25 +166,25 @@ if __name__ == "__main__":
     try:
         # Create INA230 instance
         ina230 = INA230(
-            busNumber=1,
-            shuntResistance=0.002,
-            maxExpectedCurrent=3
+            bus_number=1,
+            shunt_resistance=0.002,
+            max_expected_current=3
         )
 
         # Print configuration information
         print("INA230 Configuration:")
-        print(f"  I2C Address: 0x{ina230.__address:02X}")
-        print(f"  Shunt Resistance: {ina230.__shuntResistance} Ω")
+        print(f"  I2C Address: 0x{ina230.__addr:02X}")
+        print(f"  Shunt Resistance: {ina230.__shunt_resistance} Ω")
         print(f"  Calibration Value: {ina230.__calibration}")
         print(f"  Current LSB: {ina230.__currentLsb:.8f} A/bit")
         print(f"  Power LSB: {ina230.__powerLsb:.8f} W/bit")
 
         # Read and display sensor data
         print("\nSensor Readings:")
-        print(f"  Bus Voltage: {ina230.readVoltage():.3f} V")
-        print(f"  Shunt Voltage: {ina230.readShuntVoltage():.6f} V")
-        print(f"  Current: {ina230.readCurrent():.3f} A")
-        print(f"  Power: {ina230.readPower():.3f} W")
+        print(f"  Bus Voltage: {ina230.read_voltage():.3f} V")
+        print(f"  Shunt Voltage: {ina230.read_shunt_voltage():.6f} V")
+        print(f"  Current: {ina230.read_current():.3f} A")
+        print(f"  Power: {ina230.read_power():.3f} W")
 
         # Close connection
         ina230.close()

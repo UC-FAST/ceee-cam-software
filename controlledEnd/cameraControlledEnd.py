@@ -1,19 +1,19 @@
+import inspect
 import json
+import logging
 import os
 import queue
-import re
-import subprocess
 import time
 import typing
 
 import cv2
 import numpy
-import psutil
 
 import frameDecorator
 from components import MAX17048, picam2, led
 from utils import SlidingWindowFilter, Hdr, configLoader
 from . import controlledEnd
+from utils import Logger, LogMsg
 
 
 class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
@@ -73,22 +73,23 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     Usage:
         This class is intended to be used as part of a camera control system, providing both hardware and UI interaction logic for camera operation, including photo capture, video recording, and real-time frame processing.
     """
-    def __init__(self, _id='CameraControlledEnd', verbose_console=None, tuningFilePath=None):
+
+    def __init__(self, _id='CameraControlledEnd', verbose_console: int = logging.INFO, tuning_file_path=None):
         controlledEnd.ControlledEnd.__init__(self, _id)
-        if tuningFilePath:
-            with open(tuningFilePath, 'r') as f:
+        if tuning_file_path:
+            with open(tuning_file_path, 'r') as f:
                 tuning = json.load(f)
         else:
             tuning = None
         picam2.Cam.__init__(
-            self, 
-            verbose_console=verbose_console, 
+            self,
+            verbose_console=verbose_console,
             tuning=tuning
-            )
-        self.__zoom:float = 1
+        )
+        self.__zoom: float = 1
         self.__brightness = 0
         self.__config = configLoader.ConfigLoader('./config.json')
-        self.__barChart = frameDecorator.BarChart(
+        self.__bar_chart = frameDecorator.BarChart(
             self.__config['screen']['width'],
             self.__config['screen']['height'],
             fill=True,
@@ -99,7 +100,7 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
             [self.__worker2, ],
             height=self.__config['screen']['height'],
             padding=(10, 20, 0, 0),
-            fontHeight=10,
+            font_height=10,
             color=frameDecorator.Colors.gold.value
         )
         self.__busy = frameDecorator.Busy(
@@ -108,36 +109,47 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
         )
         self.__hist = frameDecorator.Hist2()
 
-        self.__showHist = False
-        self.__isBusy = False
+        self.__show_hist = False
+        self.__is_busy = False
         self.__mfassist = False
-        self.__isHdrProcessing = False
-        self.__decorateEnable = False
-        self.__zoomHold = False
-        self.__brightHold = False
+        self.__is_hdr_processing = False
+        self.__decorate_enable = False
+        self.__zoom_hold = False
+        self.__bright_hold = False
         self.__rotate = 0
-        self.__recordTimestamp = None
-        self.__option: None|typing.Dict[typing.Dict] = None
+        self.__record_timestamp = None
+        self.__option: None | typing.Dict = None
         self.__m = MAX17048.MAX17048()
         self.__filter = SlidingWindowFilter(10)
-        self.__frameList = queue.Queue(maxsize=5)
+        self.__frame_list = queue.Queue(maxsize=5)
 
-        
+        self.__logger = Logger()
 
     def __worker2(self):
-        return {
-            "EPTime {}": self.metadata['ExposureTime'],
-            'FocusFoM {}': self.frameQuality,
-            'FrameDur {}': self.metadata['FrameDuration'],
-            'AnGain {}': round(self.metadata['AnalogueGain'], 2),
-            'DigGain {}': round(self.metadata['DigitalGain'], 2),
-            'Lux {}': round(self.metadata['Lux'], 2),
-            'ClrTemp {}': self.metadata['ColourTemperature'],
-            "FPS {}": round(self.framePerSecond, 1),
-            "FocusFoM {}": int(self.__filter.calc())
-        }
+        if self.metadata:
+            return {
+                "EPTime {}": self.metadata['ExposureTime'],
+                'FocusFoM {}': self.frame_quality,
+                'FrameDur {}': self.metadata['FrameDuration'],
+                'AnGain {}': round(self.metadata['AnalogueGain'], 2),
+                'DigGain {}': round(self.metadata['DigitalGain'], 2),
+                'Lux {}': round(self.metadata['Lux'], 2),
+                'ClrTemp {}': self.metadata['ColourTemperature'],
+                "FPS {}": round(self.frame_per_second, 1),
+                "FocusFoM {}": int(self.__filter.calc())
+            }
 
-    def __findOptionByID(self, target):
+    def __find_option_by_ID(self, target):
+        if self.__option is None:
+            self.__logger.fatal(
+                LogMsg(
+                    content='Param self.__option is None',
+                    module=self.__module__,
+                    filename=os.path.basename(os.path.abspath(__file__)),
+                    currentframe=inspect.currentframe()
+                )
+            )
+            raise RuntimeError()
         for key, value in self.__option.items():
             if 'options' in value.keys():
                 for j in value['options']:
@@ -146,127 +158,127 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                             return j['value']
         raise LookupError(target)
 
-    def upPressAction(self):
-        if self.__decorateEnable:
-            self.__decorator.previousPage()
+    def up_press_action(self):
+        if self.__decorate_enable:
+            self.__decorator.previous_page()
             time.sleep(0.3)
         else:
-            if self.__isHdrProcessing:
+            if self.__is_hdr_processing:
                 return
-            self.__brightHold = True
+            self.__bright_hold = True
             if self.__brightness + 0.01 > 1:
                 self.__brightness = 1
             else:
                 self.__brightness += 0.01
-            self.__toast.setText("BRT {}".format(int(self.__brightness * 100)))
+            self.__toast.set_text("BRT {}".format(int(self.__brightness * 100)))
             self.brightness(self.__brightness)
             time.sleep(0.05)
 
-    def upReleaseAction(self):
-        self.__brightHold = False
+    def up_release_action(self):
+        self.__bright_hold = False
 
-    def downPressAction(self):
-        if self.__decorateEnable:
-            self.__decorator.nextPage()
+    def down_press_action(self):
+        if self.__decorate_enable:
+            self.__decorator.next_page()
             time.sleep(0.3)
         else:
-            if self.__isHdrProcessing:
+            if self.__is_hdr_processing:
                 return
-            self.__brightHold = True
+            self.__bright_hold = True
             if self.__brightness - 0.01 < -1:
                 self.__brightness = -1
             else:
                 self.__brightness -= 0.01
-            self.__toast.setText("BRT {}".format(int(self.__brightness * 100)))
+            self.__toast.set_text("BRT {}".format(int(self.__brightness * 100)))
             self.brightness(self.__brightness)
             time.sleep(0.05)
 
-    def downReleaseAction(self):
-        self.__brightHold = False
+    def down_release_action(self):
+        self.__bright_hold = False
 
-    def leftPressAction(self):
-        if self.__isHdrProcessing:
+    def left_press_action(self):
+        if self.__is_hdr_processing:
             return
-        self.__zoomHold = True
+        self.__zoom_hold = True
         if self.__zoom - 0.05 < 1:
             self.__zoom = 1
         else:
             self.__zoom -= 0.2
-        self.__toast.setText("X {}".format(round(self.__zoom, 1)))
+        self.__toast.set_text("X {}".format(round(self.__zoom, 1)))
         self.zoom(self.__zoom)
         time.sleep(0.05)
 
-    def leftReleaseAction(self):
-        self.__zoomHold = False
+    def left_release_action(self):
+        self.__zoom_hold = False
 
-    def rightPressAction(self):
-        if self.__isHdrProcessing:
+    def right_press_action(self):
+        if self.__is_hdr_processing:
             return
-        self.__zoomHold = True
+        self.__zoom_hold = True
         self.__zoom += 0.2
-        self.__toast.setText("X {}".format(round(self.__zoom, 1)))
+        self.__toast.set_text("X {}".format(round(self.__zoom, 1)))
         self.zoom(self.__zoom)
         time.sleep(0.05)
 
-    def rightReleaseAction(self):
-        self.__zoomHold = False
+    def right_release_action(self):
+        self.__zoom_hold = False
 
-    def shutterPressAction(self):
-        if self.__recordTimestamp is not None:
-            self.stopRecording()
+    def shutter_press_action(self):
+        if self.__record_timestamp is not None:
+            self.stop_recording()
             led.off(led.blue)
-            self.__recordTimestamp = None
+            self.__record_timestamp = None
         else:
             try:
                 width, height = tuple(
-                    self.__findOptionByID('resolution')['value'])
+                    self.__find_option_by_ID('resolution')['value'])
             except ValueError:
                 width, height = 0, 0
 
-            delay = self.__findOptionByID('delay')
+            delay = self.__find_option_by_ID('delay')
             for i in range(delay):
                 if delay - i <= 3:
-                    led.toggleState(led.green)
+                    led.toggle_state(led.green)
                     time.sleep(0.5)
-                    led.toggleState(led.green)
+                    led.toggle_state(led.green)
                     time.sleep(0.5)
                 else:
-                    led.toggleState(led.green)
+                    led.toggle_state(led.green)
                     time.sleep(1)
-            self.__isBusy = True
+            self.__is_busy = True
             led.on(led.green)
-            self.__toast.setText("Processing")
+            self.__toast.set_text("Processing")
             path = os.path.join(
                 self.__config['camera']['path'], "{}".format(int(time.time())))
-            fmat = self.__findOptionByID('pict format')
-            self.saveFrame(
+            fmat = self.__find_option_by_ID('pict format')
+            self.save_frame(
                 filePath=path,
                 fmat=fmat,
                 width=int(width),
                 height=int(height),
                 rotate=self.__rotate,
-                saveMetadata=self.__findOptionByID("save metadata"),
-                saveRaw=self.__findOptionByID("dng enable")
+                saveMetadata=self.__find_option_by_ID("save metadata"),
+                saveRaw=self.__find_option_by_ID("dng enable")
             )
-            if self.__findOptionByID('watermark'):
+            if self.__find_option_by_ID('watermark'):
                 frame = cv2.imread('{}.{}'.format(path, fmat))
                 frameDecorator.WaterMark(
                     int(width), int(height)).decorate(frame)
                 cv2.imwrite('{}.{}'.format(path, fmat), frame)
 
             led.off(led.green)
-            self.__isBusy = False
+            self.__is_busy = False
 
     def shutterLongPressAction(self):
-        if self.__isBusy or self.__isHdrProcessing:
+        if self.__is_busy or self.__is_hdr_processing:
             return
-        if self.__recordTimestamp is None:
+        if self.__record_timestamp is None:
             try:
                 width, height = tuple(
-                    self.__findOptionByID('resolution').split('x'))
+                    self.__find_option_by_ID('resolution').split('x'))
             except ValueError:
                 width, height = 0, 0
-            self.startRecording(
+            self.start_recording(
                 int(width), int(height),
                 '{}'.format(
                     os.path.join(
@@ -276,95 +288,95 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                 )
             )
             led.on(led.blue)
-            self.__recordTimestamp = time.time()
+            self.__record_timestamp = time.time()
         else:
-            self.stopRecording()
+            self.stop_recording()
             led.off(led.blue)
-            self.__recordTimestamp = None
+            self.__record_timestamp = None
 
-    def squarePressAction(self):
-        if self.__recordTimestamp is None and not self.__isBusy:
+    def square_press_action(self):
+        if self.__record_timestamp is None and not self.__is_busy:
             self._irq('MenuControlledEnd')
 
-    def circlePressAction(self):
-        self.__decorateEnable = not self.__decorateEnable
+    def circle_press_action(self):
+        self.__decorate_enable = not self.__decorate_enable
 
-    def crossPressAction(self):
+    def cross_press_action(self):
         pass
 
     def __exposeSetting(self):
-        if self.__findOptionByID('auto expose'):
-            self.setAeEnable(
+        if self.__find_option_by_ID('auto expose'):
+            self.set_AE_enable(
                 True
             )
-            self.setAeConstraintMode(
-                self.__findOptionByID('constraint mode')['value']
+            self.set_AE_constraint_mode(
+                self.__find_option_by_ID('constraint mode')['value']
             )
-            self.setAeExposureMode(
-                self.__findOptionByID('exposure mode')['value']
+            self.set_AE_exposureMode(
+                self.__find_option_by_ID('exposure mode')['value']
             )
-            self.setAeMeteringMode(
-                self.__findOptionByID('metering mode')['value']
+            self.set_AE_metering_mode(
+                self.__find_option_by_ID('metering mode')['value']
             )
-            self.setAeFlickerMode(
-                self.__findOptionByID('flicker mode')['value']
+            self.set_AE_flicker_mode(
+                self.__find_option_by_ID('flicker mode')['value']
             )
-            self.setAeFlickerPeriod(
-                self.__findOptionByID('flicker period')['value']
+            self.set_AE_flicker_period(
+                self.__find_option_by_ID('flicker period')['value']
             )
         else:
-            self.setAeEnable(
+            self.set_AE_enable(
                 False
             )
 
-            self.setManualExposure(
-                self.__findOptionByID('exposure time'),
-                self.__findOptionByID('analogue gain')
+            self.set_manual_exposure(
+                self.__find_option_by_ID('exposure time'),
+                self.__find_option_by_ID('analogue gain')
             )
 
     def __AwbSetting(self):
-        if self.__findOptionByID('awb'):
-            self.setAwbEnable(
+        if self.__find_option_by_ID('awb'):
+            self.set_AWB_enable(
                 True
             )
-            self.setAwbMode(
-                self.__findOptionByID('awb mode')['value']
+            self.set_AWB_mode(
+                self.__find_option_by_ID('awb mode')['value']
             )
         else:
-            self.setAwbEnable(
+            self.set_AWB_enable(
                 False
             )
-            red, blue = self.__findOptionByID(
-                'red gain'), self.__findOptionByID('blue gain')
-            self.setColourGains(red, blue)
+            red, blue = self.__find_option_by_ID(
+                'red gain'), self.__find_option_by_ID('blue gain')
+            self.set_colour_gains(red, blue)
 
-    def msgReceiver(self, sender, msg):
+    def msg_receiver(self, sender, msg):
         self.__option = msg[1]
         self.loadSettings()
 
     def loadSettings(self):
         self.__exposeSetting()
         self.__AwbSetting()
-        self.__mfassist = self.__findOptionByID('mf assist')
-        self.__showHist = self.__findOptionByID('show hist')
+        self.__mfassist = self.__find_option_by_ID('mf assist')
+        self.__show_hist = self.__find_option_by_ID('show hist')
 
-    def centerPressAction(self):
+    def center_press_action(self):
         pass
 
-    def rotaryEncoderClockwise(self):
+    def rotary_encoder_clockwise(self):
         pass
 
-    def rotaryEncoderCounterClockwise(self):
+    def rotary_encoder_counter_clockwise(self):
         pass
 
-    def rotaryEncoderSelect(self):
+    def rotary_encoder_select(self):
         pass
         # self.__main.nextCursor()
 
-    def onEnter(self, lastID):
+    def on_enter(self, lastID):
         if not os.path.exists(self.__config['camera']['path']) or not os.path.isdir(self.__config['camera']['path']):
             os.mkdir(self.__config['camera']['path'])
-        self._msgSender(self._id, 'MenuControlledEnd', self._id)
+        self._msg_sender(self._id, 'MenuControlledEnd', self._id)
         self.loadSettings()
 
     def active(self):
@@ -373,10 +385,10 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
     def inactive(self):
         self.stop()
 
-    def mainLoop(self):
+    def main_loop(self):
         for index, frame in enumerate(self.preview()):
-            self.__filter.addData(self.frameQuality)
-            self.__barChart.addData(int(self.__filter.calc()))
+            self.__filter.addData(self.frame_quality)
+            self.__bar_chart.add_data(int(self.__filter.calc()))
 
             if self.__mfassist:
                 gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
@@ -397,34 +409,33 @@ class CameraControlledEnd(controlledEnd.ControlledEnd, picam2.Cam):
                     else:
                         colorfulEdges[edges != 0] = (0, 255, 0)
 
-            if self.__decorateEnable and not self.__zoomHold and self.__recordTimestamp is None:
-                self.__barChart.decorate(frame, rotate=self.__rotate)
+            if self.__decorate_enable and not self.__zoom_hold and self.__record_timestamp is None:
+                self.__bar_chart.decorate(frame, rotate=self.__rotate)
                 self.__decorator.decorate(frame, rotate=self.__rotate)
-            if self.__isBusy:
+            if self.__is_busy:
                 self.__busy.decorate(frame, self.__rotate)
 
-            if self.__recordTimestamp is not None and not self.__zoomHold:
-                millis = (time.time() - self.__recordTimestamp) * 1000
+            if self.__record_timestamp is not None and not self.__zoom_hold:
+                millis = (time.time() - self.__record_timestamp) * 1000
                 seconds, milliseconds = divmod(int(millis), 1000)
                 minutes, seconds = divmod(int(seconds), 60)
                 hours, minutes = divmod(int(minutes), 60)
-                self.__toast.setText(
+                self.__toast.set_text(
                     '{}:{}:{}:{}'.format(
                         hours, minutes, seconds, milliseconds
                     )
                 )
-            if self.__zoomHold:
+            if self.__zoom_hold:
                 self.__toast.decorate(frame, self.__rotate)
-            if self.__brightHold:
+            if self.__bright_hold:
                 self.__toast.decorate(frame, self.__rotate)
             if self.__toast.isUpdate:
                 self.__toast.decorate(frame, self.__rotate)
-            if self.__isHdrProcessing:
+            if self.__is_hdr_processing:
                 self.__toast.decorate(frame, self.__rotate)
-            if self.__showHist:
+            if self.__show_hist:
                 self.__hist.decorate(frame)
 
             if self.__mfassist and edges.any():
                 frame = cv2.addWeighted(frame, 1, colorfulEdges, 1.0, 0)
-
             yield frame

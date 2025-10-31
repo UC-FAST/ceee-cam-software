@@ -27,7 +27,7 @@ class SystemMonitor(ControlledEnd):
             ],
             height=240,
             padding=(10, 20, 0, 0),
-            fontHeight=10,
+            font_height=10,
             color=frameDecorator.Colors.gold.value
         )
         self.__m = MAX17048.MAX17048()
@@ -50,29 +50,29 @@ class SystemMonitor(ControlledEnd):
 
     def __powerReport(self):
         try:
-            bat = round(self.__m.getBat(), 2)
-            percent = self.__m.getBatteryPercent(bat)
+            bat = round(self.__m.get_bat(), 2)
+            percent = self.__m.get_battery_percent(bat)
         except IOError:
             bat = None
             percent = None
 
         try:
-            busVoltage = round(self.__i.readVoltage(), 2)
+            busVoltage = round(self.__i.read_voltage(), 2)
         except IOError:
             busVoltage = None
 
         try:
-            shuntVoltage = round(self.__i.readShuntVoltage()*1000, 3)
+            shuntVoltage = round(self.__i.read_shunt_voltage()*1000, 3)
         except IOError:
             shuntVoltage = None
 
         try:
-            current = round(self.__i.readCurrent(), 2)*1000
+            current = round(self.__i.read_current(), 2)*1000
         except IOError:
             current = None
 
         try:
-            power = round(self.__i.readPower(), 2)
+            power = round(self.__i.read_power(), 2)
         except IOError:
             power = None
         time.sleep(0.3)
@@ -127,31 +127,31 @@ class SystemMonitor(ControlledEnd):
         }
     
 
-    def upReleaseAction(self):
-        self.__decorator.previousPage()
+    def up_release_action(self):
+        self.__decorator.previous_page()
 
-    def downPressAction(self):
-        self.__decorator.nextPage()
+    def down_press_action(self):
+        self.__decorator.next_page()
 
-    def crossPressAction(self):
+    def cross_press_action(self):
         self._irq("CameraControlledEnd")
 
-    def rotaryEncoderClockwise(self):
-        self.__decorator.previousPage()
+    def rotary_encoder_clockwise(self):
+        self.__decorator.previous_page()
 
-    def rotaryEncoderCounterClockwise(self):
-        self.__decorator.nextPage()
+    def rotary_encoder_counter_clockwise(self):
+        self.__decorator.next_page()
 
-    def rotaryEncoderSelect(self):
+    def rotary_encoder_select(self):
         pass
 
-    def msgSender(self, func):
+    def msg_sender(self, func):
         self._msgSender = func
 
     def irq(self, func):
         self._irq = func
 
-    def mainLoop(self):
+    def main_loop(self):
         frame = numpy.zeros((240, 320, 3), dtype=numpy.uint8)
         self.__decorator.decorate(frame)
         yield frame

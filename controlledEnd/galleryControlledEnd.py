@@ -17,12 +17,12 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         self.__width, self.__height = width, height
         self.__direction = 0
         self.__option: typing.Dict[typing.Dict] = None
-        self.__frameList = queue.Queue()
+        self.__frame_list = queue.Queue()
         self.__busy = frameDecorator.Busy()
         self.__rotate = 0
-        self.__currentFrame = np.zeros((self.__width, self.__height, 3), np.uint8)
+        self.__current_frame = np.zeros((self.__width, self.__height, 3), np.uint8)
         self.__hist = frameDecorator.Hist2()
-        self.__rawFrame = None
+        self.__raw_frame = None
         self.__from = None
         self.__delete = False
         self.__empty = False
@@ -32,7 +32,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
             [self.__worker1],
             height=self.__height,
             padding=(10, 20, 0, 0),
-            fontHeight=10,
+            font_height=10,
             color=frameDecorator.Colors.gold.value
         )
         self.__simpleTextEnable = False
@@ -52,7 +52,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         raise LookupError('target')
 
 
-    def centerPressAction(self):
+    def center_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
@@ -60,7 +60,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         if self.isPlaying():
             self.togglePlayPause()
 
-    def upPressAction(self):
+    def up_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
@@ -69,7 +69,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         self.__refreshFrame()
         sleep(0.2)
 
-    def downPressAction(self):
+    def down_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
@@ -78,7 +78,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         self.__refreshFrame()
         sleep(0.2)
 
-    def leftPressAction(self):
+    def left_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
@@ -87,7 +87,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         self.__refreshFrame()
         sleep(0.2)
 
-    def rightPressAction(self):
+    def right_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
@@ -98,11 +98,11 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
 
     def __addHist(self):
         if self.__findOptionByID("show hist"):
-            self.__hist.decorate(self.__currentFrame)
+            self.__hist.decorate(self.__current_frame)
         else:
-            self.__currentFrame = self.__rawFrame.copy()
+            self.__current_frame = self.__raw_frame.copy()
 
-    def circlePressAction(self):
+    def circle_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
@@ -110,7 +110,7 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         self.__simpleTextEnable = not self.__simpleTextEnable
         self.__refreshFrame()
 
-    def crossPressAction(self):
+    def cross_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
@@ -124,26 +124,26 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
             return
         self._irq('CameraControlledEnd')
 
-    def squarePressAction(self):
+    def square_press_action(self):
         if self.__empty:
             self.__empty = False
             self._irq(self.__from)
             return
         self._irq('MenuControlledEnd')
 
-    def shutterPressAction(self):
+    def shutter_press_action(self):
         pass
     
-    def rotaryEncoderClockwise(self):
+    def rotary_encoder_clockwise(self):
         pass
 
-    def rotaryEncoderCounterClockwise(self):
+    def rotary_encoder_counter_clockwise(self):
         pass
 
-    def rotaryEncoderSelect(self):
+    def rotary_encoder_select(self):
         pass
     
-    def msgReceiver(self, sender, msg):
+    def msg_receiver(self, sender, msg):
         if sender == 'MenuControlledEnd':
             self.__option = msg[1]
             if msg[0] == 'delete':
@@ -157,38 +157,38 @@ class GalleryControlledEnd(controlledEnd.ControlledEnd, mediaBrowser.MediaBrowse
         pass
 
     def __refreshFrame(self):
-        if self.__currentFrame is not None:
-            self.__busy.decorate(self.__currentFrame)
-            self.__frameList.put(self.__currentFrame)
+        if self.__current_frame is not None:
+            self.__busy.decorate(self.__current_frame)
+            self.__frame_list.put(self.__current_frame)
         try:
-            self.__rawFrame = self.getCurrentFrame()
+            self.__raw_frame = self.getCurrentFrame()
         except FileExistsError:
             self.__empty = True
             self._irq("CameraControlledEnd")
             return
-        self.__currentFrame = self.__rawFrame.copy()
+        self.__current_frame = self.__raw_frame.copy()
         self.__addHist()
-        self.__frameList.put(self.__currentFrame)
+        self.__frame_list.put(self.__current_frame)
 
-    def mainLoop(self):
+    def main_loop(self):
         while True:
-            pict = self.__frameList.get(block=True)
+            pict = self.__frame_list.get(block=True)
             if self.__simpleTextEnable:
                 self.__decorator.decorate(pict)
             yield np.rot90(pict, -self.__rotate // 90)
 
 
-    def onExit(self):
-        self.__frameList.put(frameDecorator.Warining().decorate("Empty"))
+    def on_exit(self):
+        self.__frame_list.put(frameDecorator.Warining().decorate("Empty"))
 
-    def onEnter(self, lastID):
+    def on_enter(self, lastID):
         try:
             if not self.__delete:
                 self.__from = lastID
                 self.refreshMediaList()
             self.__delete = False
-            self._msgSender(self._id, "MenuControlledEnd", self._id)
+            self._msg_sender(self._id, "MenuControlledEnd", self._id)
             self.__refreshFrame()
         except FileExistsError:
             self.__empty = True
-            self.__frameList.put(frameDecorator.Warining().decorate("Empty"))
+            self.__frame_list.put(frameDecorator.Warining().decorate("Empty"))

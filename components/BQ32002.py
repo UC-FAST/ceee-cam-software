@@ -7,10 +7,10 @@ from datetime import datetime
 
 try:
     from ..utils import ConfigLoader
-    from ..utils import logger, LogMsg, singleton
+    from ..utils import Logger, LogMsg, singleton
 except ImportError:
     from utils import ConfigLoader
-    from utils import logger, LogMsg, singleton
+    from utils import Logger, LogMsg, singleton
 
 
 @singleton
@@ -51,7 +51,7 @@ class BQ32002:
 
     def __init__(
         self,
-            busNumber=ConfigLoader()['sensor']['BQ32002']['bus'],
+            bus_number=ConfigLoader()['sensor']['BQ32002']['bus'],
             addr=0x68
     ):
         """
@@ -61,16 +61,18 @@ class BQ32002:
             busNumber: I2C bus number (default: 1 for Raspberry Pi 3/4)
             deviceAddress: BQ32002 device address (default: 0x68)
         """
-        self.__bus = smbus2.SMBus(busNumber)
+        self.__logger = Logger()
+
+        self.__bus = smbus2.SMBus(bus_number)
         self.__addr = addr
         self.configure_device()
-        self.__logger = logger()
+
         self.__logger.info(
             LogMsg(
-                content='BQ32002 init finished',
-                module='BQ32002',
+                content=f'BQ32002 init finished I2C_bus={bus_number} addr={hex(self.__addr)}',
+                module=self.__module__,
                 filename=os.path.basename(os.path.abspath(__file__)),
-                lineno=inspect.currentframe().f_lineno
+                currentframe=inspect.currentframe()  # type: ignore
             )
         )
 
@@ -122,17 +124,17 @@ class BQ32002:
         month = self.__bcdToDec(data[5] & 0x1F)     # Mask century bit
         year = self.__bcdToDec(data[6]) + 2000      # Assume 21st century
 
-        dt = datetime(year, month, date, hours, minutes, seconds).timestamp()
+        dt = datetime(year, month, date, hours, minutes, seconds)
         self.__logger.info(
             LogMsg(
                 content=f'BQ32002 read time {str(dt)}',
-                module='BQ32002',
+                module=self.__module__,
                 filename=os.path.basename(os.path.abspath(__file__)),
-                lineno=inspect.currentframe().f_lineno
+                currentframe=inspect.currentframe()
             )
         )
 
-        return dt
+        return dt.timestamp()
 
     def write_time(self, timestamp):
         """
@@ -160,9 +162,9 @@ class BQ32002:
         self.__logger.info(
             LogMsg(
                 content=f'BQ32002 write time {str(dt)}',
-                module='BQ32002',
+                module=self.__module__,
                 filename=os.path.basename(os.path.abspath(__file__)),
-                lineno=inspect.currentframe().f_lineno
+                currentframe=inspect.currentframe()
             )
         )
 
@@ -194,9 +196,9 @@ class BQ32002:
         self.__logger.info(
             LogMsg(
                 content=f'BQ32002 set calibration {value}',
-                module='BQ32002',
+                module=self.__module__,
                 filename=os.path.basename(os.path.abspath(__file__)),
-                lineno=inspect.currentframe().f_lineno
+                currentframe=inspect.currentframe()
             )
         )
 

@@ -7,35 +7,35 @@ class Toast:
             self,
             width=320,
             height=240,
-            fontHeight=12,
+            font_height=12,
     ):
         self.__width = width
         self.__height = height
-        self.__fontHeight = fontHeight
-        self.__fontScale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, self.__fontHeight)
+        self.__font_height = font_height
+        self.__font_scale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, self.__font_height)
         self.__text = None
-        self.__offsetRight = 0
-        self.__offsetLeft = self.__width
-        self.__isUpdate = False
+        self.__offset_right = 0
+        self.__offset_left = self.__width
+        self.__is_update = False
 
     @property
     def isUpdate(self):
-        return self.__isUpdate
+        return self.__is_update
 
-    def setText(self, text: str):
+    def set_text(self, text: str):
         if not self.__text or len(text) != len(self.__text):
-            self.__offsetRight = (self.__width - len(text) * self.__fontHeight) // 2 - self.__fontHeight
-            self.__offsetLeft = (self.__width + len(text) * self.__fontHeight) // 2 + self.__fontHeight
+            self.__offset_right = (self.__width - len(text) * self.__font_height) // 2 - self.__font_height
+            self.__offset_left = (self.__width + len(text) * self.__font_height) // 2 + self.__font_height
         self.__text = text
-        self.__isUpdate = True
+        self.__is_update = True
 
     def decorate(self, frame, rotate=0):
         if self.__text:
             sketch = np.zeros(frame.shape, np.uint8)
             cv2.rectangle(
                 sketch,
-                (self.__offsetRight, int(self.__height * 0.96 - self.__fontHeight)),
-                (self.__offsetLeft, int(self.__height * 0.96)),
+                (self.__offset_right, int(self.__height * 0.96 - self.__font_height)),
+                (self.__offset_left, int(self.__height * 0.96)),
                 (255, 0, 0),
                 -1
             )
@@ -43,14 +43,14 @@ class Toast:
                 sketch,
                 self.__text,
                 (
-                    (self.__width - self.__fontHeight * len(self.__text)) // 2,
+                    (self.__width - self.__font_height * len(self.__text)) // 2,
                     int(self.__height * 0.96)
                 ),
                 cv2.FONT_ITALIC,
-                self.__fontScale,
+                self.__font_scale,
                 (255, 255, 255)
             )
             if rotate:
                 sketch = np.rot90(sketch, -rotate // 90)
             cv2.addWeighted(sketch, 1, frame, 1, 0, frame)
-            self.__isUpdate = False
+            self.__is_update = False

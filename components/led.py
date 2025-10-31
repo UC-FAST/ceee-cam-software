@@ -14,7 +14,7 @@ state = {
     blue:False
 }
 
-def toggleState(led: gpiozero.output_devices.DigitalOutputDevice):
+def toggle_state(led: gpiozero.output_devices.DigitalOutputDevice):
     state[led] = not state[led]
     led.toggle()
 

@@ -5,11 +5,11 @@ from .colors import Colors
 
 
 class Warining:
-    def __init__(self, width=128, height=128, fontHeight: int = 12):
+    def __init__(self, width=128, height=128, font_height: int = 12):
         self.__width = width
         self.__height = height
-        self.__fontHeight = fontHeight
-        self.__scale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, self.__fontHeight)
+        self.__font_height = font_height
+        self.__scale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, self.__font_height)
 
         self.__sketch = np.zeros((self.__width, self.__height, 3), np.uint8)
         cv2.rectangle(self.__sketch, (0, 0), (self.__width, self.__height), Colors.darkred.value, -1)
@@ -22,18 +22,18 @@ class Warining:
         )
 
     def decorate(self, text: str, rotate=0):
-        textList = text.split()
-        spaceCount = len(textList) - 1
-        spaceTotal = (self.__height * 0.8) - len(textList) * self.__fontHeight
+        text_list = text.split()
+        space_count = len(text_list) - 1
+        space_total = (self.__height * 0.8) - len(text_list) * self.__font_height
         try:
-            space = int(spaceTotal // spaceCount)
+            space = int(space_total // space_count)
         except ZeroDivisionError:
             space = 0
-        for index, _ in enumerate(textList):
+        for index, _ in enumerate(text_list):
             cv2.putText(
                 self.__sketch,
                 _,
-                (self.__width // 10, (index + 1) * self.__fontHeight + index * space + int(self.__height // 10)),
+                (self.__width // 10, (index + 1) * self.__font_height + index * space + int(self.__height // 10)),
                 cv2.FONT_ITALIC, self.__scale,
                 (255, 255, 255),
                 1

@@ -8,7 +8,7 @@ class BarChart:
                  alpha: float = 1):
         # 计算柱形步长（宽度）
         self.__step = max(1, ceil(width / maxSize))  # 确保步长至少为1
-        self.__maxSize = maxSize
+        self.__max_size = maxSize
         self.__height = height
         self.__width = width
         self.__scale = scale
@@ -22,41 +22,41 @@ class BarChart:
         # 数据统计
         self.__max = -inf
         self.__min = inf
-        self.__dataList = []
+        self.__data_list = []
 
     @property
-    def dataList(self):
-        return self.__dataList
+    def data_list(self):
+        return self.__data_list
 
-    @dataList.setter
-    def dataList(self, datas):
+    @data_list.setter
+    def data_list(self, datas):
         # 数据降采样处理
-        if len(datas) > self.__maxSize:
-            step = max(1, len(datas) // self.__maxSize)
-            self.__dataList = [
+        if len(datas) > self.__max_size:
+            step = max(1, len(datas) // self.__max_size)
+            self.__data_list = [
                 sum(datas[i:i+step]) / step
                 for i in range(0, len(datas), step)
-            ][:self.__maxSize]
+            ][:self.__max_size]
         else:
-            self.__dataList = datas.copy()  # 避免外部修改影响
+            self.__data_list = datas.copy()  # 避免外部修改影响
         
         # 更新极值
-        if self.__dataList:
-            self.__min = min(self.__dataList)
-            self.__max = max(self.__dataList)
+        if self.__data_list:
+            self.__min = min(self.__data_list)
+            self.__max = max(self.__data_list)
 
-    def addData(self, data):
+    def add_data(self, data):
         # 数据队列管理
-        if len(self.__dataList) == self.__maxSize:
-            removed = self.__dataList.pop(0)
+        if len(self.__data_list) == self.__max_size:
+            removed = self.__data_list.pop(0)
             # 动态更新极值
             if not self.__scale:
                 if removed == self.__max:
-                    self.__max = max(self.__dataList) if self.__dataList else -inf
+                    self.__max = max(self.__data_list) if self.__data_list else -inf
                 elif removed == self.__min:
-                    self.__min = min(self.__dataList) if self.__dataList else inf
+                    self.__min = min(self.__data_list) if self.__data_list else inf
         
-        self.__dataList.append(data)
+        self.__data_list.append(data)
         
         # 更新极值
         if not self.__scale:
@@ -90,7 +90,7 @@ class BarChart:
         bar_width = self.__step
         base_y = self.__height
         
-        for idx, data in enumerate(self.__dataList):
+        for idx, data in enumerate(self.__data_list):
             # 计算柱形高度
             norm_val = self.__normalize_value(data)
             bar_height = int(base_y * norm_val / 100.0)

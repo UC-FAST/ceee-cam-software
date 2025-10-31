@@ -1,5 +1,7 @@
 import abc
-from pydoc import doc
+from typing import Iterator
+
+from numpy import ndarray
 
 
 class ControlledEnd(abc.ABC):
@@ -49,78 +51,78 @@ class ControlledEnd(abc.ABC):
     def __init__(self, _id):
         self._id = _id
         self._irq = None
-        self._msgSender = None
+        self._msg_sender = None
 
     """---Multi Direction Button Start---"""
 
-    def centerPressAction(self):
+    def center_press_action(self):
         pass
 
-    def centerReleaseAction(self):
+    def center_release_action(self):
         pass
 
-    def upPressAction(self):
+    def up_press_action(self):
         pass
 
-    def upReleaseAction(self):
+    def up_release_action(self):
         pass
 
-    def downPressAction(self):
+    def down_press_action(self):
         pass
 
-    def downReleaseAction(self):
+    def down_release_action(self):
         pass
 
-    def leftPressAction(self):
+    def left_press_action(self):
         pass
 
-    def leftReleaseAction(self):
+    def left_release_action(self):
         pass
 
-    def rightPressAction(self):
+    def right_press_action(self):
         pass
 
-    def rightReleaseAction(self):
+    def right_release_action(self):
         pass
 
     """---Multi Direction Button End---"""
 
     """---Multi Function Button Start---"""
 
-    def circlePressAction(self):
+    def circle_press_action(self):
         pass
 
-    def squarePressAction(self):
+    def square_press_action(self):
         pass
 
-    def crossPressAction(self):
+    def cross_press_action(self):
         pass
 
-    def shutterPressAction(self):
+    def shutter_press_action(self):
         pass
 
     """---Multi Function Button End---"""
 
     """---Rotary Encoder Start---"""
 
-    def rotaryEncoderClockwise(self):
+    def rotary_encoder_clockwise(self):
         pass
 
-    def rotaryEncoderCounterClockwise(self):
+    def rotary_encoder_counter_clockwise(self):
         pass
 
-    def rotaryEncoderSelect(self):
+    def rotary_encoder_select(self):
         pass
 
     """---Rotary Encoder End---"""
 
     """---Communication Function Start---"""
 
-    def msgReceiver(self, sender, msg):
+    def msg_receiver(self, sender, msg):
         pass
 
-    def msgSender(self, func):
-        self._msgSender = func
+    def msg_sender(self, func):
+        self._msg_sender = func
 
     """---Communication Function End---"""
 
@@ -128,13 +130,13 @@ class ControlledEnd(abc.ABC):
         self._irq = func
 
     @abc.abstractmethod
-    def mainLoop(self):
+    def main_loop(self) -> Iterator[ndarray]:
         pass
 
-    def onExit(self):
+    def on_exit(self):
         pass
 
-    def onEnter(self, lastID):
+    def on_enter(self, lastID):
         pass
 
     def active(self):

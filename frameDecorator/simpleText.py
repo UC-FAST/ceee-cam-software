@@ -5,13 +5,12 @@ import numpy as np
 
 
 class SimpleText:
-
     def __init__(
         self,
-        funcList: list,
+        func_list: list,
         height: int,
         padding: tuple = (5, 5, 5, 5),
-        fontHeight: int = 24,
+        font_height: int = 24,
         color: tuple = (255, 255, 255),
         thickness: float = 1
     ):
@@ -20,58 +19,58 @@ class SimpleText:
             raise ValueError("Height must be positive")
         if any(p < 0 for p in padding):
             raise ValueError("Padding values must be non-negative")
-        if not funcList:
+        if not func_list:
             raise ValueError("Function list cannot be empty")
 
-        self.__fontHeight = fontHeight
-        self.__fontSize = cv2.getFontScaleFromHeight(
-            cv2.FONT_ITALIC, self.__fontHeight)
+        self.__font_height = font_height
+        self.__font_size = cv2.getFontScaleFromHeight(
+            cv2.FONT_ITALIC, self.__font_height)
         self.__height = height
         self.__padding = padding
         self.__color = color
         self.__thickness = thickness
-        self.__funcList = tuple(funcList)
+        self.__func_list = tuple(func_list)
         self.__index = 0
 
     @property
-    def currentPage(self):
+    def current_page(self):
         return self.__index
 
     @property
-    def totalPages(self):
-        return len(self.__funcList)
+    def total_pages(self):
+        return len(self.__func_list)
 
-    def nextPage(self):
-        self.__index = min(self.__index + 1, self.totalPages - 1)
+    def next_page(self):
+        self.__index = min(self.__index + 1, self.total_pages - 1)
 
-    def previousPage(self):
+    def previous_page(self):
         self.__index = max(self.__index - 1, 0)
 
-    def setPage(self, page: int):
-        if 0 <= page < self.totalPages:
+    def set_page(self, page: int):
+        if 0 <= page < self.total_pages:
             self.__index = page
         else:
             raise IndexError(
-                f"Page index out of range [0, {self.totalPages - 1}]")
+                f"Page index out of range [0, {self.total_pages - 1}]")
 
     def decorate(self, frame, rotate=0):
-        widget = self.__funcList[self.__index]()
+        widget = self.__func_list[self.__index]()
         if not widget:
             return frame
 
         sketch = np.zeros_like(frame, dtype=np.uint8)
-        _, topPadding,  _, bottomPadding = self.__padding
-        availableHeight = self.__height - topPadding - bottomPadding
-        textCount = len(widget)
+        _, top_padding,  _, bottom_padding = self.__padding
+        available_height = self.__height - top_padding - bottom_padding
+        text_count = len(widget)
 
-        if textCount == 1:
+        if text_count == 1:
             step = 0
         else:
-            totalTextHeight = textCount * self.__fontHeight
-            step = ceil((availableHeight - totalTextHeight) / (textCount - 1))
+            total_text_height = text_count * self.__font_height
+            step = ceil((available_height - total_text_height) / (text_count - 1))
 
-        leftPadding = self.__padding[0]
-        yPos = topPadding
+        left_padding = self.__padding[0]
+        y_pos = top_padding
 
         for key, value in widget.items():
 
@@ -85,18 +84,18 @@ class SimpleText:
             cv2.putText(
                 sketch,
                 text,
-                (leftPadding, yPos),
+                (left_padding, y_pos),
                 cv2.FONT_ITALIC,
-                self.__fontSize,
+                self.__font_size,
                 self.__color,
                 self.__thickness,
             )
-            yPos += self.__fontHeight + step
+            y_pos += self.__font_height + step
 
         if rotate != 0:
-            rotateTimes = (-rotate // 90) % 4
-            if rotateTimes:
-                sketch = np.rot90(sketch, rotateTimes)
+            rotate_times = (-rotate // 90) % 4
+            if rotate_times:
+                sketch = np.rot90(sketch, rotate_times)
 
         cv2.addWeighted(sketch, 1, frame, 1, 0, frame)
         return frame

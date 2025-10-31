@@ -1,10 +1,13 @@
+import os
 import requests
 
+from utils import Logger, LogMsg
 
 
-class network():
+class Network():
     def __init__(self) -> None:
         self.__is_internet_connected: bool = False
+        self.__logger = Logger()
 
     @property
     def is_internet_connected(self) -> bool:
@@ -61,13 +64,35 @@ class network():
             response = requests.get(url, timeout=timeout)
             if response.status_code == 200 and expected_text == response.text:
                 self.__is_internet_connected = True
+                self.__logger.info(
+                    LogMsg(
+                        content=f'Network state connected',
+                        module=self.__module__,
+                        filename=os.path.basename(
+                                os.path.abspath(__file__)),
+                        currentframe=inspect.currentframe()  # type: ignore
+                    )
+                )
                 return True, response.elapsed.microseconds/1000000
             else:
+                self.__logger.warning(
+                    LogMsg(
+                        content=f'Network state disconnected',
+                        module=self.__module__,
+                        filename=os.path.basename(os.path.abspath(__file__)),
+                        currentframe=inspect.currentframe()  # type: ignore
+                    )
+                )
                 self.__is_internet_connected = False
                 return False, None
         except (requests.ConnectionError, requests.Timeout, requests.RequestException):
+            self.__logger.warning(
+                LogMsg(
+                    content=f'Network state disconnected',
+                    module=self.__module__,
+                    filename=os.path.basename(os.path.abspath(__file__)),
+                    currentframe=inspect.currentframe()  # type: ignore
+                )
+            )
             self.__is_internet_connected = False
             return False, None
-
-
-

@@ -10,7 +10,7 @@ class main:
         self.__height = height
         self.__cursor = 0
         self.__text = (None, None, None, None)
-        self.__fontScale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, fontHeight)
+        self.__font_scale = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, fontHeight)
         self.__padding = self.__width // 40
 
     def decorate(self, frame):
@@ -29,7 +29,7 @@ class main:
                     sketch, self.__text[i],
                     (i * 76 + 12, 232),
                     cv2.FONT_ITALIC,
-                    self.__fontScale,
+                    self.__font_scale,
                     (255, 255, 255)
                 )
             else:
@@ -38,20 +38,20 @@ class main:
                     sketch, self.__text[i],
                     (i * 76 + 12, 232),
                     cv2.FONT_ITALIC,
-                    self.__fontScale,
+                    self.__font_scale,
                     (255, 0, 0)
                 )
         cv2.addWeighted(sketch, 1, frame, 1, 0, frame)
 
     @property
-    def bottomBarText(self) -> Tuple[str | None, str | None, str | None, str | None]:
+    def bottom_bar_text(self) -> Tuple[str | None, str | None, str | None, str | None]:
         return self.__text
 
-    @bottomBarText.setter
-    def bottomBarText(self, text: Tuple[str, str, str, str]):
+    @bottom_bar_text.setter
+    def bottom_bar_text(self, text: Tuple[str, str, str, str]):
         self.__text = text
 
-    def nextCursor(self):
+    def next_cursor(self):
         if self.__cursor == 3:
             self.__cursor = 0
         else:

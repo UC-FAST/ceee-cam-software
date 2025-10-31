@@ -7,16 +7,16 @@ from typing import OrderedDict
 
 import smbus2
 
-from utils import ConfigLoader,logger,LogMsg,singleton
+from utils import ConfigLoader,Logger,LogMsg,singleton
 
 @singleton
 class MAX17048:
     def __init__(
         self,
-        i2cBus=ConfigLoader()['sensor']['MAX17048']['bus'],
+        bus_number=ConfigLoader()['sensor']['MAX17048']['bus'],
         addr=0x36
     ):
-        self.__i2c = smbus2.SMBus(i2cBus)
+        self.__i2c = smbus2.SMBus(bus_number)
         self.__addr = addr
         self.__reg = {
             'VCELL': 0X02,
@@ -40,17 +40,17 @@ class MAX17048:
                 c.writeheader()
         self.__lastBat = 0
         self.__alertThreshold = None
-        self.__logger=logger()
+        self.__logger=Logger()
         self.__logger.info(
             LogMsg(
-                content='MAX17048 init finished',
-                module='MAX17048',
+                content=f'MAX17048 init finished I2C_bus={bus_number} addr={hex(self.__addr)}',
+                module=self.__module__,
                 filename=os.path.basename(os.path.abspath(__file__)),
-                lineno=inspect.currentframe().f_lineno
+                currentframe=inspect.currentframe() # type: ignore
             )
         )
 
-    def getBat(self):
+    def get_bat(self):
         msb, lsb = tuple(self.__i2c.read_i2c_block_data(
             self.__addr, self.__reg['VCELL'], 2, force=None))
         data = (msb << 8 | lsb) * 0.000078125
@@ -60,6 +60,15 @@ class MAX17048:
                 self.__lastBat = data
         if self.__alertThreshold is not None and data < self.__alertThreshold:
             self.__alertAction()
+
+        self.__logger.debug(
+            LogMsg(
+                content=f'MAX17048 read battery voltage={data:.3}V',
+                module=self.__module__,
+                filename=os.path.basename(os.path.abspath(__file__)),
+                currentframe=inspect.currentframe() # type: ignore
+            )
+        )
         return data
 
     def version(self):
@@ -95,8 +104,8 @@ class MAX17048:
         subprocess.run(['sudo', 'poweroff'])
 
     @staticmethod
-    def getBatteryPercent(voltage):
-        batteryVoltage2Percentage = OrderedDict(
+    def get_battery_percent(voltage):
+        battery_voltage_to_percentage = OrderedDict(
             {
                 4.20: 100.0,
                 4.19: 99.5,
@@ -179,14 +188,14 @@ class MAX17048:
                 3.27: 0.00
             }
         )
-        for v, p in zip(batteryVoltage2Percentage.keys(), batteryVoltage2Percentage.values()):
+        for v, p in zip(battery_voltage_to_percentage.keys(), battery_voltage_to_percentage.values()):
             if voltage > v:
                 return p
 
 
 if __name__ == '__main__':
     m = MAX17048()
-    print(MAX17048().getBat())
+    print(MAX17048().get_bat())
     while True:
-        print(m.getBatteryPercent(m.getBat()))
+        print(m.get_battery_percent(m.get_bat()))
         time.sleep(1)

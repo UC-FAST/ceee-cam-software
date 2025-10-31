@@ -9,35 +9,35 @@ class DialogBox:
             self,
             width: int,
             height: int,
-            options: list = None,
-            title: str = None,
+            options: list|None = None,
+            title: str|None = None,
             padding: tuple = (0, 0, 0, 0),
-            columnCount: int = 1,
-            showIndex: bool = False,
-            fontHeight: int = 12,
+            column_count: int = 1,
+            show_index: bool = False,
+            font_height: int = 12,
             color: tuple = (255, 255, 255),
             thickness: int = 1
     ):
 
         self.__options = options
-        self.__columnCount = columnCount
+        self.__column_count = column_count
         self.__title = title
         self.__height = height
         self.__width = width
-        self.__fontHeight = fontHeight
+        self.__font_height = font_height
         self.__padding = padding
         if self.__options:
-            if showIndex:
-                self.__optionList = tuple(["{}: {}".format(i + 1, x) for i, x in enumerate(options)])
+            if show_index:
+                self.__option_list = tuple(["{}: {}".format(i + 1, x) for i, x in enumerate(options)])
             else:
-                self.__optionList = tuple(options)
-            self.__verticalStep = self.__verticalStepCalc()
-            self.__horizontalStep = self.__horizontalStepCalc()
+                self.__option_list = tuple(options)
+            self.__vertical_step = self.__vertical_step_calc()
+            self.__horizontal_step = self.__horizontal_step_calc()
         else:
-            self.__optionList = None
+            self.__option_list = None
 
-        self.__showIndex = showIndex
-        self.__fontSize = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, fontHeight)
+        self.__show_index = show_index
+        self.__font_size = cv2.getFontScaleFromHeight(cv2.FONT_ITALIC, font_height)
         self.__color = color
         self.__thickness = thickness
         self.__index = 0
@@ -50,15 +50,15 @@ class DialogBox:
     def options(self, options):
         self.__options = options
         if self.__options:
-            if self.__showIndex:
-                self.__optionList = tuple(["{}: {}".format(i + 1, x) for i, x in enumerate(options)])
+            if self.__show_index:
+                self.__option_list = tuple(["{}: {}".format(i + 1, x) for i, x in enumerate(options)])
             else:
-                self.__optionList = tuple(options)
-            self.__verticalStep = self.__verticalStepCalc()
-            self.__horizontalStep = self.__horizontalStepCalc()
+                self.__option_list = tuple(options)
+            self.__vertical_step = self.__vertical_step_calc()
+            self.__horizontal_step = self.__horizontal_step_calc()
             self.__index = 0
         else:
-            self.__optionList = None
+            self.__option_list = None
 
     @property
     def title(self):
@@ -69,99 +69,99 @@ class DialogBox:
         if t:
             self.__title = t
             if not self.__title:
-                self.__verticalStep = self.__verticalStepCalc()
-                self.__horizontalStep = self.__horizontalStepCalc()
+                self.__vertical_step = self.__vertical_step_calc()
+                self.__horizontal_step = self.__horizontal_step_calc()
 
         elif not t:
             self.__title = None
             if self.__title:
-                self.__verticalStep = self.__verticalStepCalc()
-                self.__horizontalStep = self.__horizontalStepCalc()
+                self.__vertical_step = self.__vertical_step_calc()
+                self.__horizontal_step = self.__horizontal_step_calc()
 
-    def __verticalStepCalc(self):
-        lineCount = ceil(len(self.__optionList) / self.__columnCount)
+    def __vertical_step_calc(self):
+        lineCount = ceil(len(self.__option_list) / self.__column_count)
         if self.__title:
             lineCount += 1
         spaceCount = lineCount
         heightTotal = self.__height - self.__padding[1] - self.__padding[3]
-        spaceTotal = heightTotal - lineCount * self.__fontHeight
+        spaceTotal = heightTotal - lineCount * self.__font_height
         return int(spaceTotal / spaceCount)
 
-    def __horizontalStepCalc(self):
-        return int((self.__width - self.__padding[0] - self.__padding[2]) / self.__columnCount)
+    def __horizontal_step_calc(self):
+        return int((self.__width - self.__padding[0] - self.__padding[2]) / self.__column_count)
 
-    def setIndex(self, index: int):
-        if not self.__optionList or index < len(self.__optionList):
+    def set_index(self, index: int):
+        if not self.__option_list or index < len(self.__option_list):
             raise IndexError
         self.__index = index
 
-    def getCurrentIndex(self):
+    def get_current_index(self):
         if self.__options:
             return self.__index
         raise IndexError
 
-    def optionUp(self):
-        if self.__index - self.__columnCount < 0:
+    def option_up(self):
+        if self.__index - self.__column_count < 0:
             return
         else:
-            self.__index -= self.__columnCount
+            self.__index -= self.__column_count
 
-    def optionDown(self):
-        if (len(self.__optionList) - self.__columnCount) <= self.__index < len(self.__optionList):
+    def option_down(self):
+        if (len(self.__option_list) - self.__column_count) <= self.__index < len(self.__option_list):
             return
         else:
-            self.__index += self.__columnCount
+            self.__index += self.__column_count
 
-    def optionRight(self):
-        self.__index = self.__index if self.__index == len(self.__optionList) - 1 else self.__index + 1
+    def option_right(self):
+        self.__index = self.__index if self.__index == len(self.__option_list) - 1 else self.__index + 1
 
-    def optionLeft(self):
+    def option_left(self):
         self.__index = 0 if self.__index == 0 else self.__index - 1
 
     def decorate(self, frame, rotate=0):
         sketch = np.zeros(frame.shape, np.uint8)
-        verticalOffset = self.__padding[1] + self.__fontHeight
+        vertical_offset = self.__padding[1] + self.__font_height
         if self.__title:
-            verticalOffset += self.__verticalStep + self.__fontHeight
-            totalWidth = self.__width - self.__padding[0] - self.__padding[2]
-            x = (totalWidth - len(self.__title) * self.__fontHeight) // 2
+            vertical_offset += self.__vertical_step + self.__font_height
+            total_width = self.__width - self.__padding[0] - self.__padding[2]
+            x = (total_width - len(self.__title) * self.__font_height) // 2
 
             cv2.putText(
                 sketch,
                 self.__title,
                 (
                     self.__padding[0] + x,
-                    self.__fontHeight + self.__padding[1]
+                    self.__font_height + self.__padding[1]
                 ),
-                cv2.FONT_ITALIC, self.__fontSize,
+                cv2.FONT_ITALIC, self.__font_size,
                 self.__color,
                 self.__thickness
             )
-        currentIndex = 0
-        for i in range(ceil(len(self.__optionList) / self.__columnCount)):
-            for j in range(self.__columnCount):
+        current_index = 0
+        for i in range(ceil(len(self.__option_list) / self.__column_count)):
+            for j in range(self.__column_count):
                 try:
                     coordinate = (
-                        j * self.__horizontalStep + self.__padding[0],
-                        i * (self.__fontHeight + self.__verticalStep) + verticalOffset
+                        j * self.__horizontal_step + self.__padding[0],
+                        i * (self.__font_height + self.__vertical_step) + vertical_offset
                     )
-                    if currentIndex == self.__index:
+                    if current_index == self.__index:
                         cv2.rectangle(sketch,
-                                      (coordinate[0], coordinate[1] - self.__fontHeight),
-                                      (coordinate[0] + self.__horizontalStep, coordinate[1]),
+                                      (coordinate[0], coordinate[1] - self.__font_height),
+                                      (coordinate[0] + self.__horizontal_step, coordinate[1]),
                                       color=(255, 0, 0),
                                       thickness=-self.__thickness
                                       )
 
                     cv2.putText(
                         sketch,
-                        self.__optionList[i * self.__columnCount + j],
+                        self.__option_list[i * self.__column_count + j],
                         coordinate,
-                        cv2.FONT_ITALIC, self.__fontSize,
+                        cv2.FONT_ITALIC, self.__font_size,
                         self.__color,
                         self.__thickness
                     )
-                    currentIndex += 1
+                    current_index += 1
                 except IndexError:
                     break
         if rotate:
